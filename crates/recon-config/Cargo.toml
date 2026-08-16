@@ -1,0 +1,21 @@
+[package]
+name = "recon-config"
+description = "Encrypted HOSxP site configuration for Recon: keyring-backed master key with encryptman AES-256-GCM at rest"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+recon-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+secrecy = { workspace = true }
+directories = { workspace = true }
+encryptman = { workspace = true }
+encryptman-keyring = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.15"  # temp dirs for config store tests

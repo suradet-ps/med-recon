@@ -1,0 +1,12 @@
+[package]
+name = "recon-core"
+description = "Pure domain layer for Recon: BPMH models, aggregation, days-supply and active/lapsed inference"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+chrono = { workspace = true }

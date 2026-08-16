@@ -1,0 +1,7 @@
+/target
+**/target
+/dist
+**/dist
+/node_modules
+*.key
+.DS_Store
