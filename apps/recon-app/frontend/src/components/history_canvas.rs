@@ -2,7 +2,7 @@
 //! patient bar, data-completeness warnings, allergy bands, BPMH active /
 //! lapsed sections, and the visit timeline.
 
-use chrono::Datelike;
+use chrono::{Datelike, NaiveDate};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 
@@ -82,6 +82,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
     let birthday = patient
         .birthday
         .map(|d| format!("{:02}/{:02}/{}", d.day(), d.month(), d.year()));
+    let age = patient.birthday.map(age_years);
 
     let active: Vec<MedicationItem> = history
         .medications
@@ -130,6 +131,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                         <span class="code">{"HN "}{hn.clone()}</span>
                         {move || cid.as_ref().map(|c| view! { <><span class="sep">"·"</span><span class="code">{c.clone()}</span></> })}
                         {move || birthday.as_ref().map(|b| view! { <><span class="sep">"·"</span><span>{b.clone()}</span></> })}
+                        {move || age.map(|a| view! { <><span class="sep">"·"</span><span>{tr_f(lang.get(), "canvas.age", &[("n", &a.to_string())])}</span></> })}
                     </div>
                 </div>
                 <div class="patient-bar__change">
@@ -315,4 +317,24 @@ fn format_qty(q: f64) -> String {
         s.pop();
     }
     s
+}
+
+/// Whole-years age as of today, computed from a birthday.
+///
+/// Uses the browser's local date (`js_sys::Date`) — `std::time::SystemTime`
+/// panics under `wasm32`.
+fn age_years(birthday: NaiveDate) -> i32 {
+    let today = js_sys::Date::new_0();
+    let year = today.get_full_year() as i32;
+    let month = (today.get_month() as u32) + 1;
+    let day = today.get_date() as u32;
+    let today = match NaiveDate::from_ymd_opt(year, month, day) {
+        Some(d) => d,
+        None => return 0,
+    };
+    let mut age = today.year() - birthday.year();
+    if (month, day) < (birthday.month(), birthday.day()) {
+        age -= 1;
+    }
+    age
 }

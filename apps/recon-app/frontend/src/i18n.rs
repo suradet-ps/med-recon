@@ -283,6 +283,7 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด",
         "No dispensing records in the configured window",
     ),
+    ("canvas.age", "อายุ {n} ปี", "Age {n}"),
     ("canvas.export", "ส่งออกรายงาน", "Export report"),
     ("canvas.exporting", "กำลังส่งออก…", "Exporting…"),
     (
