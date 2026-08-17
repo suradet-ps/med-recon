@@ -86,31 +86,10 @@ icon!(
 );
 
 icon!(
-    /// Shield — BPMH safety note.
-    IconShield,
-    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1 1 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
-);
-
-icon!(
     /// User — patient.
     IconUser,
     <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
     <circle cx="12" cy="7" r="4" />
-);
-
-icon!(
-    /// Calendar — visits.
-    IconCalendar,
-    <path d="M8 2v4" />
-    <path d="M16 2v4" />
-    <rect width="18" height="18" x="3" y="4" rx="2" />
-    <path d="M3 10h18" />
-);
-
-icon!(
-    /// Activity — heartbeat line.
-    IconActivity,
-    <path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2" />
 );
 
 icon!(
