@@ -19,7 +19,7 @@ keywords before execution, on top of the recommended read-only DB role.
 ```
 Tauri 2 (shell) ── Leptos 0.8 CSR (WASM UI)
         │
-        ├── recon-core      pure domain: BPMH engine, era conversion, redaction
+        ├── recon-core      pure domain: BPMH engine, date-era normalization, redaction
         ├── recon-hosxp     sqlx MySQL repository (read-only guard)
         ├── recon-config    encrypted settings (encryptman AES-256-GCM + OS keychain)
         └── recon-bridge    wasm IPC wrapper
@@ -40,7 +40,7 @@ Tauri 2 (shell) ── Leptos 0.8 CSR (WASM UI)
 
 | Screen | Purpose |
 |---|---|
-| Setup | HOSxP connection form (host/port/db/user/password, date era, history window), test + save |
+| Setup | HOSxP connection form (host/port/db/user/password, history window), test + save |
 | Search | Name / HN / CID search with result list |
 | Patient | BPMH (active / lapsed), allergies, visits, HTML report export |
 | Settings | View / edit / clear the encrypted configuration |
@@ -94,8 +94,8 @@ cargo doc --no-deps --workspace
 HOSxP sites differ. Before relying on any of these, verify against your live
 schema (see the open items in `AGENTS.md`):
 
-- **Date era** — some sites store dates in พ.ศ. (Buddhist era). Set the era in
-  Setup; conversion is handled at the repository boundary.
+- **Date era** — auto-detected per value (stored year ≥ 2500 ⇒ พ.ศ., converted
+  to ค.ศ.); no setting needed, mixed-era sites are handled.
 - **Sig (directions-for-use) lookup** — read from the `drugusage`/`sp_use`
   lookup tables via `opitemrece`; missing tables degrade to a warning.
 - **`tmt_tp_code` / `tmt_gp_code`** — TMT mapping may be empty on some sites;

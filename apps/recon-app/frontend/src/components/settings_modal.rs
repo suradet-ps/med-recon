@@ -13,7 +13,6 @@ use crate::api::{self, ConnectionInput};
 use crate::components::icons::{IconPlug, IconSave, IconX};
 use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
-use recon_core::DateEra;
 
 /// Default MySQL port, prefilled in the port field.
 const DEFAULT_PORT: u16 = 3306;
@@ -26,7 +25,6 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
     let database = RwSignal::new("hos".to_string());
     let user = RwSignal::new(String::new());
     let password = RwSignal::new(String::new());
-    let era = RwSignal::new(DateEra::Christian);
     let history_days = RwSignal::new(730u32);
     let message = RwSignal::new(None::<(bool, String)>);
     let busy = RwSignal::new(false);
@@ -82,7 +80,6 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             database: database.get_untracked(),
             user: user.get_untracked(),
             password: password.get_untracked(),
-            era: era.get_untracked(),
             history_days: history_days.get_untracked(),
         };
         if input.site_name.trim().is_empty()
@@ -237,47 +234,21 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                     />
                 </div>
 
-                <div class="form-row">
-                    <div class="form-field">
-                        <label for="cfg-era">{move || tr(lang.get(), "settings.era")}</label>                        <select
-                            id="cfg-era"
-                            class="form-input"
-                            prop:value=move || {
-                                if era.get() == DateEra::Buddhist {
-                                    "buddhist".to_string()
-                                } else {
-                                    "christian".to_string()
-                                }
+                <div class="form-field form-field--grow">
+                    <label for="cfg-window">{move || tr(lang.get(), "settings.history_days")}</label>
+                    <input
+                        id="cfg-window"
+                        class="form-input form-input--mono"
+                        type="number"
+                        min="30"
+                        max="3650"
+                        prop:value=move || history_days.get().to_string()
+                        on:input=move |ev| {
+                            if let Ok(v) = event_target_value(&ev).parse::<u32>() {
+                                history_days.set(v);
                             }
-                            on:change=move |ev| {
-                                let v = event_target_value(&ev);
-                                era.set(if v == "buddhist" {
-                                    DateEra::Buddhist
-                                } else {
-                                    DateEra::Christian
-                                });
-                            }
-                        >
-                            <option value="christian">{move || tr(lang.get(), "settings.era_ce")}</option>
-                            <option value="buddhist">{move || tr(lang.get(), "settings.era_be")}</option>
-                        </select>
-                    </div>
-                    <div class="form-field form-field--grow">
-                        <label for="cfg-window">{move || tr(lang.get(), "settings.history_days")}</label>
-                        <input
-                            id="cfg-window"
-                            class="form-input form-input--mono"
-                            type="number"
-                            min="30"
-                            max="3650"
-                            prop:value=move || history_days.get().to_string()
-                            on:input=move |ev| {
-                                if let Ok(v) = event_target_value(&ev).parse::<u32>() {
-                                    history_days.set(v);
-                                }
-                            }
-                        />
-                    </div>
+                        }
+                    />
                 </div>
 
                 {move || {

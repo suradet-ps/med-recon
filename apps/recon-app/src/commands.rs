@@ -9,7 +9,7 @@
 use std::time::{Duration, Instant};
 
 use recon_config::SiteConfig;
-use recon_core::{DateEra, PatientHistory, PatientSummary};
+use recon_core::{PatientHistory, PatientSummary};
 use recon_hosxp::{HosxpClient, HosxpConfig};
 use secrecy::SecretString;
 use serde::{Deserialize, Serialize};
@@ -135,8 +135,6 @@ pub struct ConnectionInput {
     pub user: String,
     /// Database password.
     pub password: String,
-    /// Date era of the site's HOSxP date columns.
-    pub era: DateEra,
     /// History window in days.
     pub history_days: u32,
 }
@@ -150,7 +148,6 @@ impl From<ConnectionInput> for SiteConfig {
             database: i.database,
             user: i.user,
             password: SecretString::from(i.password),
-            era: i.era,
             history_days: i.history_days,
         }
     }
@@ -207,7 +204,6 @@ fn to_hosxp_config(cfg: &SiteConfig) -> HosxpConfig {
         database: cfg.database.clone(),
         user: cfg.user.clone(),
         password: cfg.password.clone(),
-        era: cfg.era,
         history_days: cfg.history_days,
     }
 }
@@ -244,8 +240,6 @@ pub struct AppStatus {
     pub database: Option<String>,
     /// Database user, if configured.
     pub user: Option<String>,
-    /// Date era.
-    pub era: DateEra,
     /// History window in days.
     pub history_days: u32,
 }
@@ -260,7 +254,6 @@ pub async fn get_app_status(state: State<'_, AppState>) -> Result<AppStatus, Com
             host: Some(cfg.host),
             database: Some(cfg.database),
             user: Some(cfg.user),
-            era: cfg.era,
             history_days: cfg.history_days,
         }),
         Err(recon_config::Error::NoConfig) => Ok(AppStatus {
@@ -269,7 +262,6 @@ pub async fn get_app_status(state: State<'_, AppState>) -> Result<AppStatus, Com
             host: None,
             database: None,
             user: None,
-            era: DateEra::Christian,
             history_days: 730,
         }),
         Err(e) => Err(dev_log(

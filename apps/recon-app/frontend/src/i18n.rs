@@ -89,9 +89,6 @@ pub const KEYS: &[(&str, &str, &str)] = &[
     ),
     ("settings.password", "Password", "Password"),
     ("settings.site_name", "ชื่อสถานบริการ", "Site name"),
-    ("settings.era", "รูปแบบปีของวันใน HOSxP", "Date era in HOSxP"),
-    ("settings.era_ce", "ค.ศ. (คริสต์ศักราช)", "CE (Christian era)"),
-    ("settings.era_be", "พ.ศ. (พุทธศักราช)", "BE (Buddhist era)"),
     (
         "settings.history_days",
         "ค้นประวัติย้อนหลัง (วัน)",

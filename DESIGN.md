@@ -41,7 +41,7 @@ rationale behind the Best Possible Medication History (BPMH) engine.
 
 1. App starts with no settings → the **settings dialog opens automatically**.
 2. The operator enters site name, host, port, database, user, password,
-   date era (ค.ศ./พ.ศ.), and history window.
+   and history window.
 3. **Test** runs against the typed values before anything is saved
    (latency shown). **Save** connects first, then persists the
    configuration **encrypted** (AES-256-GCM; master key in the OS
@@ -203,13 +203,18 @@ Input: raw `Dispense` events (OPD + IPD). Output: `MedicationItem`s.
    supply falls back to a **30-day window**.
 4. **Sort** — most recent dispense first.
 
-### 4.4 Dates (Buddhist era)
+### 4.4 Dates (Buddhist era, auto-detected)
 
 The Thai calendar is Gregorian +543 with shared leap rules. BE leap days
 (Feb 29 of a BE year) have no proleptic-Gregorian representation, so
-CE→BE conversion clamps to Feb 28 (documented). All HOSxP dates are
-converted to CE at the repository boundary; the query cutoff is converted
-back into the site's era.
+BE→CE conversion of such a day is clamped to Feb 28 (documented). All
+HOSxP dates are normalized to CE **per value** at the repository boundary:
+a stored year ≥ 2500 is treated as พ.ศ. and converted, anything else is
+already ค.ศ. There is no site-era setting.
+
+The SQL cutoff is always sent in ค.ศ.; on พ.ศ. sites the year comparison
+matches every stored date (BE years sort higher), so the exact history
+window is enforced client-side after normalization.
 
 ### 4.5 Schema drift policy
 

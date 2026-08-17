@@ -35,8 +35,11 @@ correct queries. Do not duplicate DESIGN.md content here — link to it.
   history from HOSxP is one source among several (see DESIGN.md). The UI
   must never present it as a complete or verified medication list —
   always show data-recency and source-type indicators.
-- **Buddhist Era dates.** Some HOSxP date columns may be stored in พ.ศ.
-  Confirm per-table before assuming ค.ศ.; do not hardcode a global offset.
+- **Buddhist Era dates.** HOSxP date columns may be stored in either
+  พ.ศ. or ค.ศ. depending on the site — or even mixed. There is **no
+  era setting**: every date value read from HOSxP is normalized to ค.ศ.
+  individually, using the year (≥ 2500 ⇒ พ.ศ.) to detect its era
+  (`recon_core::normalize_date`).
 
 ## HOSxP Schema Reference (confirmed against live schema)
 
@@ -99,7 +102,6 @@ domain layer — see DESIGN.md for the BPMH active/lapsed inference rule.
 
 ## Open Items to Resolve Before Implementation
 
-- [ ] Confirm date encoding (พ.ศ. vs ค.ศ.) per relevant table on the target site.
 - [ ] Confirm whether `tmt_tp_code`/`tmt_gp_code` are populated on the target site.
 - [ ] Confirm `opd_allergy.agent` format (free-text vs `icode`-linked) on the target site.
 - [ ] Decide read-only DB user/role setup for HOSxP connection.

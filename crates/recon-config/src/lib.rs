@@ -10,7 +10,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use encryptman_keyring::Vault;
-use recon_core::DateEra;
 use secrecy::{ExposeSecret, SecretString};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -36,8 +35,6 @@ pub struct SiteConfig {
     pub user: String,
     /// Database password (never serialized in plaintext).
     pub password: SecretString,
-    /// Date era of the site's HOSxP date columns.
-    pub era: DateEra,
     /// History window in days.
     pub history_days: u32,
 }
@@ -51,7 +48,6 @@ struct SiteConfigRaw {
     database: String,
     user: String,
     password: String,
-    era: DateEra,
     history_days: u32,
 }
 
@@ -248,7 +244,6 @@ impl From<SiteConfig> for SiteConfigRaw {
             database: c.database,
             user: c.user,
             password: c.password.expose_secret().to_string(),
-            era: c.era,
             history_days: c.history_days,
         }
     }
@@ -263,7 +258,6 @@ impl From<SiteConfigRaw> for SiteConfig {
             database: r.database,
             user: r.user,
             password: SecretString::from(r.password),
-            era: r.era,
             history_days: r.history_days,
         }
     }
@@ -330,7 +324,6 @@ mod tests {
             database: "hos".into(),
             user: "recon_ro".into(),
             password: SecretString::from("sup3r-s3cret"),
-            era: DateEra::Christian,
             history_days: 730,
         }
     }
@@ -342,7 +335,6 @@ mod tests {
         assert_eq!(a.database, b.database);
         assert_eq!(a.user, b.user);
         assert_eq!(a.password.expose_secret(), b.password.expose_secret());
-        assert_eq!(a.era, b.era);
         assert_eq!(a.history_days, b.history_days);
     }
 

@@ -1,14 +1,15 @@
 //! The HOSxP repository client.
 //!
 //! Wraps a `sqlx` `MySqlPool`. Every public query method runs its statement
-//! through the read-only guard first (see [`crate::readonly`]), and all
-//! dates are converted from the site's date era into Christian era at the
-//! boundary (see [`recon_core::DateEra`]).
+//! through the read-only guard first (see [`crate::readonly`]). All date
+//! values are normalized from the site's era (auto-detected per value,
+//! พ.ศ. or ค.ศ.) to Christian era at the boundary (see
+//! [`recon_core::normalize_date`]).
 
 use chrono::NaiveDate;
 use recon_core::{
-    AllergyRecord, DateEra, Dispense, EncounterSource, MedicationItem, PatientHistory,
-    PatientSummary, VisitSummary, aggregate_medications, to_internal,
+    AllergyRecord, Dispense, EncounterSource, MedicationItem, PatientHistory, PatientSummary,
+    VisitSummary, aggregate_medications, normalize_date,
 };
 use secrecy::ExposeSecret;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPool, MySqlPoolOptions};
@@ -137,12 +138,18 @@ impl HosxpClient {
 
         Ok(rows
             .into_iter()
-            .map(|r| map_patient(&r, self.config.era))
+            .map(|r| map_patient(&r))
             .collect())
     }
 
     /// Load the full cross-visit history for one patient: identity, BPMH
     /// medication list, allergies, and visits.
+    ///
+    /// Date eras are **auto-detected per value** (see
+    /// [`recon_core::normalize_date`]); there is no site-era setting. The
+    /// SQL queries are sent a Christian-era cutoff: on Buddhist-era sites
+    /// the year comparison matches every stored date, so the exact window
+    /// is enforced client-side after normalization.
     ///
     /// HOSxP schemas vary by site: if a table used by a query is missing
     /// (error 1146), that section is skipped and a user-visible warning is
@@ -154,7 +161,6 @@ impl HosxpClient {
         let cutoff = self
             .config
             .history_cutoff(chrono::Local::now().date_naive());
-        let cutoff = to_site_date(cutoff, self.config.era);
 
         let mut warnings = Vec::new();
 
@@ -193,7 +199,7 @@ impl HosxpClient {
             .await?;
         rows.into_iter()
             .next()
-            .map(|r| map_patient(&r, self.config.era))
+            .map(|r| map_patient(&r))
             .ok_or_else(|| {
                 Error::NotFound(format!(
                     "patient with hn {} not found",
@@ -240,18 +246,7 @@ impl HosxpClient {
         };
         Ok(rows
             .into_iter()
-            .map(|r| Dispense {
-                hn: hn.to_string(),
-                visit_id: r.visit_id,
-                source: EncounterSource::Opd,
-                icode: r.icode,
-                drug_name: r.drug_name,
-                strength: r.strength,
-                units: r.units,
-                qty: parse_qty(&r.qty),
-                date: to_internal(r.disp_date, self.config.era),
-                sig: None,
-            })
+            .filter_map(|r| map_dispense(r, hn, EncounterSource::Opd, cutoff))
             .collect())
     }
 
@@ -283,18 +278,7 @@ impl HosxpClient {
         };
         Ok(rows
             .into_iter()
-            .map(|r| Dispense {
-                hn: hn.to_string(),
-                visit_id: r.visit_id,
-                source: EncounterSource::Ipd,
-                icode: r.icode,
-                drug_name: r.drug_name,
-                strength: r.strength,
-                units: r.units,
-                qty: parse_qty(&r.qty),
-                date: to_internal(r.disp_date, self.config.era),
-                sig: None,
-            })
+            .filter_map(|r| map_dispense(r, hn, EncounterSource::Ipd, cutoff))
             .collect())
     }
 
@@ -394,19 +378,25 @@ impl HosxpClient {
 
         let mut visits: Vec<VisitSummary> = opd_rows
             .into_iter()
-            .map(|r| VisitSummary {
-                visit_id: r.vn,
-                source: EncounterSource::Opd,
-                date: to_internal(r.vstdate, self.config.era),
-                department: r.main_dep,
+            .filter_map(|r| {
+                let date = normalize_date(r.vstdate);
+                (date >= cutoff).then(|| VisitSummary {
+                    visit_id: r.vn,
+                    source: EncounterSource::Opd,
+                    date,
+                    department: r.main_dep,
+                })
             })
             .collect();
 
-        visits.extend(ipd_rows.into_iter().map(|r| VisitSummary {
-            visit_id: r.an,
-            source: EncounterSource::Ipd,
-            date: to_internal(r.regdate, self.config.era),
-            department: r.ward,
+        visits.extend(ipd_rows.into_iter().filter_map(|r| {
+            let date = normalize_date(r.regdate);
+            (date >= cutoff).then(|| VisitSummary {
+                visit_id: r.an,
+                source: EncounterSource::Ipd,
+                date,
+                department: r.ward,
+            })
         }));
 
         Ok(visits)
@@ -563,29 +553,46 @@ struct IpdVisitRow {
     ward: Option<String>,
 }
 
-/// Map a `patient` row to a domain summary, converting the birthday era.
-fn map_patient(r: &PatientRow, era: DateEra) -> PatientSummary {
+/// Map a `patient` row to a domain summary, normalizing the birthday era.
+fn map_patient(r: &PatientRow) -> PatientSummary {
     PatientSummary {
         hn: r.hn.clone(),
         cid: r.cid.clone(),
         title: r.pname.clone(),
         first_name: r.fname.clone(),
         last_name: r.lname.clone(),
-        birthday: r.birthday.map(|d| to_internal(d, era)),
+        birthday: r.birthday.map(normalize_date),
     }
+}
+
+/// Map a dispensing row to a domain event, normalizing the date era.
+///
+/// The SQL cutoff is a Christian-era date; on Buddhist-era sites it matches
+/// every stored year, so the exact history window is enforced here.
+fn map_dispense(
+    r: DispenseRow,
+    hn: &str,
+    source: EncounterSource,
+    cutoff: NaiveDate,
+) -> Option<Dispense> {
+    let date = normalize_date(r.disp_date);
+    (date >= cutoff).then(|| Dispense {
+        hn: hn.to_string(),
+        visit_id: r.visit_id,
+        source,
+        icode: r.icode,
+        drug_name: r.drug_name,
+        strength: r.strength,
+        units: r.units,
+        qty: parse_qty(&r.qty),
+        date,
+        sig: None,
+    })
 }
 
 /// Parse the CHAR-cast DECIMAL quantity into an `f64`.
 fn parse_qty(raw: &str) -> f64 {
     raw.trim().parse().unwrap_or(0.0)
-}
-
-/// Convert a Christian-era date into the site's storage era.
-fn to_site_date(date: NaiveDate, era: DateEra) -> NaiveDate {
-    match era {
-        DateEra::Christian => date,
-        DateEra::Buddhist => recon_core::christian_to_buddhist(date),
-    }
 }
 
 /// Normalize a free-text allergy agent: collapse whitespace.

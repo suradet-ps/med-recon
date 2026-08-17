@@ -3,8 +3,8 @@
 //! Contains the Best Possible Medication History (BPMH) model and the
 //! aggregation/inference engine that turns raw dispensing events from HOSxP
 //! into a deduplicated, status-labelled medication list. Also provides date
-//! era conversion (พ.ศ. / ค.ศ.) and PHI redaction helpers used across the
-//! application.
+//! era normalization (auto-detected พ.ศ. / ค.ศ. per value) and PHI
+//! redaction helpers used across the application.
 
 pub mod bpmh;
 pub mod eras;
@@ -13,7 +13,9 @@ pub mod query_kind;
 pub mod redact;
 
 pub use bpmh::{aggregate_medications, days_supply, infer_status};
-pub use eras::{DateEra, buddhist_to_christian, christian_to_buddhist, to_internal};
+pub use eras::{
+    buddhist_to_christian, is_buddhist_era_year, normalize_date, BUDDHIST_ERA_YEAR_THRESHOLD,
+};
 pub use model::{
     AllergyRecord, Dispense, EncounterSource, MedicationItem, MedicationStatus, PatientHistory,
     PatientSummary, Sig, VisitSummary,

@@ -8,7 +8,7 @@
 //! components switch on `kind` (e.g. to raise the connection banner) and
 //! display `message` verbatim.
 
-use recon_core::{DateEra, PatientHistory, PatientSummary};
+use recon_core::{PatientHistory, PatientSummary};
 use serde::{Deserialize, Serialize};
 
 use crate::state::ConnectionHealth;
@@ -66,7 +66,6 @@ pub struct ConnectionInput {
     pub database: String,
     pub user: String,
     pub password: String,
-    pub era: DateEra,
     pub history_days: u32,
 }
 

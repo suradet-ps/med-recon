@@ -28,8 +28,9 @@ Initial release.
 - **HTML report export**: printable, self-contained medication history
   report with BPMH disclaimer and PHI handling notice.
 - **Thai/English UI** with persisted language choice.
-- **Date era handling**: พ.ศ. → ค.ศ. conversion at the repository boundary
-  (site-configurable; Buddhist-era leap-day clamping documented).
+- **Date era handling**: พ.ศ. → ค.ศ. normalization at the repository
+  boundary, auto-detected per value from the stored year (no site setting;
+  Buddhist-era leap-day clamping documented).
 - **PHI redaction** helpers used in all logging paths.
 
 ### Security

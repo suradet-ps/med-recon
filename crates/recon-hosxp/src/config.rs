@@ -4,7 +4,6 @@
 //! obtain it from `recon-config` (encrypted at rest); the password is held
 //! in a [`secrecy::SecretString`] and never logged.
 
-use recon_core::DateEra;
 use secrecy::SecretString;
 
 /// HOSxP connection settings.
@@ -20,8 +19,6 @@ pub struct HosxpConfig {
     pub user: String,
     /// Database password, kept in a secret wrapper.
     pub password: SecretString,
-    /// Date era used by this site for HOSxP date columns.
-    pub era: DateEra,
     /// How far back (days) medication/visit history is retrieved.
     pub history_days: u32,
 }
@@ -45,7 +42,6 @@ mod tests {
             database: "hos".into(),
             user: "recon".into(),
             password: SecretString::from("s3cret"),
-            era: DateEra::Christian,
             history_days: 730,
         }
     }
