@@ -824,6 +824,35 @@ code, .mono, .code {
   color: var(--brand);
 }
 
+.timeline-header--button {
+  background: none;
+  border: none;
+  padding: var(--sp-xs) 0;
+  margin: 0;
+  width: 100%;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  border-radius: var(--rounded-sm);
+  transition: background 0.12s ease;
+}
+
+.timeline-header--button:hover {
+  background: var(--surface-hover, rgba(0, 0, 0, 0.04));
+}
+
+.timeline-header__chevron {
+  width: 14px;
+  height: 14px;
+  margin-left: auto;
+  color: var(--slate);
+  transition: transform 0.15s ease;
+}
+
+.timeline-header--button[aria-expanded="true"] .timeline-header__chevron {
+  transform: rotate(90deg);
+}
+
 /* ==========================================================================
    Medication table
    ========================================================================== */

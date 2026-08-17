@@ -264,6 +264,11 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "Likely lapsed ({n})",
     ),
     (
+        "canvas.lapsed_collapsed",
+        "คลิกเพื่อดู {n} รายการที่คาดว่าหยุดใช้แล้ว",
+        "Click to view {n} likely-lapsed medications",
+    ),
+    (
         "canvas.allergies",
         "แพ้ยา / อาการไม่พึงประสงค์ ({n})",
         "Allergies / ADR ({n})",

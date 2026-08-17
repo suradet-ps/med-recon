@@ -8,7 +8,7 @@ use leptos::task::spawn_local;
 
 use crate::api;
 use crate::components::icons::{
-    IconAlert, IconCheckCircle, IconPrinter, IconUser, IconXCircle,
+    IconAlert, IconCheckCircle, IconChevron, IconPrinter, IconUser, IconXCircle,
 };
 use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
@@ -83,15 +83,17 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
         .birthday
         .map(|d| format!("{:02}/{:02}/{}", d.day(), d.month(), d.year()));
 
-    let active: Vec<&MedicationItem> = history
+    let active: Vec<MedicationItem> = history
         .medications
         .iter()
         .filter(|m| m.status == MedicationStatus::Active)
+        .cloned()
         .collect();
-    let lapsed: Vec<&MedicationItem> = history
+    let lapsed: Vec<MedicationItem> = history
         .medications
         .iter()
         .filter(|m| m.status == MedicationStatus::Lapsed)
+        .cloned()
         .collect();
 
     let active_count = active.len();
@@ -108,6 +110,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
         &[("n", &lapsed_count.to_string())],
     );
     let has_lapsed = lapsed_count > 0;
+    let lapsed_open = RwSignal::new(false);
     let allergy_count = history.allergies.len();
     let allergies_title = tr_f(
         lang.get_untracked(),
@@ -204,14 +207,27 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
             </section>
 
             <section class="canvas-section">
-                <h3 class="timeline-header">
+                <button
+                    class="timeline-header timeline-header--button"
+                    on:click=move |_| lapsed_open.update(|v| *v = !*v)
+                    aria-expanded=move || if lapsed_open.get() { "true" } else { "false" }
+                >
                     <IconXCircle class="icon" />
                     {lapsed_title}
-                </h3>
-                {if !has_lapsed {
-                    view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_medications")}</p> }.into_any()
-                } else {
-                    med_table(&lapsed, lang).into_any()
+                    <IconChevron class="timeline-header__chevron" />
+                </button>
+                {move || {
+                    if !has_lapsed {
+                        view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_medications")}</p> }.into_any()
+                    } else if lapsed_open.get() {
+                        med_table(&lapsed, lang).into_any()
+                    } else {
+                        view! { <p class="canvas-empty__sub">{tr_f(
+                            lang.get(),
+                            "canvas.lapsed_collapsed",
+                            &[("n", &lapsed_count.to_string())],
+                        )}</p> }.into_any()
+                    }
                 }}
             </section>
 
@@ -222,7 +238,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
 /// Render a medication list as a table:
 /// ลำดับ / วันที่จ่าย / ชื่อยา + ความแรง / วิธีใช้ / จำนวนที่จ่าย (ครั้งล่าสุด) /
 /// OPD/IPD. Used identically for both the active and lapsed sections.
-fn med_table(items: &[&MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> impl IntoView {
+fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> impl IntoView {
     view! {
         <table class="med-table">
             <thead>

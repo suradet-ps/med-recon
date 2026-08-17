@@ -127,3 +127,9 @@ icon!(
     <path d="m15 9-6 6" />
     <path d="m9 9 6 6" />
 );
+
+icon!(
+    /// Chevron — collapsible section toggle.
+    IconChevron,
+    <path d="m9 18 6-6-6-6" />
+);
