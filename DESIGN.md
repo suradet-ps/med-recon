@@ -41,8 +41,7 @@ rationale behind the Best Possible Medication History (BPMH) engine.
 
 1. App starts with no settings → the **settings dialog opens automatically**.
 2. The operator enters site name, host, port, database, user, password,
-   date era (ค.ศ./พ.ศ.), history window, and optional `medusage` sig
-   reading.
+   date era (ค.ศ./พ.ศ.), and history window.
 3. **Test** runs against the typed values before anything is saved
    (latency shown). **Save** connects first, then persists the
    configuration **encrypted** (AES-256-GCM; master key in the OS
@@ -64,8 +63,8 @@ Top to bottom:
 
 1. **Patient bar** — name, HN, CID, birthday + the export button.
 2. **Data-completeness warnings** — amber banner when a HOSxP table was
-   missing and a section was skipped (e.g. no `iptitemrece` → IPD in-stay
-   dispensing unavailable).
+   missing and a section was skipped (e.g. no `drugusage`/`sp_use` lookup →
+   sig data unavailable).
 3. **BPMH note** — persistent shield banner: dispensing-derived data is one
    source among several.
 4. **ยาที่คาดว่ายังใช้อยู่ (likely active)** — green verdict bands, one per
@@ -182,9 +181,10 @@ HN/CID) from Google Fonts. Base 14 px, line-height 1.5.
 
 ### 4.2 Dispensing events
 
-- OPD: `opitemrece` (vn-keyed). IPD: `iptitemrece` (an-keyed) with a
-  fallback to `opitemrece WHERE an IS NOT NULL` (take-home dispensing) for
-  sites whose schema lacks `iptitemrece`.
+- OPD and IPD dispensing both live in `opitemrece` (vn-keyed OPD,
+  an-keyed IPD) — confirmed at the target site: no `iptitemrece`.
+- Sig data comes from the `drugusage`/`sp_use` lookup tables joined via
+  `opitemrece.drugusage`/`opitemrece.sp_use`.
 - `qty` is DECIMAL in HOSxP; sqlx cannot decode DECIMAL as `f64`, so the
   SQL casts it to CHAR and the client parses it.
 - Columns that vary by site (`strength`, `units`) are selected through

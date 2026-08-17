@@ -97,16 +97,6 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "ค้นประวัติย้อนหลัง (วัน)",
         "History window (days)",
     ),
-    (
-        "settings.medusage",
-        "อ่านวิธีใช้ยา (sig) จาก medusage",
-        "Read sig data from the medusage table",
-    ),
-    (
-        "settings.medusage_note",
-        "ต้องยืนยันโครงสร้างตารางกับฐานข้อมูลจริงก่อนเปิดใช้งาน",
-        "Verify the table structure against the live database before enabling",
-    ),
     ("settings.test", "ทดสอบ", "Test"),
     ("settings.save", "บันทึก", "Save"),
     ("settings.cancel", "ปิด", "Close"),

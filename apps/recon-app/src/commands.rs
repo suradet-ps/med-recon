@@ -139,8 +139,6 @@ pub struct ConnectionInput {
     pub era: DateEra,
     /// History window in days.
     pub history_days: u32,
-    /// Read `medusage` sig data (verify schema before enabling).
-    pub use_medusage_sig: bool,
 }
 
 impl From<ConnectionInput> for SiteConfig {
@@ -154,7 +152,6 @@ impl From<ConnectionInput> for SiteConfig {
             password: SecretString::from(i.password),
             era: i.era,
             history_days: i.history_days,
-            use_medusage_sig: i.use_medusage_sig,
         }
     }
 }
@@ -212,7 +209,6 @@ fn to_hosxp_config(cfg: &SiteConfig) -> HosxpConfig {
         password: cfg.password.clone(),
         era: cfg.era,
         history_days: cfg.history_days,
-        use_medusage_sig: cfg.use_medusage_sig,
     }
 }
 
@@ -252,8 +248,6 @@ pub struct AppStatus {
     pub era: DateEra,
     /// History window in days.
     pub history_days: u32,
-    /// Whether `medusage` sig reading is enabled.
-    pub use_medusage_sig: bool,
 }
 
 /// Report the current configuration status (password never included).
@@ -268,7 +262,6 @@ pub async fn get_app_status(state: State<'_, AppState>) -> Result<AppStatus, Com
             user: Some(cfg.user),
             era: cfg.era,
             history_days: cfg.history_days,
-            use_medusage_sig: cfg.use_medusage_sig,
         }),
         Err(recon_config::Error::NoConfig) => Ok(AppStatus {
             configured: false,
@@ -278,7 +271,6 @@ pub async fn get_app_status(state: State<'_, AppState>) -> Result<AppStatus, Com
             user: None,
             era: DateEra::Christian,
             history_days: 730,
-            use_medusage_sig: false,
         }),
         Err(e) => Err(dev_log(
             "get_app_status",

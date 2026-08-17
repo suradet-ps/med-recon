@@ -7,9 +7,9 @@
 //! `SHOW`, `DESCRIBE`, or `EXPLAIN`, regardless of the configured DB user.
 //!
 //! Schema note: table/column names follow the HOSxP schema reference in
-//! AGENTS.md. Columns not listed there (e.g. `medusage` sig columns) are
-//! gated behind a site config flag and must be confirmed against the live
-//! schema before enabling.
+//! AGENTS.md. Queries tolerate per-site variations: missing tables
+//! (MySQL 1146) or columns (1054) skip the affected section with a
+//! user-visible warning instead of failing the load.
 
 pub mod client;
 pub mod config;

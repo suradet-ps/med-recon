@@ -59,9 +59,9 @@ the live schema before writing code — do not guess HOSxP field names.
 ### Drug Orders / Dispensing
 | Table | Key fields | Notes |
 |---|---|---|
-| `opitemrece` | `vn`, `hn`, `icode`, `qty`, `vstdate`, `income` | OPD order/dispense |
-| `iptitemrece` | `an`, `hn`, `icode`, `qty` | IPD order/dispense |
-| `medusage`, `drugusage` | — | Sig / directions for use |
+| `opitemrece` | `vn`, `hn`, `an`, `icode`, `qty`, `vstdate`, `drugusage`, `sp_use`, `income` | All OPD and IPD dispensing lives here. The split is `vn` = OPD, `an` = IPD (admission number in place of `vn`). Confirmed at the target site: there is **no `iptitemrece`**. |
+| `drugusage` | `drugusage` (code PK), `name1`, `name2`, `name3` | Sig lookup, joined via `opitemrece.drugusage`. `name1` is the short form (often a dose×frequency pattern like `1x3`), `name2`/`name3` the longer text. |
+| `sp_use` | `sp_use` (code PK), `name1`, `name2`, `name3` | Special-use lookup, joined via `opitemrece.sp_use`. |
 
 **Days supply is not a stored column.** Must be derived as
 `qty / (dose × frequency per day)`, or sourced from `sp_use` for
@@ -76,7 +76,7 @@ domain layer — see DESIGN.md for the BPMH active/lapsed inference rule.
 ### Allergy / ADR
 | Table | Key fields | Notes |
 |---|---|---|
-| `opd_allergy` | `hn`, `agent`, `symptom`, `allergy_group_id`, `severy_id`, `reporter` | `agent` may be free-text or `icode`-linked depending on site configuration — do not assume structured data; plan for text cleaning/normalization. |
+| `opd_allergy` | `hn`, `agent`, `symptom`, `allergy_group_id`, `reporter` | `agent` may be free-text or `icode`-linked depending on site configuration — do not assume structured data; plan for text cleaning/normalization. Confirmed at the target site: no `severy_id` column. |
 
 ### Diagnosis (out of MVP scope, for future indication-linking)
 | Table | Key fields | Notes |

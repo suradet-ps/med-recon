@@ -162,12 +162,10 @@ impl HosxpClient {
         let mut ipd_dispenses = self.load_ipd_dispenses(hn, cutoff, &mut warnings).await?;
         let mut dispenses = opd_dispenses.clone();
 
-        if self.config.use_medusage_sig {
-            let sigs = self.load_sigs(hn, cutoff, &mut warnings).await?;
-            for d in &mut dispenses {
-                if let Some(sig) = sigs.get(&(d.visit_id.clone(), d.icode.clone())) {
-                    d.sig = Some(sig.clone());
-                }
+        let sigs = self.load_sigs(hn, cutoff, &mut warnings).await?;
+        for d in &mut dispenses {
+            if let Some(sig) = sigs.get(&(d.visit_id.clone(), d.icode.clone())) {
+                d.sig = Some(sig.clone());
             }
         }
         dispenses.append(&mut ipd_dispenses);
@@ -273,20 +271,12 @@ impl HosxpClient {
                     queries::IPD_DISPENSE_SQL_FALLBACK,
                     vec![P::Str(hn.to_owned()), P::Date(cutoff)],
                 ),
-                (
-                    queries::IPD_TAKEHOME_SQL,
-                    vec![P::Str(hn.to_owned()), P::Date(cutoff)],
-                ),
-                (
-                    queries::IPD_TAKEHOME_SQL_FALLBACK,
-                    vec![P::Str(hn.to_owned()), P::Date(cutoff)],
-                ),
             ])
             .await
         {
             Ok(rows) => rows,
             Err(e) if is_schema_variation(&e) => {
-                warn_missing(warnings, "iptitemrece", "การจ่ายยาผู้ป่วยใน (IPD)");
+                warn_missing(warnings, "opitemrece", "การจ่ายยาผู้ป่วยใน (IPD)");
                 return Ok(Vec::new());
             }
             Err(e) => return Err(e),
@@ -316,14 +306,14 @@ impl HosxpClient {
     ) -> Result<HashMap<(String, String), recon_core::Sig>> {
         let rows: Vec<SigRow> = match self
             .fetch_rows(
-                queries::MEDUSAGE_SIG_SQL,
+                queries::SIG_SQL,
                 &[P::Str(hn.to_owned()), P::Date(cutoff)],
             )
             .await
         {
             Ok(rows) => rows,
             Err(e) if is_schema_variation(&e) => {
-                warn_missing(warnings, "medusage", "วิธีใช้ยา (sig)");
+                warn_missing(warnings, "drugusage/sp_use", "วิธีใช้ยา (sig)");
                 return Ok(HashMap::new());
             }
             Err(e) => return Err(e),
@@ -331,10 +321,9 @@ impl HosxpClient {
         Ok(rows
             .into_iter()
             .filter_map(|r| {
-                let sig = queries::sig_from_raw(
-                    r.qty_per_dose.and_then(|s| s.parse::<f64>().ok()),
-                    r.frequency.as_deref(),
-                    r.unit.as_deref(),
+                let sig = queries::sig_from_names(
+                    &[r.d_name1, r.d_name2, r.d_name3],
+                    &[r.s_name1, r.s_name2, r.s_name3],
                 )?;
                 Some(((r.vn, r.icode), sig))
             })
@@ -362,7 +351,6 @@ impl HosxpClient {
             .map(|r| AllergyRecord {
                 agent: clean_agent(&r.agent),
                 symptom: r.symptom,
-                severity_id: r.severy_id,
                 group_id: r.allergy_group_id,
                 reporter: r.reporter,
             })
@@ -537,14 +525,17 @@ struct DispenseRow {
     disp_date: NaiveDate,
 }
 
-/// Raw row shape for `medusage` sig queries.
+/// Raw row shape for `drugusage`/`sp_use` sig queries.
 #[derive(sqlx::FromRow)]
 struct SigRow {
     vn: String,
     icode: String,
-    qty_per_dose: Option<String>,
-    frequency: Option<String>,
-    unit: Option<String>,
+    d_name1: Option<String>,
+    d_name2: Option<String>,
+    d_name3: Option<String>,
+    s_name1: Option<String>,
+    s_name2: Option<String>,
+    s_name3: Option<String>,
 }
 
 /// Raw row shape for `opd_allergy` queries.
@@ -552,7 +543,6 @@ struct SigRow {
 struct AllergyRow {
     agent: String,
     symptom: Option<String>,
-    severy_id: Option<String>,
     allergy_group_id: Option<String>,
     reporter: Option<String>,
 }

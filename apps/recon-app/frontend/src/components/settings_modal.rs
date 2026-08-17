@@ -28,7 +28,6 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
     let password = RwSignal::new(String::new());
     let era = RwSignal::new(DateEra::Christian);
     let history_days = RwSignal::new(730u32);
-    let use_medusage_sig = RwSignal::new(false);
     let message = RwSignal::new(None::<(bool, String)>);
     let busy = RwSignal::new(false);
 
@@ -85,7 +84,6 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             password: password.get_untracked(),
             era: era.get_untracked(),
             history_days: history_days.get_untracked(),
-            use_medusage_sig: use_medusage_sig.get_untracked(),
         };
         if input.site_name.trim().is_empty()
             || input.host.trim().is_empty()
@@ -241,8 +239,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
 
                 <div class="form-row">
                     <div class="form-field">
-                        <label for="cfg-era">{move || tr(lang.get(), "settings.era")}</label>
-                        <select
+                        <label for="cfg-era">{move || tr(lang.get(), "settings.era")}</label>                        <select
                             id="cfg-era"
                             class="form-input"
                             prop:value=move || {
@@ -281,18 +278,6 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                             }
                         />
                     </div>
-                </div>
-
-                <div class="form-field">
-                    <label class="check-row">
-                        <input
-                            type="checkbox"
-                            prop:checked=move || use_medusage_sig.get()
-                            on:change=move |ev| use_medusage_sig.set(event_target_checked(&ev))
-                        />
-                        <span>{move || tr(lang.get(), "settings.medusage")}</span>
-                    </label>
-                    <p class="modal__note">{move || tr(lang.get(), "settings.medusage_note")}</p>
                 </div>
 
                 {move || {

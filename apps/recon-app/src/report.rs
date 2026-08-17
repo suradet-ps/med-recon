@@ -322,7 +322,6 @@ mod tests {
             allergies: vec![AllergyRecord {
                 agent: "Penicillin".into(),
                 symptom: Some("ผื่น".into()),
-                severity_id: None,
                 group_id: None,
                 reporter: Some("นส. nurse".into()),
             }],
@@ -359,9 +358,9 @@ mod tests {
     #[test]
     fn report_renders_warnings() {
         let mut h = sample_history();
-        h.warnings = vec!["ไม่พบตาราง iptitemrece".to_string()];
+        h.warnings = vec!["ไม่พบตาราง drugusage/sp_use".to_string()];
         let html = build_report(&h, "รพ.ทดสอบ");
-        assert!(html.contains("ไม่พบตาราง iptitemrece"));
+        assert!(html.contains("ไม่พบตาราง drugusage/sp_use"));
     }
 
     #[test]

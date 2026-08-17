@@ -42,9 +42,9 @@ impl PatientSummary {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum EncounterSource {
-    /// OPD order/dispense (`opitemrece`).
+    /// OPD order/dispense (`opitemrece`, vn-keyed).
     Opd,
-    /// IPD order/dispense (`iptitemrece`).
+    /// IPD order/dispense (`opitemrece`, an-keyed).
     Ipd,
 }
 
@@ -136,8 +136,6 @@ pub struct AllergyRecord {
     pub agent: String,
     /// Reported symptom(s).
     pub symptom: Option<String>,
-    /// Severity id from `severy_id` — site-dependent; passed through raw.
-    pub severity_id: Option<String>,
     /// Group id from `allergy_group_id` — site-dependent; passed through raw.
     pub group_id: Option<String>,
     /// Reporter name/title.

@@ -96,8 +96,8 @@ schema (see the open items in `AGENTS.md`):
 
 - **Date era** — some sites store dates in พ.ศ. (Buddhist era). Set the era in
   Setup; conversion is handled at the repository boundary.
-- **`medusage` sig data** — reading directions-for-use is off by default;
-  enable it in Setup only after confirming the table structure on-site.
+- **Sig (directions-for-use) lookup** — read from the `drugusage`/`sp_use`
+  lookup tables via `opitemrece`; missing tables degrade to a warning.
 - **`tmt_tp_code` / `tmt_gp_code`** — TMT mapping may be empty on some sites;
   cross-hospital drug matching should not assume it is populated.
 

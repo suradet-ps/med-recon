@@ -40,8 +40,6 @@ pub struct SiteConfig {
     pub era: DateEra,
     /// History window in days.
     pub history_days: u32,
-    /// Read `medusage` sig data (verify schema before enabling).
-    pub use_medusage_sig: bool,
 }
 
 /// Plaintext payload — the shape written to disk inside the encrypted blob.
@@ -55,7 +53,6 @@ struct SiteConfigRaw {
     password: String,
     era: DateEra,
     history_days: u32,
-    use_medusage_sig: bool,
 }
 
 /// File wrapper around the encrypted blob.
@@ -253,7 +250,6 @@ impl From<SiteConfig> for SiteConfigRaw {
             password: c.password.expose_secret().to_string(),
             era: c.era,
             history_days: c.history_days,
-            use_medusage_sig: c.use_medusage_sig,
         }
     }
 }
@@ -269,7 +265,6 @@ impl From<SiteConfigRaw> for SiteConfig {
             password: SecretString::from(r.password),
             era: r.era,
             history_days: r.history_days,
-            use_medusage_sig: r.use_medusage_sig,
         }
     }
 }
@@ -337,7 +332,6 @@ mod tests {
             password: SecretString::from("sup3r-s3cret"),
             era: DateEra::Christian,
             history_days: 730,
-            use_medusage_sig: false,
         }
     }
 
@@ -350,7 +344,6 @@ mod tests {
         assert_eq!(a.password.expose_secret(), b.password.expose_secret());
         assert_eq!(a.era, b.era);
         assert_eq!(a.history_days, b.history_days);
-        assert_eq!(a.use_medusage_sig, b.use_medusage_sig);
     }
 
     #[test]

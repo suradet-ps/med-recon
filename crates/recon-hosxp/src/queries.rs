@@ -91,51 +91,24 @@ WHERE o.hn = ?
   AND o.vstdate >= ?
 ORDER BY o.vstdate"#;
 
-/// IPD in-stay dispensing via `iptitemrece`, joined to the admission for
-/// the medication date (`ipt.regdate`).
+/// IPD dispensing — `opitemrece` rows carrying an admission number instead
+/// of a visit number. All dispensing is stored in `opitemrece`; the OPD/IPD
+/// split is `vn` = OPD vs `an` = IPD.
 ///
 /// Parameters: `(hn, cutoff)`.
 pub const IPD_DISPENSE_SQL: &str = r#"
-SELECT i.an AS visit_id, i.hn, i.icode, CAST(i.qty AS CHAR) AS qty,
-       ipt.regdate AS disp_date,
+SELECT o.an AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
+       o.vstdate AS disp_date,
        d.name AS drug_name, d.strength, d.units
-FROM iptitemrece i
-JOIN ipt ON ipt.an = i.an
-JOIN drugitems d ON d.icode = i.icode
-WHERE i.hn = ?
-  AND ipt.regdate >= ?
-ORDER BY ipt.regdate"#;
+FROM opitemrece o
+JOIN drugitems d ON d.icode = o.icode
+WHERE o.hn = ?
+  AND o.vstdate >= ?
+  AND o.an IS NOT NULL
+ORDER BY o.vstdate"#;
 
-/// IPD in-stay dispensing without the `strength`/`units` columns.
+/// IPD dispensing without the `strength`/`units` columns.
 pub const IPD_DISPENSE_SQL_FALLBACK: &str = r#"
-SELECT i.an AS visit_id, i.hn, i.icode, CAST(i.qty AS CHAR) AS qty,
-       ipt.regdate AS disp_date,
-       d.name AS drug_name, NULL AS strength, NULL AS units
-FROM iptitemrece i
-JOIN ipt ON ipt.an = i.an
-JOIN drugitems d ON d.icode = i.icode
-WHERE i.hn = ?
-  AND ipt.regdate >= ?
-ORDER BY ipt.regdate"#;
-
-/// IPD take-home dispensing — `opitemrece` rows carrying an admission
-/// number instead of `vn` (site variation; used when `iptitemrece` does not
-/// exist on the instance).
-///
-/// Parameters: `(hn, cutoff)`.
-pub const IPD_TAKEHOME_SQL: &str = r#"
-SELECT o.an AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
-       o.vstdate AS disp_date,
-       d.name AS drug_name, d.strength, d.units
-FROM opitemrece o
-JOIN drugitems d ON d.icode = o.icode
-WHERE o.hn = ?
-  AND o.vstdate >= ?
-  AND o.an IS NOT NULL
-ORDER BY o.vstdate"#;
-
-/// IPD take-home dispensing without the `strength`/`units` columns.
-pub const IPD_TAKEHOME_SQL_FALLBACK: &str = r#"
 SELECT o.an AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
        o.vstdate AS disp_date,
        d.name AS drug_name, NULL AS strength, NULL AS units
@@ -146,18 +119,19 @@ WHERE o.hn = ?
   AND o.an IS NOT NULL
 ORDER BY o.vstdate"#;
 
-/// Sig (directions for use) from `medusage`, joined through `opitemrece`
-/// so the HN filter needs no unconfirmed `medusage` columns.
-///
-/// **Gated behind `HosxpConfig::use_medusage_sig`** — the `medusage`
-/// columns `qty_per_dose` / `frequency` / `unit` must be confirmed against
-/// the live schema before enabling.
+/// Sig (directions for use) — `opitemrece.drugusage` / `opitemrece.sp_use`
+/// hold codes resolved through the `drugusage` and `sp_use` lookup tables
+/// (`name1`/`name2`/`name3` each). LEFT JOIN so rows without a code still
+/// come back with empty sig text.
 ///
 /// Parameters: `(hn, cutoff)`.
-pub const MEDUSAGE_SIG_SQL: &str = r#"
-SELECT m.vn, m.icode, m.qty_per_dose, m.frequency, m.unit
-FROM medusage m
-JOIN opitemrece o ON o.vn = m.vn AND o.icode = m.icode
+pub const SIG_SQL: &str = r#"
+SELECT o.vn, o.icode,
+       d.name1 AS d_name1, d.name2 AS d_name2, d.name3 AS d_name3,
+       s.name1 AS s_name1, s.name2 AS s_name2, s.name3 AS s_name3
+FROM opitemrece o
+LEFT JOIN drugusage d ON d.drugusage = o.drugusage
+LEFT JOIN sp_use s ON s.sp_use = o.sp_use
 WHERE o.hn = ?
   AND o.vstdate >= ?"#;
 
@@ -165,7 +139,7 @@ WHERE o.hn = ?
 ///
 /// Parameters: `(hn)`.
 pub const ALLERGY_SQL: &str = r#"
-SELECT hn, agent, symptom, allergy_group_id, severy_id, reporter
+SELECT hn, agent, symptom, allergy_group_id, reporter
 FROM opd_allergy
 WHERE hn = ?
 ORDER BY agent"#;
@@ -242,20 +216,34 @@ pub fn parse_frequency(raw: &str, qty_per_dose: Option<f64>) -> Option<(Option<f
     Some((Some(dose), freq))
 }
 
-/// Build a [`Sig`] from raw `medusage` fields.
-pub fn sig_from_raw(
-    qty_per_dose: Option<f64>,
-    frequency: Option<&str>,
-    note: Option<&str>,
+/// Build a [`Sig`] from the `drugusage` / `sp_use` name texts.
+///
+/// The non-empty names are joined into the sig note. The first
+/// `drugusage` name is also parsed as a dose×frequency pattern (e.g.
+/// `"1x3"`, `"3"`) when possible; anything else leaves dose/frequency
+/// unset and the raw text is carried in `note`.
+pub fn sig_from_names(
+    drugusage_names: &[Option<String>],
+    sp_use_names: &[Option<String>],
 ) -> Option<Sig> {
-    let (dose, freq) = parse_frequency(frequency?, qty_per_dose)?;
+    let parts: Vec<String> = drugusage_names
+        .iter()
+        .chain(sp_use_names)
+        .filter_map(|n| n.as_deref().map(str::trim).filter(|s| !s.is_empty()).map(String::from))
+        .collect();
+    let note = parts.join(" ");
+    if note.is_empty() {
+        return None;
+    }
+    let (dose_per_admin, frequency_per_day) = parts
+        .first()
+        .and_then(|first| parse_frequency(first, None))
+        .map(|(dose, freq)| (dose, Some(freq)))
+        .unwrap_or((None, None));
     Some(Sig {
-        dose_per_admin: dose,
-        frequency_per_day: Some(freq),
-        note: note
-            .map(str::trim)
-            .filter(|s| !s.is_empty())
-            .map(str::to_string),
+        dose_per_admin,
+        frequency_per_day,
+        note: Some(note),
     })
 }
 
@@ -313,16 +301,29 @@ mod tests {
     }
 
     #[test]
-    fn sig_from_raw_combines_fields() {
-        let sig = sig_from_raw(Some(1.0), Some("1x3"), Some(" หลังอาหาร ")).unwrap();
+    fn sig_from_names_joins_and_parses() {
+        let sig = sig_from_names(
+            &[Some("1x3".into()), Some("หลังอาหาร".into()), None],
+            &[Some("รับประทาน".into()), None, None],
+        )
+        .unwrap();
         assert_eq!(sig.dose_per_admin, Some(1.0));
         assert_eq!(sig.frequency_per_day, Some(3.0));
+        assert_eq!(sig.note.as_deref(), Some("1x3 หลังอาหาร รับประทาน"));
+    }
+
+    #[test]
+    fn sig_from_names_note_only_when_unparseable() {
+        let sig = sig_from_names(&[Some("หลังอาหาร".into())], &[]).unwrap();
+        assert_eq!(sig.dose_per_admin, None);
+        assert_eq!(sig.frequency_per_day, None);
         assert_eq!(sig.note.as_deref(), Some("หลังอาหาร"));
     }
 
     #[test]
-    fn sig_from_raw_missing_frequency_is_none() {
-        assert!(sig_from_raw(Some(1.0), None, None).is_none());
+    fn sig_from_names_all_empty_is_none() {
+        assert!(sig_from_names(&[None, None, None], &[None]).is_none());
+        assert!(sig_from_names(&[], &[]).is_none());
     }
 
     #[test]
@@ -337,9 +338,7 @@ mod tests {
             OPD_DISPENSE_SQL_FALLBACK,
             IPD_DISPENSE_SQL,
             IPD_DISPENSE_SQL_FALLBACK,
-            IPD_TAKEHOME_SQL,
-            IPD_TAKEHOME_SQL_FALLBACK,
-            MEDUSAGE_SIG_SQL,
+            SIG_SQL,
             ALLERGY_SQL,
             OPD_VISIT_SQL,
             IPD_VISIT_SQL,

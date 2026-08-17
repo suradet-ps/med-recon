@@ -68,7 +68,6 @@ pub struct ConnectionInput {
     pub password: String,
     pub era: DateEra,
     pub history_days: u32,
-    pub use_medusage_sig: bool,
 }
 
 /// Result of the backend's `SELECT 1` smoke test.

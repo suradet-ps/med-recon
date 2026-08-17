@@ -24,11 +24,6 @@ pub struct HosxpConfig {
     pub era: DateEra,
     /// How far back (days) medication/visit history is retrieved.
     pub history_days: u32,
-    /// Whether to read sig data from `medusage`.
-    ///
-    /// The `medusage` columns are not confirmed in AGENTS.md — verify against
-    /// the live schema before enabling.
-    pub use_medusage_sig: bool,
 }
 
 impl HosxpConfig {
@@ -52,7 +47,6 @@ mod tests {
             password: SecretString::from("s3cret"),
             era: DateEra::Christian,
             history_days: 730,
-            use_medusage_sig: false,
         }
     }
 
