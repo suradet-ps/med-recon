@@ -85,8 +85,8 @@ cargo doc --no-deps --workspace
 ```
 
 - `AGENTS.md` — project conventions + the confirmed HOSxP schema reference
-- `AGENTS-RUST.md` — Rust style/lint rules
-- `DESIGN.md` — product scope, UX flows, design system, and BPMH data-model rationale
+- `docs/AGENTS-RUST.md` — Rust style/lint rules
+- `docs/DESIGN.md` — product scope, UX flows, design system, and BPMH data-model rationale
 - `crates/recon-core` — BPMH aggregation, days-supply, active/lapsed inference
 - `crates/recon-hosxp` — SQL statements (all `SELECT` only) and row mapping
 

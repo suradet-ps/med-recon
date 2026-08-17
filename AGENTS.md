@@ -8,9 +8,9 @@ hospital information system) to retrieve a patient's cross-visit medication
 and allergy history.
 
 For product scope, UX flows, data model rationale, and reconciliation logic,
-see **DESIGN.md**. This file covers agent-facing conventions: stack, build
+see **docs/DESIGN.md**. This file covers agent-facing conventions: stack, build
 commands, coding rules, and the HOSxP schema reference needed to write
-correct queries. Do not duplicate DESIGN.md content here — link to it.
+correct queries. Do not duplicate docs/DESIGN.md content here — link to it.
 
 ## Tech Stack
 
@@ -25,8 +25,8 @@ correct queries. Do not duplicate DESIGN.md content here — link to it.
   `recon-config`): `connection.json` (encrypted credentials) and
   `settings.json` (plain, non-secret: site name, history window,
   current-medication `icode` list).
-- **Documentation convention:** `DESIGN.md` (product/data model),
-  `AGENTS.md` (this file), `AGENTS-RUST.md` (Rust-specific style/lint rules)
+- **Documentation convention:** `docs/DESIGN.md` (product/data model),
+  `AGENTS.md` (this file), `docs/AGENTS-RUST.md` (Rust-specific style/lint rules)
 
 ## Core Constraints
 
@@ -36,7 +36,7 @@ correct queries. Do not duplicate DESIGN.md content here — link to it.
 - **PHI handling.** HN, CID, patient name, and medication/allergy data are
   PHI. Do not log raw PHI. Redact HN/CID in logs and crash reports.
 - **Best Possible Medication History (BPMH) framing.** Dispensing-derived
-  history from HOSxP is one source among several (see DESIGN.md). The UI
+  history from HOSxP is one source among several (see docs/DESIGN.md). The UI
   must never present it as a complete or verified medication list —
   always show data-recency and source-type indicators.
 - **Buddhist Era dates.** HOSxP date columns may be stored in either
@@ -76,7 +76,7 @@ continuous/injectable regimens. It is display-only metadata — the
 active/lapsed BPMH verdict is **operator-configured**: the settings
 screen curates a current-medication list (`drugitems` icodes, stored
 encrypted with the site config) and only drugs on it are shown as
-ยาที่คาดว่ายังใช้อยู่. See DESIGN.md for the full BPMH rules.
+ยาที่คาดว่ายังใช้อยู่. See docs/DESIGN.md for the full BPMH rules.
 
 ### Drug Master
 | Table | Key fields | Notes |
@@ -101,9 +101,9 @@ encrypted with the site config) and only drugs on it are shown as
   schema as gathered on the date of writing and may drift by site/version.
 - All new query modules go through `encryptman`-backed connection config;
   never hardcode connection strings.
-- See `AGENTS-RUST.md` for Rust style, error handling, and workspace
+- See `docs/AGENTS-RUST.md` for Rust style, error handling, and workspace
   layout conventions.
-- See `DESIGN.md` for the BPMH aggregation/dedup logic, active-vs-lapsed
+- See `docs/DESIGN.md` for the BPMH aggregation/dedup logic, active-vs-lapsed
   medication inference, and reconciliation workflow (admission/transfer/
   discharge) this app is designed to support.
 
