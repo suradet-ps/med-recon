@@ -90,6 +90,21 @@ pub const KEYS: &[(&str, &str, &str)] = &[
     ("settings.password", "Password", "Password"),
     ("settings.site_name", "ชื่อสถานบริการ", "Site name"),
     (
+        "settings.site_name_placeholder",
+        "เช่น โรงพยาบาลสมมติ (แสดงในรายงาน)",
+        "e.g. Somdej Hospital (shown on reports)",
+    ),
+    (
+        "settings.section_connection",
+        "การเชื่อมต่อ HOSxP",
+        "HOSxP connection",
+    ),
+    (
+        "settings.section_site",
+        "การตั้งค่าอื่นๆ",
+        "Site settings",
+    ),
+    (
         "settings.history_days",
         "ค้นประวัติย้อนหลัง (วัน)",
         "History window (days)",
@@ -99,6 +114,52 @@ pub const KEYS: &[(&str, &str, &str)] = &[
     ("settings.cancel", "ปิด", "Close"),
     ("settings.testing", "กำลังทดสอบ…", "Testing…"),
     ("settings.saving", "กำลังบันทึก…", "Saving…"),
+    (
+        "settings.meds_title",
+        "ตั้งค่ายาที่ใช้อยู่",
+        "Set current medications",
+    ),
+    (
+        "settings.meds_note",
+        "เฉพาะยาที่ตั้งค่าไว้เท่านั้นจะแสดงในหัวข้อ ยาที่คาดว่ายังใช้อยู่ — ยาที่ไม่ตั้งค่า (แม้เพิ่งได้รับ) จะถือว่าหยุดใช้แล้ว",
+        "Only configured drugs are shown under 'likely active' — any drug not configured (even recently dispensed) is treated as stopped.",
+    ),
+    (
+        "settings.meds_search",
+        "ค้นหาชื่อยา…",
+        "Search drug name…",
+    ),
+    (
+        "settings.meds_add",
+        "เพิ่ม",
+        "Add",
+    ),
+    (
+        "settings.meds_remove",
+        "ลบ",
+        "Remove",
+    ),
+    (
+        "settings.meds_results",
+        "ผลการค้นหา ({n})",
+        "Search results ({n})",
+    ),
+    (
+        "settings.meds_selected",
+        "ยาที่ตั้งค่าไว้ ({n})",
+        "Configured medications ({n})",
+    ),
+    (
+        "settings.meds_no_results",
+        "ไม่พบรายการยา",
+        "No drugs found",
+    ),
+    (
+        "settings.meds_empty",
+        "ยังไม่ได้ตั้งค่ายา — ยาทั้งหมดจะถือว่าหยุดใช้แล้ว",
+        "No medications configured — all drugs are treated as stopped.",
+    ),
+    ("settings.save_settings", "บันทึกการตั้งค่า", "Save settings"),
     (
         "settings.note",
         "ข้อมูลการเชื่อมต่อถูกเข้ารหัส AES-256-GCM เก็บ master key ใน Keychain ของระบบปฏิบัติการ",

@@ -12,6 +12,13 @@ use recon_core::{MedicationItem, MedicationStatus, PatientHistory};
 pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
     let now = chrono::Local::now();
     let patient = &history.patient;
+    // Empty site name falls back to a generic label so the header never
+    // renders a bare separator.
+    let site_label = if site_name.trim().is_empty() {
+        "สถานบริการ".to_string()
+    } else {
+        site_name.trim().to_string()
+    };
 
     let active: Vec<&MedicationItem> = history
         .medications
@@ -226,7 +233,7 @@ pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
   </div>
 </body>
 </html>"#,
-        site = escape_html(site_name),
+        site = escape_html(&site_label),
         generated = format_date(now.date_naive()),
         name = escape_html(&patient.display_name()),
         hn = escape_html(&patient.hn),
@@ -314,8 +321,11 @@ mod tests {
             90.0,
             chrono::NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
         );
-        let medications =
-            recon_core::aggregate_medications(&[d1, d2], chrono::Local::now().date_naive());
+        let medications = recon_core::aggregate_medications(
+            &[d1, d2],
+            chrono::Local::now().date_naive(),
+            &["P1".to_string()].into_iter().collect(),
+        );
         PatientHistory {
             patient,
             medications,

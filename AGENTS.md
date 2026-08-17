@@ -18,9 +18,13 @@ correct queries. Do not duplicate DESIGN.md content here — link to it.
 - **Frontend:** Leptos 0.8, CSR (client-side rendered, compiled to WASM)
 - **Database access:** MySQL/MariaDB client (HOSxP), read-only connection only
 - **Credential/config encryption:** `encryptman` (AES-256-GCM + HKDF) — all
-  stored DB connection strings, credentials, and Tailscale/remote-access
-  settings must go through `encryptman`. Never store plaintext credentials
-  on disk, in logs, or in error messages. and `encryptman-keyring`. for master key managemaent
+  stored DB connection strings and credentials must go through
+  `encryptman` (master key via `encryptman-keyring`). Never store
+  plaintext credentials on disk, in logs, or in error messages. Config is
+  split across two JSON files under the platform config dir (see
+  `recon-config`): `connection.json` (encrypted credentials) and
+  `settings.json` (plain, non-secret: site name, history window,
+  current-medication `icode` list).
 - **Documentation convention:** `DESIGN.md` (product/data model),
   `AGENTS.md` (this file), `AGENTS-RUST.md` (Rust-specific style/lint rules)
 
@@ -68,8 +72,11 @@ the live schema before writing code — do not guess HOSxP field names.
 
 **Days supply is not a stored column.** Must be derived as
 `qty / (dose × frequency per day)`, or sourced from `sp_use` for
-continuous/injectable regimens. This derivation logic belongs in the
-domain layer — see DESIGN.md for the BPMH active/lapsed inference rule.
+continuous/injectable regimens. It is display-only metadata — the
+active/lapsed BPMH verdict is **operator-configured**: the settings
+screen curates a current-medication list (`drugitems` icodes, stored
+encrypted with the site config) and only drugs on it are shown as
+ยาที่คาดว่ายังใช้อยู่. See DESIGN.md for the full BPMH rules.
 
 ### Drug Master
 | Table | Key fields | Notes |

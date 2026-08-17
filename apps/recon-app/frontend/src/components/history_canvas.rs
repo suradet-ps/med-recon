@@ -97,28 +97,28 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
 
     let active_count = active.len();
     let active_title = tr_f(
-        lang.get(),
+        lang.get_untracked(),
         "canvas.active",
         &[("n", &active_count.to_string())],
     );
     let has_active = active_count > 0;
     let lapsed_count = lapsed.len();
     let lapsed_title = tr_f(
-        lang.get(),
+        lang.get_untracked(),
         "canvas.lapsed",
         &[("n", &lapsed_count.to_string())],
     );
     let has_lapsed = lapsed_count > 0;
     let allergy_count = history.allergies.len();
     let allergies_title = tr_f(
-        lang.get(),
+        lang.get_untracked(),
         "canvas.allergies",
         &[("n", &allergy_count.to_string())],
     );
     let has_allergies = allergy_count > 0;
     let visit_count = history.visits.len();
     let visits_title = tr_f(
-        lang.get(),
+        lang.get_untracked(),
         "canvas.visits",
         &[("n", &visit_count.to_string())],
     );
@@ -186,7 +186,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     {active_title}
                 </h3>
                 {if !has_active {
-                    view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_medications")}</p> }.into_any()
+                    view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_medications")}</p> }.into_any()
                 } else {
                     active.iter().map(|m| view! { <MedBand item=(*m).clone() lang=lang/> }).collect_view().into_any()
                 }}
@@ -198,7 +198,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     {lapsed_title}
                 </h3>
                 {if !has_lapsed {
-                    view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_medications")}</p> }.into_any()
+                    view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_medications")}</p> }.into_any()
                 } else {
                     lapsed.iter().map(|m| view! { <MedBand item=(*m).clone() lang=lang/> }).collect_view().into_any()
                 }}
@@ -210,7 +210,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     {allergies_title}
                 </h3>
                 {if !has_allergies {
-                    view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_allergies")}</p> }.into_any()
+                    view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_allergies")}</p> }.into_any()
                 } else {
                     history.allergies.iter().map(|a| {
                         let agent = a.agent.clone();
@@ -236,7 +236,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     {visits_title}
                 </h3>
                 {if !has_visits {
-                    view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_visits")}</p> }.into_any()
+                    view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_visits")}</p> }.into_any()
                 } else {
                     view! {
                         <ul class="timeline">
@@ -275,9 +275,9 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
 fn MedBand(item: MedicationItem, lang: RwSignal<crate::i18n::Lang>) -> impl IntoView {
     let is_active = item.status == MedicationStatus::Active;
     let chip = if is_active {
-        tr(lang.get(), "med.active").to_string()
+        tr(lang.get_untracked(), "med.active").to_string()
     } else {
-        tr(lang.get(), "med.lapsed").to_string()
+        tr(lang.get_untracked(), "med.lapsed").to_string()
     };
     let name = item.drug_name.clone();
     let strength = item.strength.clone();
@@ -291,7 +291,11 @@ fn MedBand(item: MedicationItem, lang: RwSignal<crate::i18n::Lang>) -> impl Into
     let sources = item.sources.clone();
 
     let last_str = format!("{:02}/{:02}/{}", last.day(), last.month(), last.year());
-    let meta = tr_f(lang.get(), "med.last_dispense", &[("date", &last_str)]);
+    let meta = tr_f(
+        lang.get_untracked(),
+        "med.last_dispense",
+        &[("date", &last_str)],
+    );
 
     view! {
         <div class=move || {

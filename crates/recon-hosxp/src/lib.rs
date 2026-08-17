@@ -17,6 +17,6 @@ pub mod error;
 pub mod queries;
 pub mod readonly;
 
-pub use client::HosxpClient;
+pub use client::{DrugItem, HosxpClient};
 pub use config::HosxpConfig;
 pub use error::Error;

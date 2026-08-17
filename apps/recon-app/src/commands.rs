@@ -6,9 +6,10 @@
 //! English and typed; this layer is the only place where errors are
 //! translated for the UI.
 
+use std::collections::HashSet;
 use std::time::{Duration, Instant};
 
-use recon_config::SiteConfig;
+use recon_config::{ConnectionConfig, SiteSettings};
 use recon_core::{PatientHistory, PatientSummary};
 use recon_hosxp::{HosxpClient, HosxpConfig};
 use secrecy::SecretString;
@@ -123,8 +124,6 @@ fn map_repo_error(err: recon_hosxp::Error, action: &'static str) -> CommandError
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConnectionInput {
-    /// Human-readable site label.
-    pub site_name: String,
     /// Hostname or IP.
     pub host: String,
     /// TCP port.
@@ -135,22 +134,107 @@ pub struct ConnectionInput {
     pub user: String,
     /// Database password.
     pub password: String,
-    /// History window in days.
-    pub history_days: u32,
 }
 
-impl From<ConnectionInput> for SiteConfig {
+impl From<ConnectionInput> for ConnectionConfig {
     fn from(i: ConnectionInput) -> Self {
         Self {
-            site_name: i.site_name,
             host: i.host,
             port: i.port,
             database: i.database,
             user: i.user,
             password: SecretString::from(i.password),
-            history_days: i.history_days,
         }
     }
+}
+
+/// Site settings submitted from the settings dialog (non-secret).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SiteSettingsInput {
+    /// Human-readable site label.
+    pub site_name: String,
+    /// History window in days.
+    pub history_days: u32,
+    /// Current-medication `icode`s (from the drug picker).
+    pub current_med_codes: Vec<String>,
+}
+
+impl From<SiteSettingsInput> for SiteSettings {
+    fn from(i: SiteSettingsInput) -> Self {
+        Self {
+            site_name: i.site_name,
+            history_days: i.history_days.clamp(30, 3650),
+            current_med_codes: i.current_med_codes,
+        }
+    }
+}
+
+/// Load the operator-configured current-medication `icode`s from the site
+/// settings file (defaults to empty when no settings were saved yet).
+fn configured_med_codes(state: &AppState) -> HashSet<String> {
+    state
+        .store
+        .load_settings()
+        .map(|s| s.current_med_codes.into_iter().collect())
+        .unwrap_or_default()
+}
+
+/// Drug master entry as returned to the settings UI (never PHI — drug
+/// metadata only).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DrugInfo {
+    /// Drug master code.
+    pub icode: String,
+    /// Drug display name.
+    pub name: String,
+    /// Strength text, if any.
+    pub strength: Option<String>,
+    /// Units text, if any.
+    pub units: Option<String>,
+}
+
+impl From<recon_hosxp::DrugItem> for DrugInfo {
+    fn from(d: recon_hosxp::DrugItem) -> Self {
+        Self {
+            icode: d.icode,
+            name: d.name,
+            strength: d.strength,
+            units: d.units,
+        }
+    }
+}
+
+/// Search the drug master (`drugitems`) by name or code for the
+/// current-medication settings.
+#[tauri::command]
+pub async fn search_drugs(
+    state: State<'_, AppState>,
+    query: String,
+) -> Result<Vec<DrugInfo>, CommandError> {
+    let client = client(&state, "ค้นหายา").await?;
+    let results = client
+        .search_drugs(&query)
+        .await
+        .map_err(|e| map_repo_error(e, "ค้นหายา"))?;
+    tracing::debug!(query_len = query.len(), count = results.len(), "drug search");
+    Ok(results.into_iter().map(DrugInfo::from).collect())
+}
+
+/// The operator-configured current medications, resolved to names.
+#[tauri::command]
+pub async fn get_current_meds(state: State<'_, AppState>) -> Result<Vec<DrugInfo>, CommandError> {
+    let codes: Vec<String> = configured_med_codes(&state).into_iter().collect();
+    if codes.is_empty() {
+        return Ok(Vec::new());
+    }
+    let client = client(&state, "อ่านรายการยา").await?;
+    let results = client
+        .load_drugs_by_codes(&codes)
+        .await
+        .map_err(|e| map_repo_error(e, "อ่านรายการยา"))?;
+    Ok(results.into_iter().map(DrugInfo::from).collect())
 }
 
 /// Live HOSxP reachability, polled by the frontend — drives the top-bar
@@ -195,17 +279,25 @@ async fn connect_client(
     }
 }
 
-/// Build the connection config for the HOSxP client from the stored site
-/// config.
-fn to_hosxp_config(cfg: &SiteConfig) -> HosxpConfig {
+/// Build the connection config for the HOSxP client from the stored
+/// connection config plus the history window from the site settings.
+fn to_hosxp_config(conn: &ConnectionConfig, history_days: u32) -> HosxpConfig {
     HosxpConfig {
-        host: cfg.host.clone(),
-        port: cfg.port,
-        database: cfg.database.clone(),
-        user: cfg.user.clone(),
-        password: cfg.password.clone(),
-        history_days: cfg.history_days,
+        host: conn.host.clone(),
+        port: conn.port,
+        database: conn.database.clone(),
+        user: conn.user.clone(),
+        password: conn.password.clone(),
+        history_days,
     }
+}
+
+/// Load the stored connection config, mapping a missing file to the
+/// user-facing NotConfigured error.
+fn stored_connection(state: &AppState) -> Result<ConnectionConfig, CommandError> {
+    state.store.load_connection().map_err(|_| {
+        CommandError::new(CommandErrorKind::NotConfigured, "ยังไม่ได้ตั้งค่าการเชื่อมต่อ HOSxP")
+    })
 }
 
 /// Resolve a usable HOSxP client, connecting from the saved config if
@@ -216,10 +308,12 @@ async fn client(state: &AppState, action: &'static str) -> Result<HosxpClient, C
         return Ok(client.clone());
     }
 
-    let cfg = state.store.load().map_err(|_| {
-        CommandError::new(CommandErrorKind::NotConfigured, "ยังไม่ได้ตั้งค่าการเชื่อมต่อ HOSxP")
-    })?;
-    let client = connect_client(to_hosxp_config(&cfg), action).await?;
+    let conn = stored_connection(state)?;
+    let settings = state
+        .store
+        .load_settings()
+        .map_err(|e| dev_log("client", &e, CommandErrorKind::Query, "อ่านการตั้งค่าไม่สำเร็จ"))?;
+    let client = connect_client(to_hosxp_config(&conn, settings.history_days), action).await?;
 
     *state.client.write().await = Some(client.clone());
     Ok(client)
@@ -247,22 +341,26 @@ pub struct AppStatus {
 /// Report the current configuration status (password never included).
 #[tauri::command]
 pub async fn get_app_status(state: State<'_, AppState>) -> Result<AppStatus, CommandError> {
-    match state.store.load() {
-        Ok(cfg) => Ok(AppStatus {
+    let settings = state
+        .store
+        .load_settings()
+        .map_err(|e| dev_log("get_app_status", &e, CommandErrorKind::Query, "อ่านการตั้งค่าไม่สำเร็จ"))?;
+    match state.store.load_connection() {
+        Ok(conn) => Ok(AppStatus {
             configured: true,
-            site_name: Some(cfg.site_name),
-            host: Some(cfg.host),
-            database: Some(cfg.database),
-            user: Some(cfg.user),
-            history_days: cfg.history_days,
+            site_name: Some(settings.site_name),
+            host: Some(conn.host),
+            database: Some(conn.database),
+            user: Some(conn.user),
+            history_days: settings.history_days,
         }),
         Err(recon_config::Error::NoConfig) => Ok(AppStatus {
             configured: false,
-            site_name: None,
+            site_name: Some(settings.site_name),
             host: None,
             database: None,
             user: None,
-            history_days: 730,
+            history_days: settings.history_days,
         }),
         Err(e) => Err(dev_log(
             "get_app_status",
@@ -273,10 +371,10 @@ pub async fn get_app_status(state: State<'_, AppState>) -> Result<AppStatus, Com
     }
 }
 
-/// Whether stored settings exist.
+/// Whether connection settings exist.
 #[tauri::command]
 pub async fn is_configured(state: State<'_, AppState>) -> Result<bool, CommandError> {
-    Ok(state.store.exists())
+    Ok(state.store.connection_exists())
 }
 
 /// Live connection health for the top-bar status dot.
@@ -284,7 +382,7 @@ pub async fn is_configured(state: State<'_, AppState>) -> Result<bool, CommandEr
 pub async fn connection_health(
     state: State<'_, AppState>,
 ) -> Result<ConnectionHealth, CommandError> {
-    if !state.store.exists() {
+    if !state.store.connection_exists() {
         return Ok(ConnectionHealth::Unconfigured);
     }
     match client(&state, "ตรวจสอบการเชื่อมต่อ").await {
@@ -305,27 +403,34 @@ pub async fn connection_health(
     }
 }
 
-/// Save the site configuration (encrypted at rest) and connect.
+/// Save the HOSxP connection config (encrypted at rest) and connect.
 #[tauri::command]
-pub async fn save_site_config(
+pub async fn save_connection(
     state: State<'_, AppState>,
     config: ConnectionInput,
 ) -> Result<(), CommandError> {
-    let site_config: SiteConfig = config.into();
-    let hosxp_config = to_hosxp_config(&site_config);
+    let connection: ConnectionConfig = config.into();
+    let settings = state
+        .store
+        .load_settings()
+        .map_err(|e| dev_log("save_connection", &e, CommandErrorKind::Query, "อ่านการตั้งค่าไม่สำเร็จ"))?;
+    let hosxp_config = to_hosxp_config(&connection, settings.history_days);
 
     // Connect before persisting so a bad password never gets saved.
     let client = connect_client(hosxp_config, "บันทึกการตั้งค่า").await?;
 
     // Encrypting for disk touches the OS keychain, which can stall on a
     // permission dialog with unsigned dev binaries — cap it as well.
-    let saved =
-        tokio::time::timeout(COMMAND_TIMEOUT, async { state.store.save(&site_config) }).await;
+    let saved = tokio::time::timeout(
+        COMMAND_TIMEOUT,
+        async { state.store.save_connection(&connection) },
+    )
+    .await;
     match saved {
         Ok(Ok(())) => {}
         Ok(Err(e)) => {
             return Err(dev_log(
-                "save_site_config",
+                "save_connection",
                 &e,
                 CommandErrorKind::Query,
                 "บันทึกการตั้งค่าไม่สำเร็จ",
@@ -341,11 +446,41 @@ pub async fn save_site_config(
 
     *state.client.write().await = Some(client);
     tracing::info!(
-        site = %site_config.site_name,
-        host = %site_config.host,
-        "site configuration saved and connected"
+        host = %connection.host,
+        "connection saved and connected"
     );
     Ok(())
+}
+
+/// The non-secret site settings (site name, history window, current
+/// medication list) — independent of the connection config.
+#[tauri::command]
+pub async fn get_site_settings(state: State<'_, AppState>) -> Result<SiteSettings, CommandError> {
+    state.store.load_settings().map_err(|e| {
+        dev_log(
+            "get_site_settings",
+            &e,
+            CommandErrorKind::Query,
+            "อ่านการตั้งค่าไม่สำเร็จ",
+        )
+    })
+}
+
+/// Save the non-secret site settings as plain JSON (`settings.json`).
+#[tauri::command]
+pub async fn save_site_settings(
+    state: State<'_, AppState>,
+    settings: SiteSettingsInput,
+) -> Result<(), CommandError> {
+    let settings: SiteSettings = settings.into();
+    state.store.save_settings(&settings).map_err(|e| {
+        dev_log(
+            "save_site_settings",
+            &e,
+            CommandErrorKind::Query,
+            "บันทึกการตั้งค่าไม่สำเร็จ",
+        )
+    })
 }
 
 /// Validate connectivity against the given settings (without saving) or the
@@ -355,15 +490,20 @@ pub async fn test_connection(
     state: State<'_, AppState>,
     config: Option<ConnectionInput>,
 ) -> Result<ConnectionTestResult, CommandError> {
-    let cfg = match config {
-        Some(input) => SiteConfig::from(input),
-        None => state.store.load().map_err(|_| {
-            CommandError::new(CommandErrorKind::NotConfigured, "ยังไม่ได้ตั้งค่าการเชื่อมต่อ HOSxP")
-        })?,
+    let (conn, history_days) = match config {
+        Some(input) => (ConnectionConfig::from(input), 730),
+        None => {
+            let conn = stored_connection(&state)?;
+            let settings = state
+                .store
+                .load_settings()
+                .map_err(|e| dev_log("test_connection", &e, CommandErrorKind::Query, "อ่านการตั้งค่าไม่สำเร็จ"))?;
+            (conn, settings.history_days)
+        }
     };
 
     let started = Instant::now();
-    let client = connect_client(to_hosxp_config(&cfg), "ทดสอบการเชื่อมต่อ").await?;
+    let client = connect_client(to_hosxp_config(&conn, history_days), "ทดสอบการเชื่อมต่อ").await?;
     let ping = tokio::time::timeout(COMMAND_TIMEOUT, client.ping()).await;
     match ping {
         Ok(Ok(())) => {}
@@ -422,8 +562,9 @@ pub async fn load_history(
     hn: String,
 ) -> Result<PatientHistory, CommandError> {
     let client = client(&state, "โหลดประวัติ").await?;
+    let current_codes = configured_med_codes(&state);
     let history = client
-        .load_history(&hn)
+        .load_history(&hn, &current_codes)
         .await
         .map_err(|e| map_repo_error(e, "โหลดประวัติ"))?;
     tracing::debug!(hn = %recon_core::redact_hn(&hn), "patient history loaded");
@@ -434,16 +575,16 @@ pub async fn load_history(
 #[tauri::command]
 pub async fn export_report(state: State<'_, AppState>, hn: String) -> Result<String, CommandError> {
     let client = client(&state, "ส่งออกรายงาน").await?;
+    let current_codes = configured_med_codes(&state);
     let history = client
-        .load_history(&hn)
+        .load_history(&hn, &current_codes)
         .await
         .map_err(|e| map_repo_error(e, "ส่งออกรายงาน"))?;
 
     let site_name = state
         .store
-        .load()
-        .ok()
-        .map(|c| c.site_name)
+        .load_settings()
+        .map(|s| s.site_name)
         .unwrap_or_default();
 
     let html = crate::report::build_report(&history, &site_name);

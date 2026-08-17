@@ -60,13 +60,20 @@ impl ApiError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConnectionInput {
-    pub site_name: String,
     pub host: String,
     pub port: u16,
     pub database: String,
     pub user: String,
     pub password: String,
+}
+
+/// Non-secret site settings — stored as plain JSON on disk.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SiteSettings {
+    pub site_name: String,
     pub history_days: u32,
+    pub current_med_codes: Vec<String>,
 }
 
 /// Result of the backend's `SELECT 1` smoke test.
@@ -74,6 +81,17 @@ pub struct ConnectionInput {
 #[serde(rename_all = "camelCase")]
 pub struct ConnectionTestResult {
     pub latency_ms: u64,
+}
+
+/// A drug master entry (`drugitems`) returned to the current-medication
+/// settings picker.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DrugInfo {
+    pub icode: String,
+    pub name: String,
+    pub strength: Option<String>,
+    pub units: Option<String>,
 }
 
 async fn invoke_raw<T>(cmd: &str, args: impl Serialize) -> Result<T, ApiError>
@@ -120,9 +138,20 @@ pub async fn connection_health() -> Result<ConnectionHealth, ApiError> {
     call_empty("connection_health").await
 }
 
-/// Save the site configuration (encrypted at rest) and connect.
-pub async fn save_site_config(config: &ConnectionInput) -> Result<(), ApiError> {
-    call_struct_arg("save_site_config", "config", config).await
+/// Save the site connection config (encrypted at rest) and connect.
+pub async fn save_connection(config: &ConnectionInput) -> Result<(), ApiError> {
+    call_struct_arg("save_connection", "config", config).await
+}
+
+/// Load the non-secret site settings (site name, history window, current
+/// medication list).
+pub async fn get_site_settings() -> Result<SiteSettings, ApiError> {
+    call_empty("get_site_settings").await
+}
+
+/// Save the non-secret site settings as plain JSON.
+pub async fn save_site_settings(settings: &SiteSettings) -> Result<(), ApiError> {
+    call_struct_arg("save_site_settings", "settings", settings).await
 }
 
 /// Test connectivity without saving.
@@ -136,6 +165,16 @@ pub async fn test_connection(
 /// Search patients by CID, HN, or name.
 pub async fn search_patients(query: &str) -> Result<Vec<PatientSummary>, ApiError> {
     call_string_arg("search_patients", "query", query).await
+}
+
+/// Search the drug master (`drugitems`) by name or code.
+pub async fn search_drugs(query: &str) -> Result<Vec<DrugInfo>, ApiError> {
+    call_string_arg("search_drugs", "query", query).await
+}
+
+/// The operator-configured current medications, resolved to names.
+pub async fn get_current_meds() -> Result<Vec<DrugInfo>, ApiError> {
+    call_empty("get_current_meds").await
 }
 
 /// Load the full medication + allergy history for a patient.

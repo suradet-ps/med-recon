@@ -974,6 +974,28 @@ code, .mono, .code {
   accent-color: var(--brand);
 }
 
+.form-section {
+  margin-top: var(--sp-md);
+  padding-top: var(--sp-md);
+  border-top: 1px solid var(--hairline);
+}
+
+.form-section__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--sp-xs);
+}
+
+.form-section__title .icon {
+  width: 15px;
+  height: 15px;
+  color: var(--brand);
+}
+
 /* ==========================================================================
    Banners
    ========================================================================== */

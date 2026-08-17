@@ -39,14 +39,21 @@ rationale behind the Best Possible Medication History (BPMH) engine.
 
 ### 2.1 First launch → connection setup
 
-1. App starts with no settings → the **settings dialog opens automatically**.
-2. The operator enters site name, host, port, database, user, password,
-   and history window.
-3. **Test** runs against the typed values before anything is saved
-   (latency shown). **Save** connects first, then persists the
-   configuration **encrypted** (AES-256-GCM; master key in the OS
+The settings dialog has **two independent sections**, each saved to its
+own file (see 4.6):
+
+1. App starts with no connection config → the **settings dialog opens
+   automatically**.
+2. **HOSxP connection section** — host, port, database, user, password.
+   **Test** runs against the typed values before anything is saved
+   (latency shown). **Save** connects first, then persists the config
+   **encrypted** (`connection.json`, AES-256-GCM; master key in the OS
    keychain).
-4. Success closes the dialog; the top-bar status dot turns green.
+3. **Site settings section** — site name (shown on exported reports),
+   history window, and the current-medication list (ตั้งค่ายา). Saved as
+   plain JSON (`settings.json`); usable before a connection exists.
+4. Success updates the status dot; the dialog stays open so the operator
+   can continue with site settings.
 
 ### 2.2 Search
 
@@ -192,15 +199,19 @@ HN/CID) from Google Fonts. Base 14 px, line-height 1.5.
 
 ### 4.3 BPMH aggregation (recon-core)
 
-Input: raw `Dispense` events (OPD + IPD). Output: `MedicationItem`s.
+Input: raw `Dispense` events (OPD + IPD) + the operator-configured
+**current-medication list** (`current_med_codes`, from the settings screen).
+Output: `MedicationItem`s.
 
 1. **Dedup by `icode`** — all visits for the same drug merge into one item.
 2. **Derived days supply** — `qty / (dose_per_admin × frequency_per_day)`,
-   rounded up (never understate the covered window). `None` when the sig is
-   missing.
-3. **Active/lapsed inference** — covered window = last dispense +
-   days supply + **14-day grace** (patients refill early/late). Unknown
-   supply falls back to a **30-day window**.
+   rounded up; `None` when the sig is missing. Display-only — it no longer
+   drives the active/lapsed verdict.
+3. **Active/lapsed verdict — operator-configured, not inferred.** A drug
+   whose `icode` is on the current-medication list is `active` no matter
+   when it was last dispensed; every other dispensed drug is `lapsed`
+   (stopped). The list is curated in settings (search `drugitems`), stored
+   encrypted with the site config. An empty list marks everything lapsed.
 4. **Sort** — most recent dispense first.
 
 ### 4.4 Dates (Buddhist era, auto-detected)
@@ -223,6 +234,34 @@ window is enforced client-side after normalization.
 | MySQL 1146 | table missing | try fallback tier → skip section + user-visible warning |
 | MySQL 1054 | column missing | degrade to the fallback statement (same row shape) |
 | other | real failure | surface as typed error (kind + message) |
+
+### 4.6 Settings storage (`recon-config`)
+
+Configuration is split into **two JSON files** under the platform config
+directory (`%APPDATA%\org.recon\Recon` on Windows, XDG on Linux,
+`~/Library/Application Support/...` on macOS), so connection credentials
+and operator preferences are versioned/backed up independently:
+
+| File | Contents | Format |
+|---|---|---|
+| `connection.json` | `host`, `port`, `database`, `user`, `password` | encrypted blob (AES-256-GCM via `encryptman`; master key in the OS keychain) |
+| `settings.json` | `siteName`, `historyDays`, `currentMedCodes` | plain readable JSON (non-secret by design) |
+
+Rules:
+
+- **Credentials never appear in plaintext** — not in `connection.json`,
+  logs, or error messages. A missing `connection.json` maps to
+  "ยังไม่ได้ตั้งค่า" (NotConfigured) in the UI.
+- **Settings file defaults**: absent `settings.json` loads as
+  `siteName: ""`, `historyDays: 730`, `currentMedCodes: []`; unknown or
+  missing fields in an existing file also fall back via serde defaults.
+- **Migration**: a legacy single-file config (`site-config.json`, the
+  pre-split encrypted blob) is split into the two files on first open and
+  archived as `site-config.json.bak`. Existing files are never
+  overwritten.
+- The current-medication list (`currentMedCodes`) lives in the plain
+  settings file because it is operator configuration, not a secret; it
+  still drives the BPMH active/lapsed split via `load_history`.
 
 ---
 

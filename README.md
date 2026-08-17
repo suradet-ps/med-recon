@@ -21,7 +21,7 @@ Tauri 2 (shell) ── Leptos 0.8 CSR (WASM UI)
         │
         ├── recon-core      pure domain: BPMH engine, date-era normalization, redaction
         ├── recon-hosxp     sqlx MySQL repository (read-only guard)
-        ├── recon-config    encrypted settings (encryptman AES-256-GCM + OS keychain)
+        ├── recon-config    settings store: encrypted connection.json + plain settings.json
         └── recon-bridge    wasm IPC wrapper
 ```
 
@@ -30,7 +30,9 @@ Tauri 2 (shell) ── Leptos 0.8 CSR (WASM UI)
 - **No plaintext credentials on disk.** Connection settings are encrypted with
   `encryptman` (AES-256-GCM, HKDF-derived keys); the master key lives in the
   OS keychain via `encryptman-keyring` (macOS Keychain / Windows Credential
-  Manager / Linux Secret Service).
+  Manager / Linux Secret Service). Credentials live in `connection.json`;
+  non-secret site settings (site name, history window, current-medication
+  list) live in a separate plain `settings.json`.
 - **PHI discipline.** HN/CID are redacted in logs; names are never logged.
   The UI always shows the BPMH disclaimer — dispensing-derived data is one
   source among several, not a verified medication list.
@@ -40,10 +42,9 @@ Tauri 2 (shell) ── Leptos 0.8 CSR (WASM UI)
 
 | Screen | Purpose |
 |---|---|
-| Setup | HOSxP connection form (host/port/db/user/password, history window), test + save |
+| Setup | Two sections: HOSxP connection (host/port/db/user/password, test + save) and site settings (ชื่อสถานบริการ, history window, ตั้งค่ายา) |
 | Search | Name / HN / CID search with result list |
 | Patient | BPMH (active / lapsed), allergies, visits, HTML report export |
-| Settings | View / edit / clear the encrypted configuration |
 | About | Project information |
 
 UI ships bilingual (**ไทย / English**) with a language toggle.
@@ -98,6 +99,9 @@ schema (see the open items in `AGENTS.md`):
   to ค.ศ.); no setting needed, mixed-era sites are handled.
 - **Sig (directions-for-use) lookup** — read from the `drugusage`/`sp_use`
   lookup tables via `opitemrece`; missing tables degrade to a warning.
+- **Current medications (ยาที่ใช้อยู่)** — the BPMH active/lapsed verdict is
+  operator-configured: curate a `drugitems` list in Settings; only listed
+  drugs show as active, regardless of dispense recency.
 - **`tmt_tp_code` / `tmt_gp_code`** — TMT mapping may be empty on some sites;
   cross-hospital drug matching should not assume it is populated.
 

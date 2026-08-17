@@ -13,7 +13,7 @@ use recon_core::{
 };
 use secrecy::ExposeSecret;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPool, MySqlPoolOptions};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::time::Duration;
 use tracing::debug;
 
@@ -145,6 +145,10 @@ impl HosxpClient {
     /// Load the full cross-visit history for one patient: identity, BPMH
     /// medication list, allergies, and visits.
     ///
+    /// `current_codes` is the operator-configured current-medication list
+    /// (`icode`s); it decides which medications are labelled active vs
+    /// lapsed in the BPMH list (see [`recon_core::aggregate_medications`]).
+    ///
     /// Date eras are **auto-detected per value** (see
     /// [`recon_core::normalize_date`]); there is no site-era setting. The
     /// SQL queries are sent a Christian-era cutoff: on Buddhist-era sites
@@ -155,7 +159,11 @@ impl HosxpClient {
     /// (error 1146), that section is skipped and a user-visible warning is
     /// recorded in [`PatientHistory::warnings`] instead of failing the whole
     /// load.
-    pub async fn load_history(&self, hn: &str) -> Result<PatientHistory> {
+    pub async fn load_history(
+        &self,
+        hn: &str,
+        current_codes: &HashSet<String>,
+    ) -> Result<PatientHistory> {
         let patient = self.load_patient(hn).await?;
 
         let cutoff = self
@@ -181,7 +189,7 @@ impl HosxpClient {
         visits.sort_by_key(|a| std::cmp::Reverse(a.date));
 
         let today = chrono::Local::now().date_naive();
-        let medications = aggregate_medications(&dispenses, today);
+        let medications = aggregate_medications(&dispenses, today, current_codes);
 
         Ok(PatientHistory {
             patient,
@@ -213,9 +221,46 @@ impl HosxpClient {
     pub async fn load_medications(
         &self,
         hn: &str,
+        current_codes: &HashSet<String>,
     ) -> Result<(PatientSummary, Vec<MedicationItem>)> {
-        let history = self.load_history(hn).await?;
+        let history = self.load_history(hn, current_codes).await?;
         Ok((history.patient, history.medications))
+    }
+
+    /// Search the drug master (`drugitems`) by name or code.
+    ///
+    /// Used by the current-medication settings picker. Returns up to
+    /// [`queries::DEFAULT_SEARCH_LIMIT`] hits, name-ordered.
+    pub async fn search_drugs(&self, query: &str) -> Result<Vec<DrugItem>> {
+        let query = query.trim();
+        if query.is_empty() {
+            return Ok(Vec::new());
+        }
+        let pattern = queries::like_pattern(query);
+        self.fetch_rows(
+            queries::DRUG_SEARCH_SQL,
+            &[
+                P::Str(pattern.clone()),
+                P::Str(pattern),
+                P::Int(queries::DEFAULT_SEARCH_LIMIT as i64),
+            ],
+        )
+        .await
+    }
+
+    /// Resolve `icode`s back to drug master rows (name/strength/units),
+    /// name-ordered. Missing codes are silently dropped.
+    pub async fn load_drugs_by_codes(&self, codes: &[String]) -> Result<Vec<DrugItem>> {
+        if codes.is_empty() {
+            return Ok(Vec::new());
+        }
+        let sql = queries::drugs_by_codes_sql(codes);
+        assert_read_only(&sql)?;
+        let mut query = sqlx::query_as::<_, DrugItem>(&sql);
+        for code in codes {
+            query = query.bind(code);
+        }
+        Ok(query.fetch_all(&self.pool).await?)
     }
 
     async fn load_opd_dispenses(
@@ -551,6 +596,21 @@ struct IpdVisitRow {
     an: String,
     regdate: NaiveDate,
     ward: Option<String>,
+}
+
+/// A drug master row (`drugitems`) — non-PHI drug metadata used by the
+/// current-medication settings.
+#[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DrugItem {
+    /// Drug master code.
+    pub icode: String,
+    /// Drug display name.
+    pub name: String,
+    /// Strength text, e.g. "500 mg".
+    pub strength: Option<String>,
+    /// Units text, e.g. "เม็ด" / "tablet".
+    pub units: Option<String>,
 }
 
 /// Map a `patient` row to a domain summary, normalizing the birthday era.

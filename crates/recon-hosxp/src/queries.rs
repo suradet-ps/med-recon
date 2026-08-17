@@ -144,6 +144,29 @@ FROM opd_allergy
 WHERE hn = ?
 ORDER BY agent"#;
 
+/// Drug master search for the current-medication settings.
+///
+/// Parameters: `(pattern, pattern, limit)` — case-insensitive LIKE against
+/// `icode` and `name`, sorted by name.
+pub const DRUG_SEARCH_SQL: &str = r#"
+SELECT icode, name, strength, units
+FROM drugitems
+WHERE icode LIKE ?
+   OR name LIKE ?
+ORDER BY name
+LIMIT ?"#;
+
+/// Resolve a list of `icode`s back to drug master rows (current-medication
+/// settings display).
+///
+/// Parameters: one `?` per code.
+pub fn drugs_by_codes_sql(codes: &[String]) -> String {
+    let placeholders = vec!["?"; codes.len()].join(", ");
+    format!(
+        "SELECT icode, name, strength, units FROM drugitems WHERE icode IN ({placeholders}) ORDER BY name"
+    )
+}
+
 /// OPD visit history.
 ///
 /// Parameters: `(hn, cutoff)`.
@@ -340,6 +363,7 @@ mod tests {
             IPD_DISPENSE_SQL_FALLBACK,
             SIG_SQL,
             ALLERGY_SQL,
+            DRUG_SEARCH_SQL,
             OPD_VISIT_SQL,
             IPD_VISIT_SQL,
         ] {

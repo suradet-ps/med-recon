@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- **HOSxP schema alignment** (confirmed against the live site): IPD
+  dispensing read from `opitemrece` (an-keyed) instead of `iptitemrece`;
+  sig/directions-for-use read from the `drugusage`/`sp_use` lookup tables
+  joined via `opitemrece.drugusage`/`sp_use`; dropped the `medusage` table
+  and the `use_medusage_sig` config flag (sig reading is always on,
+  degrading to a warning when the tables are missing); dropped
+  `opd_allergy.severy_id`.
+- **Date era auto-detection** — removed the era setting. Every date value
+  read from HOSxP is normalized to ค.ศ. individually (stored year ≥ 2500
+  ⇒ พ.ศ.), tolerating BE/CE/mixed sites without configuration.
+- **BPMH verdict is operator-configured** — the settings screen curates a
+  current-medication list (search `drugitems`); only listed drugs are
+  labelled "ยาที่คาดว่ายังใช้อยู่" regardless of dispense recency. Days
+  supply remains display-only.
+- **Settings split into two JSON files** — `connection.json` (encrypted
+  credentials) and `settings.json` (plain, non-secret: site name, history
+  window, current-medication list). Legacy single-file configs are
+  migrated automatically on first open.
+
 ## [0.1.0] — 2026-08-16
 
 Initial release.

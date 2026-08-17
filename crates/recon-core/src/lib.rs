@@ -12,7 +12,7 @@ pub mod model;
 pub mod query_kind;
 pub mod redact;
 
-pub use bpmh::{aggregate_medications, days_supply, infer_status};
+pub use bpmh::{aggregate_medications, days_supply};
 pub use eras::{
     buddhist_to_christian, is_buddhist_era_year, normalize_date, BUDDHIST_ERA_YEAR_THRESHOLD,
 };
