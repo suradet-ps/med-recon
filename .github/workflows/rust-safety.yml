@@ -59,4 +59,9 @@ jobs:
         with:
           workspaces: ". -> target"
 
-      - run: cargo +nightly miri test -p ${{ matrix.crate }}
+      # recon-config/recon-core tests use tempfile (real mkdir) — allow
+      # filesystem ops under Miri while still checking for UB.
+      - name: Run Miri
+        env:
+          MIRIFLAGS: -Zmiri-disable-isolation
+        run: cargo +nightly miri test -p ${{ matrix.crate }}
