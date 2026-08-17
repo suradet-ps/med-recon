@@ -22,6 +22,7 @@ pub fn run() {
             commands::is_configured,
             commands::connection_health,
             commands::save_connection,
+            commands::get_connection,
             commands::get_site_settings,
             commands::save_site_settings,
             commands::test_connection,

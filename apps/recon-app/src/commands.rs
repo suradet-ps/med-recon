@@ -302,10 +302,16 @@ fn stored_connection(state: &AppState) -> Result<ConnectionConfig, CommandError>
 
 /// Resolve a usable HOSxP client, connecting from the saved config if
 /// needed. `action` labels the user-facing error.
+///
+/// The cache lock is only held for the short cache lookup/store — the slow
+/// work (keychain decrypt, TCP connect) happens with no lock held, so a
+/// slow/failed connect can never block other commands that need the lock.
 async fn client(state: &AppState, action: &'static str) -> Result<HosxpClient, CommandError> {
-    let guard = state.client.read().await;
-    if let Some(client) = guard.as_ref() {
-        return Ok(client.clone());
+    {
+        let guard = state.client.read().await;
+        if let Some(client) = guard.as_ref() {
+            return Ok(client.clone());
+        }
     }
 
     let conn = stored_connection(state)?;
@@ -315,7 +321,12 @@ async fn client(state: &AppState, action: &'static str) -> Result<HosxpClient, C
         .map_err(|e| dev_log("client", &e, CommandErrorKind::Query, "อ่านการตั้งค่าไม่สำเร็จ"))?;
     let client = connect_client(to_hosxp_config(&conn, settings.history_days), action).await?;
 
-    *state.client.write().await = Some(client.clone());
+    // Another command may have cached a client while we connected; keep the
+    // first writer's client to avoid dropping an in-use pool.
+    let mut slot = state.client.write().await;
+    if slot.is_none() {
+        *slot = Some(client.clone());
+    }
     Ok(client)
 }
 
@@ -444,12 +455,48 @@ pub async fn save_connection(
         }
     }
 
-    *state.client.write().await = Some(client);
+    // Replace the cached client under a short lock; the previous pool is
+    // closed after the lock is released so no in-flight query is disturbed.
+    let old = {
+        let mut slot = state.client.write().await;
+        slot.replace(client.clone())
+    };
+    if let Some(old) = old {
+        old.disconnect().await;
+    }
     tracing::info!(
         host = %connection.host,
         "connection saved and connected"
     );
     Ok(())
+}
+
+/// Non-secret summary of the saved connection (the password is never
+/// returned — it cannot be restored into the form).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConnectionInfo {
+    /// Hostname or IP.
+    pub host: String,
+    /// TCP port.
+    pub port: u16,
+    /// HOSxP database name.
+    pub database: String,
+    /// Database user.
+    pub user: String,
+}
+
+/// The saved HOSxP connection, without the password — used to pre-fill the
+/// settings form so re-saving does not require retyping everything.
+#[tauri::command]
+pub async fn get_connection(state: State<'_, AppState>) -> Result<ConnectionInfo, CommandError> {
+    let conn = stored_connection(&state)?;
+    Ok(ConnectionInfo {
+        host: conn.host,
+        port: conn.port,
+        database: conn.database,
+        user: conn.user,
+    })
 }
 
 /// The non-secret site settings (site name, history window, current

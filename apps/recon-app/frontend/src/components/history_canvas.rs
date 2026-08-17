@@ -188,7 +188,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                 {if !has_active {
                     view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_medications")}</p> }.into_any()
                 } else {
-                    active.iter().map(|m| view! { <MedBand item=(*m).clone() lang=lang/> }).collect_view().into_any()
+                    med_table(&active, lang).into_any()
                 }}
             </section>
 
@@ -200,7 +200,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                 {if !has_lapsed {
                     view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_medications")}</p> }.into_any()
                 } else {
-                    lapsed.iter().map(|m| view! { <MedBand item=(*m).clone() lang=lang/> }).collect_view().into_any()
+                    med_table(&lapsed, lang).into_any()
                 }}
             </section>
 
@@ -269,79 +269,62 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
     }
 }
 
-/// One BPMH medication — a verdict-style compact band: active (green) or
-/// lapsed (neutral), with sig, quantity, and supply details.
-#[component]
-fn MedBand(item: MedicationItem, lang: RwSignal<crate::i18n::Lang>) -> impl IntoView {
-    let is_active = item.status == MedicationStatus::Active;
-    let chip = if is_active {
-        tr(lang.get_untracked(), "med.active").to_string()
-    } else {
-        tr(lang.get_untracked(), "med.lapsed").to_string()
-    };
-    let name = item.drug_name.clone();
-    let strength = item.strength.clone();
-    let units = item.units.clone();
-    let units_meta = units.clone();
-    let last = item.last_dispense;
-    let total_qty = format_qty(item.total_qty);
-    let visit_count = item.visit_count;
-    let supply = item.days_supply;
-    let sig = item.sig.clone();
-    let sources = item.sources.clone();
-
-    let last_str = format!("{:02}/{:02}/{}", last.day(), last.month(), last.year());
-    let meta = tr_f(
-        lang.get_untracked(),
-        "med.last_dispense",
-        &[("date", &last_str)],
-    );
-
+/// Render a medication list as a table:
+/// ลำดับ / วันที่จ่าย / ชื่อยา + ความแรง / วิธีใช้ / จำนวนที่จ่าย (ครั้งล่าสุด) /
+/// OPD/IPD. Used identically for both the active and lapsed sections.
+fn med_table(items: &[&MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> impl IntoView {
     view! {
-        <div class=move || {
-            if is_active {
-                "verdict-band verdict-found verdict-band--compact"
-            } else {
-                "verdict-band verdict-lapsed verdict-band--compact"
-            }
-        }>
-            {if is_active {
-                view! { <IconCheckCircle class="verdict-band__icon" /> }.into_any()
-            } else {
-                view! { <IconXCircle class="verdict-band__icon" /> }.into_any()
-            }}
-            <div class="verdict-band__content">
-                <div class="med-head">
-                    <p class="verdict-band__term">
-                        {name}
-                        {move || strength.as_ref().map(|s| format!(" · {s}")).unwrap_or_default()}
-                        {move || units.as_ref().map(|u| format!(" {u}")).unwrap_or_default()}
-                    </p>
-                    <div class="med-chips">
-                        {sources.iter().map(|s| {
-                            let label = match s {
-                                EncounterSource::Opd => "OPD",
-                                EncounterSource::Ipd => "IPD",
-                            };
-                            view! { <span class="badge">{label}</span> }
-                        }).collect_view()}
-                        <span class="badge">{chip}</span>
-                    </div>
-                </div>
-                <p class="verdict-band__detail">
-                    {meta}
-                    " · " {tr_f(lang.get(), "med.visits", &[("n", &visit_count.to_string())])}
-                    " · " {tr_f(lang.get(), "med.total_qty", &[("qty", &total_qty), ("units", units_meta.as_deref().unwrap_or(""))])}
-                    {move || supply.map(|d| format!(" · {}", tr_f(lang.get(), "med.days_supply", &[("n", &d.to_string())]))).unwrap_or_default()}
-                </p>
-                {move || sig.clone().map(|s| view! {
-                    <p class="verdict-band__detail" style="opacity:1">
-                        {tr_f(lang.get(), "med.sig", &[("sig", &format_sig(&s))])}
-                    </p>
-                })}
-            </div>
-        </div>
+        <table class="med-table">
+            <thead>
+                <tr>
+                    <th class="med-table__no">{tr(lang.get(), "med.col_no")}</th>
+                    <th>{tr(lang.get(), "med.col_date")}</th>
+                    <th>{tr(lang.get(), "med.col_drug")}</th>
+                    <th>{tr(lang.get(), "med.col_sig")}</th>
+                    <th>{tr(lang.get(), "med.col_qty")}</th>
+                    <th>{tr(lang.get(), "med.col_source")}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {items.iter().enumerate().map(|(i, m)| {
+                    let no = (i + 1).to_string();
+                    let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), m.last_dispense.month(), m.last_dispense.year());
+                    let drug = drug_label(m);
+                    let sig = m.sig.as_ref().map(format_sig).unwrap_or_default();
+                    let qty = format_qty(m.last_qty);
+                    let units = m.units.clone().unwrap_or_default();
+                    let source = m.sources.iter().map(|s| match s {
+                        EncounterSource::Opd => "OPD",
+                        EncounterSource::Ipd => "IPD",
+                    }).collect::<Vec<_>>().join("/");
+                    view! {
+                        <tr>
+                            <td class="med-table__no">{no}</td>
+                            <td class="med-table__date">{date}</td>
+                            <td class="med-table__drug">{drug}</td>
+                            <td class="med-table__sig">
+                                {if sig.is_empty() { "—".to_string() } else { sig }}
+                            </td>
+                            <td class="med-table__qty">
+                                {qty}
+                                {if units.is_empty() { String::new() } else { format!(" {units}") }}
+                            </td>
+                            <td class="med-table__source">{source}</td>
+                        </tr>
+                    }
+                }).collect_view()}
+            </tbody>
+        </table>
     }
+}
+
+/// "Name · strength" label for the drug column.
+fn drug_label(m: &MedicationItem) -> String {
+    let mut label = m.drug_name.clone();
+    if let Some(strength) = &m.strength {
+        label.push_str(&format!(" · {strength}"));
+    }
+    label
 }
 
 /// Format a sig for display.

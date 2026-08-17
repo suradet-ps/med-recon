@@ -87,6 +87,7 @@ pub fn aggregate_medications(
                 units: latest.units.clone(),
                 last_dispense: latest.date,
                 first_dispense: earliest.date,
+                last_qty: latest.qty,
                 total_qty,
                 visit_count: visit_ids.len() as u32,
                 sources: sources.into_keys().collect(),
@@ -241,6 +242,7 @@ mod tests {
 
         let a1 = items.iter().find(|i| i.icode == "A1").unwrap();
         assert_eq!(a1.total_qty, 30.0);
+        assert_eq!(a1.last_qty, 20.0); // quantity of the most recent event
         assert_eq!(a1.visit_count, 2);
         assert_eq!(a1.first_dispense, date(2026, 1, 1));
         assert_eq!(a1.last_dispense, date(2026, 2, 1));

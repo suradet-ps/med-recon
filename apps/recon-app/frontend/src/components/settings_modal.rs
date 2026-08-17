@@ -26,11 +26,44 @@ const DRUG_SEARCH_DEBOUNCE_MS: u64 = 250;
 /// Default history window in days, prefilled in the settings section.
 const DEFAULT_HISTORY_DAYS: u32 = 730;
 
+/// Hard ceiling for any backend operation (connect, keychain, save) so the
+/// busy state can never stick forever if the backend future is dropped.
+const OPERATION_TIMEOUT_SECS: u64 = 25;
+
 /// The two settings tabs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SettingsTab {
     Connection,
     Site,
+}
+
+/// Arm a hard timeout for a backend operation.
+///
+/// Returns a generation token; only the caller of the current token may
+/// update the busy/message signals, so a stale (late-arriving) result or a
+/// dropped future can never leave the UI stuck. The timer is fire-and-
+/// forget: a late firing sees the stale token and does nothing.
+fn arm_operation_timeout(
+    generation: RwSignal<u64>,
+    busy: RwSignal<bool>,
+    message: RwSignal<Option<(bool, String)>>,
+    lang: RwSignal<crate::i18n::Lang>,
+) -> u64 {
+    let token = generation.get_untracked() + 1;
+    generation.set(token);
+    set_timeout(
+        move || {
+            if generation.get_untracked() == token {
+                busy.set(false);
+                message.set(Some((
+                    false,
+                    tr(lang.get_untracked(), "settings.timeout").to_string(),
+                )));
+            }
+        },
+        std::time::Duration::from_secs(OPERATION_TIMEOUT_SECS),
+    );
+    token
 }
 
 #[component]
@@ -53,8 +86,19 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
     let settings_message = RwSignal::new(None::<(bool, String)>);
     let settings_busy = RwSignal::new(false);
     let tab = RwSignal::new(SettingsTab::Connection);
+    let generation = RwSignal::new(0u64);
 
-    // Load the saved site settings + current medication list on mount.
+    // Load the saved connection values, site settings, and current
+    // medication list on mount so re-opening the dialog shows what was set
+    // (the password is never stored, so it stays empty).
+    spawn_local(async move {
+        if let Ok(info) = api::get_connection().await {
+            host.set(info.host);
+            port.set(info.port.to_string());
+            database.set(info.database);
+            user.set(info.user);
+        }
+    });
     spawn_local(async move {
         match api::get_site_settings().await {
             Ok(settings) => {
@@ -135,19 +179,23 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
         };
         conn_busy.set(true);
         conn_message.set(None);
+        let token = arm_operation_timeout(generation, conn_busy, conn_message, lang);
         spawn_local(async move {
-            match api::test_connection(Some(&input)).await {
-                Ok(result) => conn_message.set(Some((
-                    true,
-                    tr_f(
-                        lang.get_untracked(),
-                        "settings.test_ok",
-                        &[("ms", &result.latency_ms.to_string())],
-                    ),
-                ))),
-                Err(error) => conn_message.set(Some((false, error.message))),
+            let result = api::test_connection(Some(&input)).await;
+            if generation.get_untracked() == token {
+                match result {
+                    Ok(test) => conn_message.set(Some((
+                        true,
+                        tr_f(
+                            lang.get_untracked(),
+                            "settings.test_ok",
+                            &[("ms", &test.latency_ms.to_string())],
+                        ),
+                    ))),
+                    Err(error) => conn_message.set(Some((false, error.message))),
+                }
+                conn_busy.set(false);
             }
-            conn_busy.set(false);
         });
     };
 
@@ -164,20 +212,25 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
         };
         conn_busy.set(true);
         conn_message.set(None);
+        let token = arm_operation_timeout(generation, conn_busy, conn_message, lang);
         spawn_local(async move {
-            match api::save_connection(&input).await {
-                Ok(()) => {
-                    wipe_connection_fields();
-                    conn_message.set(Some((
-                        true,
-                        tr(lang.get_untracked(), "settings.save_ok").to_string(),
-                    )));
-                    state.configured.set(true);
-                    state.health.set(ConnectionHealth::Connected);
+            let result = api::save_connection(&input).await;
+            if generation.get_untracked() == token {
+                match result {
+                    Ok(()) => {
+                        // Fields keep their values so the operator can see
+                        // what is saved; they are only wiped on close.
+                        conn_message.set(Some((
+                            true,
+                            tr(lang.get_untracked(), "settings.save_ok").to_string(),
+                        )));
+                        state.configured.set(true);
+                        state.health.set(ConnectionHealth::Connected);
+                    }
+                    Err(error) => conn_message.set(Some((false, error.message))),
                 }
-                Err(error) => conn_message.set(Some((false, error.message))),
+                conn_busy.set(false);
             }
-            conn_busy.set(false);
         });
     };
 
@@ -196,15 +249,19 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                 .map(|d| d.icode.clone())
                 .collect(),
         };
+        let token = arm_operation_timeout(generation, settings_busy, settings_message, lang);
         spawn_local(async move {
-            match api::save_site_settings(&settings).await {
-                Ok(()) => settings_message.set(Some((
-                    true,
-                    tr(lang.get_untracked(), "settings.save_ok").to_string(),
-                ))),
-                Err(e) => settings_message.set(Some((false, e.message))),
+            let result = api::save_site_settings(&settings).await;
+            if generation.get_untracked() == token {
+                match result {
+                    Ok(()) => settings_message.set(Some((
+                        true,
+                        tr(lang.get_untracked(), "settings.save_ok").to_string(),
+                    ))),
+                    Err(e) => settings_message.set(Some((false, e.message))),
+                }
+                settings_busy.set(false);
             }
-            settings_busy.set(false);
         });
     };
 
@@ -266,6 +323,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         prop:value=move || password.get()
                         on:input=move |ev| password.set(event_target_value(&ev))
                     />
+                    <p class="modal__note">{move || tr(lang.get(), "settings.password_hint")}</p>
                 </div>
 
                 {move || {

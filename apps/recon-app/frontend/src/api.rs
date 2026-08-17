@@ -67,6 +67,17 @@ pub struct ConnectionInput {
     pub password: String,
 }
 
+/// Non-secret summary of the saved connection (password never returned) —
+/// used to pre-fill the settings form.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConnectionInfo {
+    pub host: String,
+    pub port: u16,
+    pub database: String,
+    pub user: String,
+}
+
 /// Non-secret site settings — stored as plain JSON on disk.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -141,6 +152,11 @@ pub async fn connection_health() -> Result<ConnectionHealth, ApiError> {
 /// Save the site connection config (encrypted at rest) and connect.
 pub async fn save_connection(config: &ConnectionInput) -> Result<(), ApiError> {
     call_struct_arg("save_connection", "config", config).await
+}
+
+/// The saved HOSxP connection (without the password) — pre-fills the form.
+pub async fn get_connection() -> Result<ConnectionInfo, ApiError> {
+    call_empty("get_connection").await
 }
 
 /// Load the non-secret site settings (site name, history window, current

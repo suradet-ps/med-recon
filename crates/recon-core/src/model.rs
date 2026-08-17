@@ -113,6 +113,9 @@ pub struct MedicationItem {
     pub last_dispense: NaiveDate,
     /// Earliest dispense date in the history.
     pub first_dispense: NaiveDate,
+    /// Quantity of the most recent dispensing event (shown next to the
+    /// dispense date; not the lifetime total).
+    pub last_qty: f64,
     /// Sum of quantities across all events.
     pub total_qty: f64,
     /// Number of distinct visits that dispensed this drug.

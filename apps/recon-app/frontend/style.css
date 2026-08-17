@@ -825,6 +825,68 @@ code, .mono, .code {
 }
 
 /* ==========================================================================
+   Medication table
+   ========================================================================== */
+
+.med-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: var(--sp-sm);
+}
+
+.med-table th {
+  text-align: left;
+  padding: 8px var(--sp-sm);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--slate);
+  border-bottom: 1px solid var(--hairline-strong);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.med-table td {
+  padding: 8px var(--sp-sm);
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: top;
+  line-height: 1.4;
+}
+
+.med-table tbody tr:hover {
+  background: var(--surface-muted);
+}
+
+.med-table__no {
+  width: 40px;
+  color: var(--slate);
+}
+
+.med-table__date {
+  white-space: nowrap;
+  color: var(--slate);
+}
+
+.med-table__drug {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.med-table__sig {
+  color: var(--steel);
+}
+
+.med-table__qty {
+  white-space: nowrap;
+  color: var(--steel);
+}
+
+.med-table__source {
+  white-space: nowrap;
+  color: var(--slate);
+}
+
+/* ==========================================================================
    Settings Modal
    ========================================================================== */
 
