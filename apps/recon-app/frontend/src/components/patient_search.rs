@@ -70,6 +70,17 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
 
     let on_pick = move |patient: PatientSummary| {
         let hn = patient.hn.clone();
+        let name = patient.display_name();
+        // Close the dropdown: clear the result list, cancel any pending
+        // debounced search, and reflect the picked name in the input so only
+        // the selected patient remains.
+        results.set(Vec::new());
+        searched.set(false);
+        error.set(None);
+        if let Some(prev) = last_timeout.get() {
+            prev.clear();
+        }
+        query.set(name);
         state.patient.set(Some(patient));
         state.history.set(None);
         state.history_error.set(None);
