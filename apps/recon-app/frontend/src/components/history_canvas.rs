@@ -8,8 +8,7 @@ use leptos::task::spawn_local;
 
 use crate::api;
 use crate::components::icons::{
-    IconActivity, IconAlert, IconCalendar, IconCheckCircle, IconPrinter, IconShield, IconUser,
-    IconXCircle,
+    IconAlert, IconCheckCircle, IconPrinter, IconUser, IconXCircle,
 };
 use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
@@ -116,13 +115,6 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
         &[("n", &allergy_count.to_string())],
     );
     let has_allergies = allergy_count > 0;
-    let visit_count = history.visits.len();
-    let visits_title = tr_f(
-        lang.get_untracked(),
-        "canvas.visits",
-        &[("n", &visit_count.to_string())],
-    );
-    let has_visits = visit_count > 0;
     let warnings = history.warnings.clone();
 
     view! {
@@ -173,12 +165,31 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                 }
             }}
 
-            <div class="verdict-band verdict-pending">
-                <IconShield class="verdict-band__icon" />
-                <div class="verdict-band__content">
-                    <p class="verdict-band__detail">{move || tr(lang.get(), "canvas.bpmh_note")}</p>
-                </div>
-            </div>
+            <section class="canvas-section">
+                <h3 class="timeline-header">
+                    <IconAlert class="icon" />
+                    {allergies_title}
+                </h3>
+                {if !has_allergies {
+                    view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_allergies")}</p> }.into_any()
+                } else {
+                    history.allergies.iter().map(|a| {
+                        let agent = a.agent.clone();
+                        let symptom = a.symptom.clone();
+                        view! {
+                            <div class="verdict-band verdict-notfound verdict-band--compact">
+                                <IconAlert class="verdict-band__icon" />
+                                <div class="verdict-band__content">
+                                    <p class="verdict-band__term">{agent}</p>
+                                    {move || symptom.as_ref().map(|s| view! {
+                                        <p class="verdict-band__detail">{s.clone()}</p>
+                                    })}
+                                </div>
+                            </div>
+                        }
+                    }).collect_view().into_any()
+                }}
+            </section>
 
             <section class="canvas-section">
                 <h3 class="timeline-header">
@@ -204,67 +215,6 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                 }}
             </section>
 
-            <section class="canvas-section">
-                <h3 class="timeline-header">
-                    <IconActivity class="icon" />
-                    {allergies_title}
-                </h3>
-                {if !has_allergies {
-                    view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_allergies")}</p> }.into_any()
-                } else {
-                    history.allergies.iter().map(|a| {
-                        let agent = a.agent.clone();
-                        let symptom = a.symptom.clone();
-                        view! {
-                            <div class="verdict-band verdict-notfound verdict-band--compact">
-                                <IconXCircle class="verdict-band__icon" />
-                                <div class="verdict-band__content">
-                                    <p class="verdict-band__term">{agent}</p>
-                                    {move || symptom.as_ref().map(|s| view! {
-                                        <p class="verdict-band__detail">{s.clone()}</p>
-                                    })}
-                                </div>
-                            </div>
-                        }
-                    }).collect_view().into_any()
-                }}
-            </section>
-
-            <section class="canvas-section">
-                <h3 class="timeline-header">
-                    <IconCalendar class="icon" />
-                    {visits_title}
-                </h3>
-                {if !has_visits {
-                    view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_visits")}</p> }.into_any()
-                } else {
-                    view! {
-                        <ul class="timeline">
-                            {history.visits.iter().map(|v| {
-                                let date = format!("{:02}/{:02}/{}", v.date.day(), v.date.month(), v.date.year());
-                                let kind = match v.source {
-                                    EncounterSource::Opd => tr(lang.get(), "visit.opd"),
-                                    EncounterSource::Ipd => tr(lang.get(), "visit.ipd"),
-                                };
-                                let dept = v.department.clone().unwrap_or_default();
-                                let vid = v.visit_id.clone();
-                                view! {
-                                    <li class="timeline-row">
-                                        <span class="timeline-row__date">{date}</span>
-                                        <span class="timeline-row__badge">
-                                            <span class="badge">{kind}</span>
-                                        </span>
-                                        <div class="timeline-row__main">
-                                            <p class="timeline-row__drug">{dept}</p>
-                                            <p class="timeline-row__meta">{vid}</p>
-                                        </div>
-                                    </li>
-                                }
-                            }).collect_view()}
-                        </ul>
-                    }.into_any()
-                }}
-            </section>
         </>
     }
 }

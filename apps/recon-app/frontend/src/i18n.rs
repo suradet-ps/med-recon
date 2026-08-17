@@ -249,11 +249,6 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "Search by name, HN, or CID on the left, then pick a patient.",
     ),
     (
-        "canvas.bpmh_note",
-        "ข้อมูลจากระบบการจ่ายยา (dispensing) เป็นแหล่งข้อมูลหนึ่งสำหรับ BPMH — ยังไม่ถือว่าเป็นรายการยาที่สมบูรณ์ ควรสอบทานกับผู้ป่วยเสมอ",
-        "Dispensing-derived data is one BPMH source among several — not a verified list; always reconcile with the patient.",
-    ),
-    (
         "canvas.warnings",
         "คำเตือนความครบถ้วนของข้อมูล",
         "Data-completeness warnings",
@@ -282,16 +277,6 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "canvas.no_medications",
         "ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด",
         "No dispensing records in the configured window",
-    ),
-    (
-        "canvas.visits",
-        "ประวัติการเข้ารับบริการ ({n})",
-        "Visit history ({n})",
-    ),
-    (
-        "canvas.no_visits",
-        "ไม่พบประวัติการเข้ารับบริการ",
-        "No visit records",
     ),
     ("canvas.export", "ส่งออกรายงาน", "Export report"),
     ("canvas.exporting", "กำลังส่งออก…", "Exporting…"),
