@@ -77,7 +77,7 @@ FROM opitemrece o
 JOIN drugitems d ON d.icode = o.icode
 WHERE o.hn = ?
   AND o.vstdate >= ?
-  AND o.an IS NULL
+  AND (o.an IS NULL OR TRIM(o.an) = '')
 ORDER BY o.vstdate"#;
 
 /// OPD dispensing history without the `strength`/`units` columns — same
@@ -85,12 +85,12 @@ ORDER BY o.vstdate"#;
 pub const OPD_DISPENSE_SQL_FALLBACK: &str = r#"
 SELECT o.vn AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
        o.vstdate AS disp_date,
-       d.name AS drug_name, NULL AS strength, NULL AS units
+        d.name AS drug_name, NULL AS strength, NULL AS units
 FROM opitemrece o
 JOIN drugitems d ON d.icode = o.icode
 WHERE o.hn = ?
   AND o.vstdate >= ?
-  AND o.an IS NULL
+  AND (o.an IS NULL OR TRIM(o.an) = '')
 ORDER BY o.vstdate"#;
 
 /// IPD dispensing — `opitemrece` rows carrying an admission number instead
@@ -106,19 +106,19 @@ FROM opitemrece o
 JOIN drugitems d ON d.icode = o.icode
 WHERE o.hn = ?
   AND o.vstdate >= ?
-  AND o.an IS NOT NULL
+  AND o.an IS NOT NULL AND TRIM(o.an) <> ''
 ORDER BY o.vstdate"#;
 
 /// IPD dispensing without the `strength`/`units` columns.
 pub const IPD_DISPENSE_SQL_FALLBACK: &str = r#"
 SELECT o.an AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
        o.vstdate AS disp_date,
-       d.name AS drug_name, NULL AS strength, NULL AS units
+        d.name AS drug_name, NULL AS strength, NULL AS units
 FROM opitemrece o
 JOIN drugitems d ON d.icode = o.icode
 WHERE o.hn = ?
   AND o.vstdate >= ?
-  AND o.an IS NOT NULL
+  AND o.an IS NOT NULL AND TRIM(o.an) <> ''
 ORDER BY o.vstdate"#;
 
 /// Sig (directions for use) — `opitemrece.drugusage` / `opitemrece.sp_use`
