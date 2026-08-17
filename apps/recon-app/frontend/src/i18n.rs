@@ -100,6 +100,16 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "HOSxP connection",
     ),
     (
+        "settings.tab_connection",
+        "การเชื่อมต่อ",
+        "Connection",
+    ),
+    (
+        "settings.tab_site",
+        "ตั้งค่าอื่นๆ",
+        "Site settings",
+    ),
+    (
         "settings.section_site",
         "การตั้งค่าอื่นๆ",
         "Site settings",

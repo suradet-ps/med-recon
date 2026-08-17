@@ -238,8 +238,8 @@ window is enforced client-side after normalization.
 ### 4.6 Settings storage (`recon-config`)
 
 Configuration is split into **two JSON files** under the platform config
-directory (`%APPDATA%\org.recon\Recon` on Windows, XDG on Linux,
-`~/Library/Application Support/...` on macOS), so connection credentials
+directory (`%APPDATA%\Recon` on Windows, `~/.config/Recon` on Linux,
+`~/Library/Application Support/Recon` on macOS), so connection credentials
 and operator preferences are versioned/backed up independently:
 
 | File | Contents | Format |

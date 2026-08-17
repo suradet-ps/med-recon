@@ -26,6 +26,13 @@ const DRUG_SEARCH_DEBOUNCE_MS: u64 = 250;
 /// Default history window in days, prefilled in the settings section.
 const DEFAULT_HISTORY_DAYS: u32 = 730;
 
+/// The two settings tabs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SettingsTab {
+    Connection,
+    Site,
+}
+
 #[component]
 pub fn SettingsModal(state: AppState) -> impl IntoView {
     let lang = state.lang;
@@ -45,6 +52,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
     let selected_meds = RwSignal::new(Vec::<DrugInfo>::new());
     let settings_message = RwSignal::new(None::<(bool, String)>);
     let settings_busy = RwSignal::new(false);
+    let tab = RwSignal::new(SettingsTab::Connection);
 
     // Load the saved site settings + current medication list on mount.
     spawn_local(async move {
@@ -200,6 +208,173 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
         });
     };
 
+    let connection_panel = move || {
+        view! {
+            <section class="form-section">
+                <h3 class="form-section__title">
+                    <IconPlug class="icon" />
+                    {move || tr(lang.get(), "settings.section_connection")}
+                </h3>
+
+                <div class="form-field">
+                    <label for="cfg-host">{move || tr(lang.get(), "settings.host")}</label>
+                    <input
+                        id="cfg-host"
+                        class="form-input form-input--mono"
+                        placeholder="192.168.1.10"
+                        prop:value=move || host.get()
+                        on:input=move |ev| host.set(event_target_value(&ev))
+                    />
+                </div>
+                <div class="form-row">
+                    <div class="form-field" style="max-width:100px">
+                        <label for="cfg-port">{move || tr(lang.get(), "settings.port")}</label>
+                        <input
+                            id="cfg-port"
+                            class="form-input form-input--mono"
+                            prop:value=move || port.get()
+                            on:input=move |ev| port.set(event_target_value(&ev))
+                        />
+                    </div>
+                    <div class="form-field form-field--grow">
+                        <label for="cfg-database">{move || tr(lang.get(), "settings.database")}</label>
+                        <input
+                            id="cfg-database"
+                            class="form-input form-input--mono"
+                            placeholder="hos"
+                            prop:value=move || database.get()
+                            on:input=move |ev| database.set(event_target_value(&ev))
+                        />
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label for="cfg-user">{move || tr(lang.get(), "settings.user")}</label>
+                    <input
+                        id="cfg-user"
+                        class="form-input form-input--mono"
+                        placeholder="recon_ro"
+                        prop:value=move || user.get()
+                        on:input=move |ev| user.set(event_target_value(&ev))
+                    />
+                </div>
+                <div class="form-field">
+                    <label for="cfg-password">{move || tr(lang.get(), "settings.password")}</label>
+                    <input
+                        id="cfg-password"
+                        class="form-input form-input--mono"
+                        type="password"
+                        prop:value=move || password.get()
+                        on:input=move |ev| password.set(event_target_value(&ev))
+                    />
+                </div>
+
+                {move || {
+                    conn_message.get().map(|(is_success, text)| {
+                        let class = if is_success {
+                            "modal__message modal__message--success"
+                        } else {
+                            "modal__message modal__message--error"
+                        };
+                        view! { <p class=class>{text}</p> }
+                    })
+                }}
+
+                <div class="modal__actions" style="margin-top:var(--sp-md)">
+                    <button
+                        class="button-secondary button-secondary--inline"
+                        on:click=move |_| run_test()
+                        prop:disabled=move || conn_busy.get()
+                    >
+                        <IconPlug class="icon" />
+                        {move || if conn_busy.get() { tr(lang.get(), "settings.testing") } else { tr(lang.get(), "settings.test") }}
+                    </button>
+                    <button
+                        class="button-primary button-primary--inline"
+                        on:click=move |_| run_save_connection()
+                        prop:disabled=move || conn_busy.get()
+                    >
+                        <IconSave class="icon" />
+                        {move || if conn_busy.get() { tr(lang.get(), "settings.saving") } else { tr(lang.get(), "settings.save") }}
+                    </button>
+                </div>
+
+                <p class="modal__note">{move || tr(lang.get(), "settings.note")}</p>
+            </section>
+        }
+        .into_any()
+    };
+
+    let site_panel = move || {
+        view! {
+            <section class="form-section">
+                <h3 class="form-section__title">
+                    <IconCheckCircle class="icon" />
+                    {move || tr(lang.get(), "settings.section_site")}
+                </h3>
+
+                <div class="form-field">
+                    <label for="cfg-site">{move || tr(lang.get(), "settings.site_name")}</label>
+                    <input
+                        id="cfg-site"
+                        class="form-input"
+                        placeholder={move || tr(lang.get(), "settings.site_name_placeholder")}
+                        prop:value=move || site_name.get()
+                        on:input=move |ev| site_name.set(event_target_value(&ev))
+                    />
+                </div>
+                <div class="form-field">
+                    <label for="cfg-window">{move || tr(lang.get(), "settings.history_days")}</label>
+                    <input
+                        id="cfg-window"
+                        class="form-input form-input--mono"
+                        type="number"
+                        min="30"
+                        max="3650"
+                        prop:value=move || history_days.get().to_string()
+                        on:input=move |ev| {
+                            if let Ok(v) = event_target_value(&ev).parse::<u32>() {
+                                history_days.set(v);
+                            }
+                        }
+                    />
+                </div>
+
+                <p class="modal__note">{move || tr(lang.get(), "settings.meds_note")}</p>
+                <CurrentMedsPanel state=state selected=selected_meds/>
+
+                {move || {
+                    settings_message.get().map(|(is_success, text)| {
+                        let class = if is_success {
+                            "modal__message modal__message--success"
+                        } else {
+                            "modal__message modal__message--error"
+                        };
+                        view! { <p class=class>{text}</p> }
+                    })
+                }}
+
+                <div class="modal__actions" style="margin-top:var(--sp-md)">
+                    <button
+                        class="button-secondary button-secondary--inline"
+                        on:click=move |_| close()
+                    >
+                        <IconX class="icon" />
+                        {move || tr(lang.get(), "settings.cancel")}
+                    </button>
+                    <button
+                        class="button-primary button-primary--inline"
+                        on:click=move |_| run_save_settings()
+                        prop:disabled=move || settings_busy.get()
+                    >
+                        <IconSave class="icon" />
+                        {move || if settings_busy.get() { tr(lang.get(), "settings.saving") } else { tr(lang.get(), "settings.save_settings") }}
+                    </button>
+                </div>
+            </section>
+        }
+        .into_any()
+    };
+
     view! {
         <div
             class="modal-backdrop"
@@ -224,168 +399,42 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                     }}
                 </p>
 
-                // ------------------------------------------------------------------
-                // 1. HOSxP connection
-                // ------------------------------------------------------------------
-                <section class="form-section">
-                    <h3 class="form-section__title">
-                        <IconPlug class="icon" />
-                        {move || tr(lang.get(), "settings.section_connection")}
-                    </h3>
-
-                    <div class="form-field">
-                        <label for="cfg-host">{move || tr(lang.get(), "settings.host")}</label>
-                        <input
-                            id="cfg-host"
-                            class="form-input form-input--mono"
-                            placeholder="192.168.1.10"
-                            prop:value=move || host.get()
-                            on:input=move |ev| host.set(event_target_value(&ev))
-                        />
-                    </div>
-                    <div class="form-row">
-                        <div class="form-field" style="max-width:100px">
-                            <label for="cfg-port">{move || tr(lang.get(), "settings.port")}</label>
-                            <input
-                                id="cfg-port"
-                                class="form-input form-input--mono"
-                                prop:value=move || port.get()
-                                on:input=move |ev| port.set(event_target_value(&ev))
-                            />
-                        </div>
-                        <div class="form-field form-field--grow">
-                            <label for="cfg-database">{move || tr(lang.get(), "settings.database")}</label>
-                            <input
-                                id="cfg-database"
-                                class="form-input form-input--mono"
-                                placeholder="hos"
-                                prop:value=move || database.get()
-                                on:input=move |ev| database.set(event_target_value(&ev))
-                            />
-                        </div>
-                    </div>
-                    <div class="form-field">
-                        <label for="cfg-user">{move || tr(lang.get(), "settings.user")}</label>
-                        <input
-                            id="cfg-user"
-                            class="form-input form-input--mono"
-                            placeholder="recon_ro"
-                            prop:value=move || user.get()
-                            on:input=move |ev| user.set(event_target_value(&ev))
-                        />
-                    </div>
-                    <div class="form-field">
-                        <label for="cfg-password">{move || tr(lang.get(), "settings.password")}</label>
-                        <input
-                            id="cfg-password"
-                            class="form-input form-input--mono"
-                            type="password"
-                            prop:value=move || password.get()
-                            on:input=move |ev| password.set(event_target_value(&ev))
-                        />
-                    </div>
-
-                    {move || {
-                        conn_message.get().map(|(is_success, text)| {
-                            let class = if is_success {
-                                "modal__message modal__message--success"
+                <div class="tabs">
+                    <button
+                        class=move || {
+                            if tab.get() == SettingsTab::Connection {
+                                "tab tab--active"
                             } else {
-                                "modal__message modal__message--error"
-                            };
-                            view! { <p class=class>{text}</p> }
-                        })
-                    }}
-
-                    <div class="modal__actions" style="margin-top:var(--sp-md)">
-                        <button
-                            class="button-secondary button-secondary--inline"
-                            on:click=move |_| run_test()
-                            prop:disabled=move || conn_busy.get()
-                        >
-                            <IconPlug class="icon" />
-                            {move || if conn_busy.get() { tr(lang.get(), "settings.testing") } else { tr(lang.get(), "settings.test") }}
-                        </button>
-                        <button
-                            class="button-primary button-primary--inline"
-                            on:click=move |_| run_save_connection()
-                            prop:disabled=move || conn_busy.get()
-                        >
-                            <IconSave class="icon" />
-                            {move || if conn_busy.get() { tr(lang.get(), "settings.saving") } else { tr(lang.get(), "settings.save") }}
-                        </button>
-                    </div>
-                </section>
-
-                // ------------------------------------------------------------------
-                // 2. Site settings
-                // ------------------------------------------------------------------
-                <section class="form-section">
-                    <h3 class="form-section__title">
-                        <IconCheckCircle class="icon" />
-                        {move || tr(lang.get(), "settings.section_site")}
-                    </h3>
-
-                    <div class="form-field">
-                        <label for="cfg-site">{move || tr(lang.get(), "settings.site_name")}</label>
-                        <input
-                            id="cfg-site"
-                            class="form-input"
-                            placeholder={move || tr(lang.get(), "settings.site_name_placeholder")}
-                            prop:value=move || site_name.get()
-                            on:input=move |ev| site_name.set(event_target_value(&ev))
-                        />
-                    </div>
-                    <div class="form-field">
-                        <label for="cfg-window">{move || tr(lang.get(), "settings.history_days")}</label>
-                        <input
-                            id="cfg-window"
-                            class="form-input form-input--mono"
-                            type="number"
-                            min="30"
-                            max="3650"
-                            prop:value=move || history_days.get().to_string()
-                            on:input=move |ev| {
-                                if let Ok(v) = event_target_value(&ev).parse::<u32>() {
-                                    history_days.set(v);
-                                }
+                                "tab"
                             }
-                        />
-                    </div>
-
-                    <p class="modal__note">{move || tr(lang.get(), "settings.meds_note")}</p>
-                    <CurrentMedsPanel state=state selected=selected_meds/>
-
-                    {move || {
-                        settings_message.get().map(|(is_success, text)| {
-                            let class = if is_success {
-                                "modal__message modal__message--success"
+                        }
+                        on:click=move |_| tab.set(SettingsTab::Connection)
+                    >
+                        <IconPlug class="icon" />
+                        {move || tr(lang.get(), "settings.tab_connection")}
+                    </button>
+                    <button
+                        class=move || {
+                            if tab.get() == SettingsTab::Site {
+                                "tab tab--active"
                             } else {
-                                "modal__message modal__message--error"
-                            };
-                            view! { <p class=class>{text}</p> }
-                        })
-                    }}
+                                "tab"
+                            }
+                        }
+                        on:click=move |_| tab.set(SettingsTab::Site)
+                    >
+                        <IconCheckCircle class="icon" />
+                        {move || tr(lang.get(), "settings.tab_site")}
+                    </button>
+                </div>
 
-                    <div class="modal__actions" style="margin-top:var(--sp-md)">
-                        <button
-                            class="button-secondary button-secondary--inline"
-                            on:click=move |_| close()
-                        >
-                            <IconX class="icon" />
-                            {move || tr(lang.get(), "settings.cancel")}
-                        </button>
-                        <button
-                            class="button-primary button-primary--inline"
-                            on:click=move |_| run_save_settings()
-                            prop:disabled=move || settings_busy.get()
-                        >
-                            <IconSave class="icon" />
-                            {move || if settings_busy.get() { tr(lang.get(), "settings.saving") } else { tr(lang.get(), "settings.save_settings") }}
-                        </button>
-                    </div>
-                </section>
-
-                <p class="modal__note">{move || tr(lang.get(), "settings.note")}</p>
+                {move || {
+                    if tab.get() == SettingsTab::Connection {
+                        connection_panel()
+                    } else {
+                        site_panel()
+                    }
+                }}
             </section>
         </div>
     }

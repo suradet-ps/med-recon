@@ -996,6 +996,45 @@ code, .mono, .code {
   color: var(--brand);
 }
 
+.tabs {
+  display: flex;
+  gap: var(--sp-xs);
+  margin-bottom: var(--sp-md);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px var(--sp-sm);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--slate);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tab .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.tab--active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+
 /* ==========================================================================
    Banners
    ========================================================================== */

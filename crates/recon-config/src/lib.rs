@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 /// Keyring service name — shared by all Recon users on this machine.
-const KEYRING_SERVICE: &str = "org.recon.desktop";
+const KEYRING_SERVICE: &str = "Recon";
 
 /// Encrypted connection settings file name.
 pub const CONNECTION_FILE: &str = "connection.json";
@@ -395,10 +395,10 @@ impl From<ConnectionConfigRaw> for ConnectionConfig {
     }
 }
 
-/// Platform config directory for the app (`~/Library/Application Support/...`
-/// on macOS, XDG on Linux, AppData on Windows).
+/// Platform config directory for the app (`~/Library/Application Support/Recon`
+/// on macOS, `~/.config/Recon` on Linux, `%APPDATA%\Recon` on Windows).
 fn default_config_dir() -> PathBuf {
-    directories::ProjectDirs::from("org", "recon", "Recon")
+    directories::ProjectDirs::from("", "", "Recon")
         .map(|d| d.config_dir().to_path_buf())
         .unwrap_or_else(|| PathBuf::from("."))
 }
