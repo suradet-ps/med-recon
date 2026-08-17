@@ -77,6 +77,7 @@ FROM opitemrece o
 JOIN drugitems d ON d.icode = o.icode
 WHERE o.hn = ?
   AND o.vstdate >= ?
+  AND o.an IS NULL
 ORDER BY o.vstdate"#;
 
 /// OPD dispensing history without the `strength`/`units` columns — same
@@ -89,6 +90,7 @@ FROM opitemrece o
 JOIN drugitems d ON d.icode = o.icode
 WHERE o.hn = ?
   AND o.vstdate >= ?
+  AND o.an IS NULL
 ORDER BY o.vstdate"#;
 
 /// IPD dispensing — `opitemrece` rows carrying an admission number instead

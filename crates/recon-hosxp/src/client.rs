@@ -374,7 +374,7 @@ impl HosxpClient {
             .map(|r| AllergyRecord {
                 agent: clean_agent(&r.agent),
                 symptom: r.symptom,
-                group_id: r.allergy_group_id,
+                group_id: r.allergy_group_id.map(|v| v.to_string()),
                 reporter: r.reporter,
             })
             .collect())
@@ -543,7 +543,7 @@ struct PatientRow {
 /// Raw row shape for dispensing queries (OPD and IPD share column aliases).
 #[derive(sqlx::FromRow)]
 struct DispenseRow {
-    visit_id: String,
+    visit_id: Option<String>,
     icode: String,
     /// `qty` is DECIMAL in HOSxP; sqlx cannot decode DECIMAL as `f64`, so
     /// the SQL casts it to CHAR and we parse here.
@@ -572,7 +572,7 @@ struct SigRow {
 struct AllergyRow {
     agent: String,
     symptom: Option<String>,
-    allergy_group_id: Option<String>,
+    allergy_group_id: Option<i32>,
     reporter: Option<String>,
 }
 
@@ -630,9 +630,10 @@ fn map_dispense(
     cutoff: NaiveDate,
 ) -> Option<Dispense> {
     let date = normalize_date(r.disp_date);
+    let visit_id = r.visit_id?;
     (date >= cutoff).then(|| Dispense {
         hn: hn.to_string(),
-        visit_id: r.visit_id,
+        visit_id,
         source,
         icode: r.icode,
         drug_name: r.drug_name,
