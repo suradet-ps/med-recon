@@ -252,7 +252,12 @@ pub fn sig_from_names(
     let parts: Vec<String> = drugusage_names
         .iter()
         .chain(sp_use_names)
-        .filter_map(|n| n.as_deref().map(str::trim).filter(|s| !s.is_empty()).map(String::from))
+        .filter_map(|n| {
+            n.as_deref()
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(String::from)
+        })
         .collect();
     let note = parts.join(" ");
     if note.is_empty() {

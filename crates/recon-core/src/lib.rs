@@ -14,7 +14,7 @@ pub mod redact;
 
 pub use bpmh::{aggregate_medications, days_supply};
 pub use eras::{
-    buddhist_to_christian, is_buddhist_era_year, normalize_date, BUDDHIST_ERA_YEAR_THRESHOLD,
+    BUDDHIST_ERA_YEAR_THRESHOLD, buddhist_to_christian, is_buddhist_era_year, normalize_date,
 };
 pub use model::{
     AllergyRecord, Dispense, EncounterSource, MedicationItem, MedicationStatus, PatientHistory,

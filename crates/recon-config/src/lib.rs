@@ -232,8 +232,7 @@ impl ConfigStore {
     ///
     /// Returns [`Error::NoConfig`] when none has been saved yet.
     pub fn load_connection(&self) -> Result<ConnectionConfig> {
-        let raw = read_optional(&self.connection_path())?
-            .ok_or(Error::NoConfig)?;
+        let raw = read_optional(&self.connection_path())?.ok_or(Error::NoConfig)?;
         let file: EncryptedFile = serde_json::from_str(&raw)?;
         if file.version != 1 {
             return Err(Error::UnsupportedVersion(file.version));
@@ -543,15 +542,16 @@ mod tests {
     #[test]
     fn settings_missing_field_defaults() {
         // Settings saved before `current_med_codes` existed still load.
-        let raw: SiteSettings = serde_json::from_str(
-            r#"{"siteName":"x","historyDays":730}"#,
-        )
-        .unwrap();
-        assert_eq!(raw, SiteSettings {
-            site_name: "x".into(),
-            history_days: 730,
-            current_med_codes: vec![],
-        });
+        let raw: SiteSettings =
+            serde_json::from_str(r#"{"siteName":"x","historyDays":730}"#).unwrap();
+        assert_eq!(
+            raw,
+            SiteSettings {
+                site_name: "x".into(),
+                history_days: 730,
+                current_med_codes: vec![],
+            }
+        );
     }
 
     #[test]
@@ -577,10 +577,8 @@ mod tests {
         let store = store_in(&dir);
         store.save_connection(&sample_connection()).unwrap();
 
-        let other = ConfigStore::with_vault(
-            Box::new(InMemoryVault::new()),
-            dir.path().to_path_buf(),
-        );
+        let other =
+            ConfigStore::with_vault(Box::new(InMemoryVault::new()), dir.path().to_path_buf());
         assert!(
             other.load_connection().is_err(),
             "decrypt with wrong key must fail"
@@ -618,7 +616,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let store = store_in(&dir);
         fs::write(
-            &store.connection_path(),
+            store.connection_path(),
             r#"{"version": 99, "ciphertext": "abc"}"#,
         )
         .unwrap();
@@ -671,9 +669,11 @@ mod tests {
         assert!(dir.path().join(LEGACY_BACKUP_FILE).exists());
         let backup = fs::read_to_string(dir.path().join(LEGACY_BACKUP_FILE)).unwrap();
         assert!(!backup.contains("legacy-pass"));
-        assert!(!fs::read_to_string(store.connection_path())
-            .unwrap()
-            .contains("legacy-pass"));
+        assert!(
+            !fs::read_to_string(store.connection_path())
+                .unwrap()
+                .contains("legacy-pass")
+        );
     }
 
     #[test]

@@ -1,0 +1,78 @@
+# cargo-deny configuration for Recon
+# https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+targets = []
+
+[output]
+feature-depth = 1
+
+[advisories]
+ignore = [
+  # Marvin Attack timing sidechannel on rsa (transitive dep of sqlx-mysql
+  # for caching_sha2_password auth). Recon always connects over TLS
+  # (rustls) on the local hospital LAN — advisory itself says local use on
+  # a non-compromised computer is fine. No patched release exists.
+  { id = "RUSTSEC-2023-0071", reason = "sqlx-mysql RSA auth exchange; TLS-only connections, local hospital LAN" },
+  # GTK3 bindings unmaintained (transitive deps of tauri on Linux)
+  "RUSTSEC-2024-0411",
+  "RUSTSEC-2024-0412",
+  "RUSTSEC-2024-0413",
+  "RUSTSEC-2024-0414",
+  "RUSTSEC-2024-0415",
+  "RUSTSEC-2024-0416",
+  "RUSTSEC-2024-0417",
+  "RUSTSEC-2024-0418",
+  "RUSTSEC-2024-0419",
+  "RUSTSEC-2024-0420",
+  # proc-macro-error unmaintained (transitive dep of glib/gtk)
+  "RUSTSEC-2024-0370",
+  # proc-macro-error2 unmaintained (transitive dep of glib/gtk)
+  "RUSTSEC-2026-0173",
+  # paste unmaintained (transitive dep of glib/gtk, via pest/cfg-if chain)
+  "RUSTSEC-2024-0436",
+  # unic-* unmaintained (transitive dep of tauri-utils via urlpattern)
+  "RUSTSEC-2025-0075",
+  "RUSTSEC-2025-0080",
+  "RUSTSEC-2025-0081",
+  "RUSTSEC-2025-0098",
+  "RUSTSEC-2025-0100",
+]
+
+[licenses]
+allow = [
+  "MIT",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "CDLA-Permissive-2.0",
+  "ISC",
+  "Unicode-3.0",
+  "Unicode-DFS-2016",
+  "Zlib",
+  "BSL-1.0",
+  "OpenSSL",
+  "Unicode-TOU",
+  "CC0-1.0",
+  "LGPL-2.1-or-later",
+  "LGPL-3.0-or-later",
+  "MPL-2.0",
+]
+confidence-threshold = 0.92
+
+[licenses.private]
+ignore = false
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+highlight = "all"
+workspace-default-features = "allow"
+external-default-features = "allow"
+
+[sources]
+unknown-registry = "warn"
+unknown-git = "warn"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

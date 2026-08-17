@@ -1,0 +1,101 @@
+name: "Publish Release"
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cargo-audit:
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Audit dependency advisories
+        # cargo-deny covers advisories on every PR; this is the loud,
+        # dedicated audit on the release path (ROADMAP Phase 4).
+        run: cargo audit
+
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows Build
+          - platform: "windows-latest"
+            args: ""
+            trunk-artifact: "trunk-x86_64-pc-windows-msvc.tar.gz"
+          # Linux Build (Ubuntu 24.04)
+          - platform: "ubuntu-24.04"
+            args: ""
+            trunk-artifact: "trunk-x86_64-unknown-linux-gnu.tar.gz"
+          # macOS Build (Apple Silicon)
+          - platform: "macos-latest"
+            args: "--target aarch64-apple-darwin"
+            trunk-artifact: "trunk-aarch64-apple-darwin.tar.gz"
+          # Uncomment if you need Intel Mac support
+          # - platform: "macos-latest"
+          #   args: "--target x86_64-apple-darwin"
+          #   trunk-artifact: "trunk-x86_64-apple-darwin.tar.gz"
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Install Rust stable (wasm target)
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install dependencies (Ubuntu only)
+        if: matrix.platform == 'ubuntu-24.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install Trunk
+        shell: bash
+        run: |
+          # GitHub release downloads occasionally drop the connection;
+          # retry before giving up.
+          if [ "$RUNNER_OS" = "Windows" ]; then CURL=curl.exe; else CURL=curl; fi
+          for attempt in 1 2 3 4; do
+            $CURL -LsSf https://github.com/trunk-rs/trunk/releases/download/v0.21.14/${{ matrix.trunk-artifact }} -o trunk.tar.gz \
+              && mkdir -p "$HOME/.cargo/bin" \
+              && tar -xzf trunk.tar.gz -C "$HOME/.cargo/bin" \
+              && break
+            echo "trunk download failed (attempt $attempt/4) — retrying in 10s"
+            sleep 10
+          done
+          test -x "$HOME/.cargo/bin/trunk"
+
+      - name: Build Tauri App
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/recon-app
+          tagName: v__VERSION__
+          releaseName: "Recon v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}

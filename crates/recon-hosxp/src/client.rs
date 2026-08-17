@@ -136,10 +136,7 @@ impl HosxpClient {
             }
         };
 
-        Ok(rows
-            .into_iter()
-            .map(|r| map_patient(&r))
-            .collect())
+        Ok(rows.into_iter().map(|r| map_patient(&r)).collect())
     }
 
     /// Load the full cross-visit history for one patient: identity, BPMH
@@ -334,10 +331,7 @@ impl HosxpClient {
         warnings: &mut Vec<String>,
     ) -> Result<HashMap<(String, String), recon_core::Sig>> {
         let rows: Vec<SigRow> = match self
-            .fetch_rows(
-                queries::SIG_SQL,
-                &[P::Str(hn.to_owned()), P::Date(cutoff)],
-            )
+            .fetch_rows(queries::SIG_SQL, &[P::Str(hn.to_owned()), P::Date(cutoff)])
             .await
         {
             Ok(rows) => rows,
@@ -425,7 +419,7 @@ impl HosxpClient {
             .into_iter()
             .filter_map(|r| {
                 let date = normalize_date(r.vstdate);
-                (date >= cutoff).then(|| VisitSummary {
+                (date >= cutoff).then_some(VisitSummary {
                     visit_id: r.vn,
                     source: EncounterSource::Opd,
                     date,
@@ -436,7 +430,7 @@ impl HosxpClient {
 
         visits.extend(ipd_rows.into_iter().filter_map(|r| {
             let date = normalize_date(r.regdate);
-            (date >= cutoff).then(|| VisitSummary {
+            (date >= cutoff).then_some(VisitSummary {
                 visit_id: r.an,
                 source: EncounterSource::Ipd,
                 date,

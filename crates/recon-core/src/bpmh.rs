@@ -195,11 +195,7 @@ mod tests {
                 date(2020, 1, 1), // long ago — still active if configured
             ),
         ];
-        let items = aggregate_medications(
-            &dispenses,
-            date(2026, 4, 1),
-            &codes(&["A1", "C3"]),
-        );
+        let items = aggregate_medications(&dispenses, date(2026, 4, 1), &codes(&["A1", "C3"]));
         let status_of = |icode: &str| {
             items
                 .iter()

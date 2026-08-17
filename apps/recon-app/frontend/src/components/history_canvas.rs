@@ -326,8 +326,8 @@ fn format_qty(q: f64) -> String {
 fn age_years(birthday: NaiveDate) -> i32 {
     let today = js_sys::Date::new_0();
     let year = today.get_full_year() as i32;
-    let month = (today.get_month() as u32) + 1;
-    let day = today.get_date() as u32;
+    let month = today.get_month() + 1;
+    let day = today.get_date();
     let today = match NaiveDate::from_ymd_opt(year, month, day) {
         Some(d) => d,
         None => return 0,

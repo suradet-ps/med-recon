@@ -1,0 +1,76 @@
+name: Test Build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - "crates/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/test-build.yml"
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-tauri:
+    permissions:
+      contents: read
+
+    runs-on: "ubuntu-24.04"
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Install Rust stable (wasm target)
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          workspaces: |
+            ./apps/recon-app -> apps/recon-app/target
+            ./apps/recon-app/frontend -> apps/recon-app/frontend/target
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install Trunk
+        run: |
+          # GitHub release downloads occasionally drop the connection;
+          # retry before giving up.
+          for attempt in 1 2 3 4; do
+            curl -LsSf https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-x86_64-unknown-linux-gnu.tar.gz -o trunk.tar.gz \
+              && tar -xzf trunk.tar.gz \
+              && sudo mv trunk /usr/local/bin/ \
+              && break
+            echo "trunk download failed (attempt $attempt/4) — retrying in 10s"
+            sleep 10
+          done
+          test -x /usr/local/bin/trunk
+
+      - name: Install tauri-cli
+        run: cargo install tauri-cli --version 2.11.4 --locked
+
+      - name: Build Tauri App (Test Only)
+        working-directory: apps/recon-app
+        run: |
+          # The beforeBuildCommand runs trunk build, which downloads the
+          # wasm-bindgen CLI from GitHub releases and occasionally flakes
+          # mid-connection — retry the whole build (caches make this cheap).
+          for attempt in 1 2 3 4; do
+            cargo tauri build --no-bundle && exit 0
+            echo "tauri build failed (attempt $attempt/4) — retrying in 10s"
+            sleep 10
+          done
+          exit 1

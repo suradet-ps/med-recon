@@ -218,7 +218,11 @@ pub async fn search_drugs(
         .search_drugs(&query)
         .await
         .map_err(|e| map_repo_error(e, "ค้นหายา"))?;
-    tracing::debug!(query_len = query.len(), count = results.len(), "drug search");
+    tracing::debug!(
+        query_len = query.len(),
+        count = results.len(),
+        "drug search"
+    );
     Ok(results.into_iter().map(DrugInfo::from).collect())
 }
 
@@ -352,10 +356,14 @@ pub struct AppStatus {
 /// Report the current configuration status (password never included).
 #[tauri::command]
 pub async fn get_app_status(state: State<'_, AppState>) -> Result<AppStatus, CommandError> {
-    let settings = state
-        .store
-        .load_settings()
-        .map_err(|e| dev_log("get_app_status", &e, CommandErrorKind::Query, "อ่านการตั้งค่าไม่สำเร็จ"))?;
+    let settings = state.store.load_settings().map_err(|e| {
+        dev_log(
+            "get_app_status",
+            &e,
+            CommandErrorKind::Query,
+            "อ่านการตั้งค่าไม่สำเร็จ",
+        )
+    })?;
     match state.store.load_connection() {
         Ok(conn) => Ok(AppStatus {
             configured: true,
@@ -421,10 +429,14 @@ pub async fn save_connection(
     config: ConnectionInput,
 ) -> Result<(), CommandError> {
     let connection: ConnectionConfig = config.into();
-    let settings = state
-        .store
-        .load_settings()
-        .map_err(|e| dev_log("save_connection", &e, CommandErrorKind::Query, "อ่านการตั้งค่าไม่สำเร็จ"))?;
+    let settings = state.store.load_settings().map_err(|e| {
+        dev_log(
+            "save_connection",
+            &e,
+            CommandErrorKind::Query,
+            "อ่านการตั้งค่าไม่สำเร็จ",
+        )
+    })?;
     let hosxp_config = to_hosxp_config(&connection, settings.history_days);
 
     // Connect before persisting so a bad password never gets saved.
@@ -432,10 +444,9 @@ pub async fn save_connection(
 
     // Encrypting for disk touches the OS keychain, which can stall on a
     // permission dialog with unsigned dev binaries — cap it as well.
-    let saved = tokio::time::timeout(
-        COMMAND_TIMEOUT,
-        async { state.store.save_connection(&connection) },
-    )
+    let saved = tokio::time::timeout(COMMAND_TIMEOUT, async {
+        state.store.save_connection(&connection)
+    })
     .await;
     match saved {
         Ok(Ok(())) => {}
@@ -541,10 +552,14 @@ pub async fn test_connection(
         Some(input) => (ConnectionConfig::from(input), 730),
         None => {
             let conn = stored_connection(&state)?;
-            let settings = state
-                .store
-                .load_settings()
-                .map_err(|e| dev_log("test_connection", &e, CommandErrorKind::Query, "อ่านการตั้งค่าไม่สำเร็จ"))?;
+            let settings = state.store.load_settings().map_err(|e| {
+                dev_log(
+                    "test_connection",
+                    &e,
+                    CommandErrorKind::Query,
+                    "อ่านการตั้งค่าไม่สำเร็จ",
+                )
+            })?;
             (conn, settings.history_days)
         }
     };
