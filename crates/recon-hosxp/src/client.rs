@@ -344,11 +344,12 @@ impl HosxpClient {
         Ok(rows
             .into_iter()
             .filter_map(|r| {
+                let vn = r.vn?;
                 let sig = queries::sig_from_names(
                     &[r.d_name1, r.d_name2, r.d_name3],
                     &[r.s_name1, r.s_name2, r.s_name3],
                 )?;
-                Some(((r.vn, r.icode), sig))
+                Some(((vn, r.icode), sig))
             })
             .collect())
     }
@@ -557,7 +558,7 @@ struct DispenseRow {
 /// Raw row shape for `drugusage`/`sp_use` sig queries.
 #[derive(sqlx::FromRow)]
 struct SigRow {
-    vn: String,
+    vn: Option<String>,
     icode: String,
     d_name1: Option<String>,
     d_name2: Option<String>,
