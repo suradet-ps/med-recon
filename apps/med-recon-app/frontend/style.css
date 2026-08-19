@@ -1004,18 +1004,9 @@ code, .mono, .code {
   color: var(--slate);
 }
 
-/* Screening table (CC/PE) — fixed layout so the text columns share the
-   remaining width equally after the numbered/date columns. */
+/* Screening table (CC/PE) — long text must wrap inside fixed cells. */
 .med-table--screen {
   table-layout: fixed;
-}
-
-.med-table--screen th:first-child {
-  width: 40px;
-}
-
-.med-table--screen th:nth-child(2) {
-  width: 92px;
 }
 
 .med-table--screen td {
