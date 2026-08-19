@@ -1,6 +1,6 @@
-# Recon — Design System & Product Design
+# Med Recon — Design System & Product Design
 
-Recon is a **read-only medication history lookup desktop application** for
+Med Recon is a **read-only medication history lookup desktop application** for
 allergy assessment and medication reconciliation. This document defines the
 product scope, UX flows, the visual design system, and the data-model
 rationale behind the Best Possible Medication History (BPMH) engine.
@@ -138,7 +138,7 @@ HN/CID) from Google Fonts. Base 14 px, line-height 1.5.
 
 ```
 ┌─────────────────────────────── top-bar (44px) ───────────────────────────────┐
-│ logo  Recon        ● status   [ไทย]   [ตั้งค่า]                                 │
+│ logo Med Recon        ● status   [ไทย]   [ตั้งค่า]                                 │
 ├───────────────────────┬───────────────────────────────────────────────────────┤
 │ sidebar (360px)       │ main canvas                                            │
 │  search input         │  patient bar + export                                  │
@@ -197,7 +197,7 @@ HN/CID) from Google Fonts. Base 14 px, line-height 1.5.
 - Columns that vary by site (`strength`, `units`) are selected through
   fallback query tiers (MySQL 1054 → degrade; 1146 → skip + warn).
 
-### 4.3 BPMH aggregation (recon-core)
+### 4.3 BPMH aggregation (med-recon-core)
 
 Input: raw `Dispense` events (OPD + IPD) + the operator-configured
 **current-medication list** (`current_med_codes`, from the settings screen).
@@ -235,11 +235,11 @@ window is enforced client-side after normalization.
 | MySQL 1054 | column missing | degrade to the fallback statement (same row shape) |
 | other | real failure | surface as typed error (kind + message) |
 
-### 4.6 Settings storage (`recon-config`)
+### 4.6 Settings storage (`med-recon-config`)
 
 Configuration is split into **two JSON files** under the platform config
-directory (`%APPDATA%\Recon` on Windows, `~/.config/Recon` on Linux,
-`~/Library/Application Support/Recon` on macOS), so connection credentials
+directory (`%APPDATA%\MedRecon` on Windows, `~/.config/MedRecon` on Linux,
+`~/Library/Application Support/MedRecon` on macOS), so connection credentials
 and operator preferences are versioned/backed up independently:
 
 | File | Contents | Format |

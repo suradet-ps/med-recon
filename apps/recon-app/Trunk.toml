@@ -1,6 +1,0 @@
-# Trunk config for the Recon frontend.
-# Tauri's beforeDevCommand/beforeBuildCommand run with cwd = this directory
-# (see tauri.conf.json), so paths are relative to this file.
-[build]
-target = "frontend/index.html"
-dist = "frontend/dist"

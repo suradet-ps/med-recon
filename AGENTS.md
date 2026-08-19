@@ -1,8 +1,8 @@
-# AGENTS.md — Recon
+# AGENTS.md - Med Recon
 
 ## Project Overview
 
-Recon is a read-only medication history lookup desktop application for allergy
+Med Recon is a read-only medication history lookup desktop application for allergy
 assessment and medication reconciliation. It connects to HOSxP (MySQL/MariaDB
 hospital information system) to retrieve a patient's cross-visit medication
 and allergy history.
@@ -22,7 +22,7 @@ correct queries. Do not duplicate docs/DESIGN.md content here — link to it.
   `encryptman` (master key via `encryptman-keyring`). Never store
   plaintext credentials on disk, in logs, or in error messages. Config is
   split across two JSON files under the platform config dir (see
-  `recon-config`): `connection.json` (encrypted credentials) and
+  `med-recon-config`): `connection.json` (encrypted credentials) and
   `settings.json` (plain, non-secret: site name, history window,
   current-medication `icode` list).
 - **Documentation convention:** `docs/DESIGN.md` (product/data model),
@@ -43,7 +43,7 @@ correct queries. Do not duplicate docs/DESIGN.md content here — link to it.
   พ.ศ. or ค.ศ. depending on the site — or even mixed. There is **no
   era setting**: every date value read from HOSxP is normalized to ค.ศ.
   individually, using the year (≥ 2500 ⇒ พ.ศ.) to detect its era
-  (`recon_core::normalize_date`).
+  (`med_recon_core::normalize_date`).
 
 ## HOSxP Schema Reference (confirmed against live schema)
 

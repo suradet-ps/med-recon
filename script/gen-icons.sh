@@ -3,7 +3,7 @@
 #
 # `cargo tauri icon` accepts a squared SVG with transparency directly and
 # renders every platform size itself (macOS .icns, Windows .ico, iOS,
-# Android, Store logos) into apps/recon-app/icons/.
+# Android, Store logos) into apps/med-recon-app/icons/.
 #
 # Prerequisite: tauri-cli (`cargo install tauri-cli --locked`).
 #
@@ -22,6 +22,6 @@ if [ ! -f icon-master.svg ]; then
   exit 1
 fi
 
-cargo tauri icon icon-master.svg -o apps/recon-app/icons
+cargo tauri icon icon-master.svg -o apps/med-recon-app/icons
 
-echo "All icons generated in apps/recon-app/icons/."
+echo "All icons generated in apps/med-recon-app/icons/."

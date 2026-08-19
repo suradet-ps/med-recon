@@ -34,18 +34,18 @@ Initial release.
 
 ### Added
 
-- **BPMH engine** (`recon-core`): cross-visit dispensing aggregation
+- **BPMH engine** (`med-recon-core`): cross-visit dispensing aggregation
   deduplicated by drug code, days-supply derivation from sig data
   (`qty / (dose × frequency)`), and active/lapsed inference with a grace
   period and a fallback window for unknown sigs.
-- **HOSxP repository** (`recon-hosxp`): sqlx-based MySQL/MariaDB client with
+- **HOSxP repository** (`med-recon-hosxp`): sqlx-based MySQL/MariaDB client with
   patient search (HN / CID / name), OPD + IPD dispensing history, allergy
   records, and visit history. Every statement passes a read-only guard
   (allow-list of `SELECT` / `SHOW` / `DESCRIBE` / `EXPLAIN`).
-- **Encrypted site configuration** (`recon-config`): AES-256-GCM at rest via
+- **Encrypted site configuration** (`med-recon-config`): AES-256-GCM at rest via
   `encryptman`, master key in the OS keychain via `encryptman-keyring`.
   Passwords never touch disk in plaintext.
-- **Desktop app** (`recon-app`): Tauri 2 shell + Leptos 0.8 CSR frontend.
+- **Desktop app** (`med-recon-app`): Tauri 2 shell + Leptos 0.8 CSR frontend.
   Screens: connection setup (test/save), patient search, patient detail
   (active/lapsed medications, allergies, visits), settings, about.
 - **HTML report export**: printable, self-contained medication history

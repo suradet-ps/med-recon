@@ -1,0 +1,27 @@
+[package]
+name = "med-recon-app"
+description = "Med Recon desktop shell: Tauri 2 backend serving the Leptos frontend"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+med-recon-core = { workspace = true }
+med-recon-hosxp = { workspace = true }
+med-recon-config = { workspace = true }
+sqlx = { workspace = true }             # error classification in map_repo_error
+tauri = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+rfd = { workspace = true }
+secrecy = { workspace = true }          # password wrapper in SiteConfigInput conversion
+encryptman = "0.3.0"                    # ephemeral vault fallback (headless)

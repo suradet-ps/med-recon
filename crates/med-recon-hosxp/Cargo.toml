@@ -1,0 +1,18 @@
+[package]
+name = "med-recon-hosxp"
+description = "Read-only HOSxP (MySQL/MariaDB) repository: patient identity, dispensing, allergy, and visit queries"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+med-recon-core = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+secrecy = { workspace = true }
+sqlx = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }

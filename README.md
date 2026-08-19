@@ -1,12 +1,12 @@
-# Recon
+# Med Recon
 
 > Read-only cross-visit medication & allergy history lookup for HOSxP hospitals.
 
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
-[![CI](https://github.com/suradet-ps/recon/actions/workflows/ci.yml/badge.svg)](https://github.com/suradet-ps/recon/actions/workflows/ci.yml)
+[![CI](https://github.com/suradet-ps/med-recon/actions/workflows/ci.yml/badge.svg)](https://github.com/suradet-ps/med-recon/actions/workflows/ci.yml)
 [![Rust 1.85+](https://img.shields.io/badge/rust-1.85%2B-dea584.svg)](#requirements)
 
-Recon is a **read-only** desktop application that answers inter-hospital
+Med Recon is a **read-only** desktop application that answers inter-hospital
 inquiries about a patient's medication history. Search by **name, HN, or CID**
 to see:
 
@@ -24,10 +24,10 @@ execution, on top of the recommended read-only DB role.
 ```
 Tauri 2 (shell) ── Leptos 0.8 CSR (WASM UI)
         │
-        ├── recon-core      pure domain: BPMH engine, date-era normalization, redaction
-        ├── recon-hosxp     sqlx MySQL repository (read-only guard)
-        ├── recon-config    settings store: encrypted connection.json + plain settings.json
-        └── recon-bridge    wasm IPC wrapper
+        ├── med-recon-core      pure domain: BPMH engine, date-era normalization, redaction
+        ├── med-recon-hosxp     sqlx MySQL repository (read-only guard)
+        ├── med-recon-config    settings store: encrypted connection.json + plain settings.json
+        └── med-recon-bridge    wasm IPC wrapper
 ```
 
 ## Security & privacy
@@ -41,7 +41,7 @@ Tauri 2 (shell) ── Leptos 0.8 CSR (WASM UI)
 - **PHI discipline.** HN/CID are redacted in logs; names are never logged.
   The UI always shows the BPMH disclaimer — dispensing-derived data is one
   source among several, not a verified medication list.
-- **Read-only by construction.** See `crates/recon-hosxp/src/readonly.rs`.
+- **Read-only by construction.** See `crates/med-recon-hosxp/src/readonly.rs`.
 
 ## Screens
 
@@ -73,12 +73,12 @@ cargo tauri dev
 cargo tauri build
 
 # or build the pieces individually
-trunk build apps/recon-app/frontend/index.html --release   # wasm UI
-cargo build -p recon-app                                    # native shell
+trunk build apps/med-recon-app/frontend/index.html --release   # wasm UI
+cargo build -p med-recon-app                                    # native shell
 ```
 
 Pre-built binaries (when published) are attached to
-[GitHub Releases](https://github.com/suradet-ps/recon/releases).
+[GitHub Releases](https://github.com/suradet-ps/med-recon/releases).
 
 ## Development
 
@@ -87,18 +87,18 @@ Local checks (mirror the CI):
 ```bash
 cargo fmt --check
 cargo clippy --workspace --all-targets -- -D warnings
-cargo test -p recon-core -p recon-hosxp -p recon-config -p recon-bridge -p recon-app
+cargo test -p med-recon-core -p med-recon-hosxp -p med-recon-config -p med-recon-bridge -p med-recon-app
 ```
 
-> `apps/recon-app/frontend` (`recon-frontend`) is a `wasm32` crate and is not
+> `apps/med-recon-app/frontend` (`med-recon-frontend`) is a `wasm32` crate and is not
 > built by `cargo test` on the host. It is verified by the CI's `wasm-frontend`
 > and `wasm-tests` jobs (Trunk build + `wasm32` clippy/test).
 
 - `AGENTS.md` — project conventions + the confirmed HOSxP schema reference
 - `docs/AGENTS-RUST.md` — Rust style/lint rules
 - `docs/DESIGN.md` — product scope, UX flows, design system, and BPMH data-model rationale
-- `crates/recon-core` — BPMH aggregation, days-supply, active/lapsed inference
-- `crates/recon-hosxp` — SQL statements (all `SELECT` only) and row mapping
+- `crates/med-recon-core` — BPMH aggregation, days-supply, active/lapsed inference
+- `crates/med-recon-hosxp` — SQL statements (all `SELECT` only) and row mapping
 
 ## Site-specific configuration
 
@@ -123,7 +123,7 @@ Contributions are welcome under the MIT OR Apache-2.0 license.
   reference before changing any query.
 - Backend crates and the Tauri shell are checked with `cargo fmt --check`,
   `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test`.
-- The Leptos frontend (`apps/recon-app/frontend`) is a wasm32 crate built with
+- The Leptos frontend (`apps/med-recon-app/frontend`) is a wasm32 crate built with
   Trunk; it is verified on CI, not via `cargo test --workspace` on the host.
 - All HOSxP access is **read-only** — never add `INSERT`/`UPDATE`/`DELETE`/DDL.
 

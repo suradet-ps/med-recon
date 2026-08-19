@@ -3003,6 +3003,94 @@ dependencies = [
 ]
 
 [[package]]
+name = "med-recon-app"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "encryptman",
+ "med-recon-config",
+ "med-recon-core",
+ "med-recon-hosxp",
+ "rfd",
+ "secrecy",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tauri",
+ "tauri-build",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "med-recon-bridge"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "tokio",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
+name = "med-recon-config"
+version = "0.1.0"
+dependencies = [
+ "directories",
+ "encryptman",
+ "encryptman-keyring",
+ "med-recon-core",
+ "secrecy",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "med-recon-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+]
+
+[[package]]
+name = "med-recon-frontend"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "js-sys",
+ "leptos",
+ "leptos_router",
+ "med-recon-bridge",
+ "med-recon-core",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "med-recon-hosxp"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "med-recon-core",
+ "secrecy",
+ "serde",
+ "sqlx",
+ "thiserror 2.0.20",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "memchr"
 version = "2.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4043,94 +4131,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
-]
-
-[[package]]
-name = "recon-app"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "encryptman",
- "recon-config",
- "recon-core",
- "recon-hosxp",
- "rfd",
- "secrecy",
- "serde",
- "serde_json",
- "sqlx",
- "tauri",
- "tauri-build",
- "tokio",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "recon-bridge"
-version = "0.1.0"
-dependencies = [
- "js-sys",
- "serde",
- "serde_json",
- "thiserror 2.0.20",
- "tokio",
- "wasm-bindgen",
- "wasm-bindgen-futures",
-]
-
-[[package]]
-name = "recon-config"
-version = "0.1.0"
-dependencies = [
- "directories",
- "encryptman",
- "encryptman-keyring",
- "recon-core",
- "secrecy",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.20",
-]
-
-[[package]]
-name = "recon-core"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
-]
-
-[[package]]
-name = "recon-frontend"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "js-sys",
- "leptos",
- "leptos_router",
- "recon-bridge",
- "recon-core",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "recon-hosxp"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "recon-core",
- "secrecy",
- "serde",
- "sqlx",
- "thiserror 2.0.20",
- "tokio",
- "tracing",
 ]
 
 [[package]]

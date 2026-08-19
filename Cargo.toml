@@ -1,26 +1,26 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/recon-core",
-    "crates/recon-hosxp",
-    "crates/recon-config",
-    "crates/recon-bridge",
-    "apps/recon-app",
-    "apps/recon-app/frontend",
+    "crates/med-recon-core",
+    "crates/med-recon-hosxp",
+    "crates/med-recon-config",
+    "crates/med-recon-bridge",
+    "apps/med-recon-app",
+    "apps/med-recon-app/frontend",
 ]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/suradet-ps/recon"
+repository = "https://github.com/suradet-ps/med-recon"
 authors = ["suradet-ps"]
 
 [workspace.dependencies]
-recon-core = { path = "crates/recon-core" }
-recon-hosxp = { path = "crates/recon-hosxp" }
-recon-config = { path = "crates/recon-config" }
-recon-bridge = { path = "crates/recon-bridge" }
+med-recon-core = { path = "crates/med-recon-core" }
+med-recon-hosxp = { path = "crates/med-recon-hosxp" }
+med-recon-config = { path = "crates/med-recon-config" }
+med-recon-bridge = { path = "crates/med-recon-bridge" }
 
 serde = { version = "1.0", features = ["derive"] }          # serialization across the boundary
 serde_json = "1.0"                                          # JSON payloads for Tauri IPC

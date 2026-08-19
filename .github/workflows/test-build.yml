@@ -37,8 +37,8 @@ jobs:
         uses: swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           workspaces: |
-            ./apps/recon-app -> apps/recon-app/target
-            ./apps/recon-app/frontend -> apps/recon-app/frontend/target
+            ./apps/med-recon-app -> apps/med-recon-app/target
+            ./apps/med-recon-app/frontend -> apps/med-recon-app/frontend/target
 
       - name: Install system dependencies
         run: |
@@ -63,7 +63,7 @@ jobs:
         run: cargo install tauri-cli --version 2.11.4 --locked
 
       - name: Build Tauri App (Test Only)
-        working-directory: apps/recon-app
+        working-directory: apps/med-recon-app
         run: |
           # The beforeBuildCommand runs trunk build, which downloads the
           # wasm-bindgen CLI from GitHub releases and occasionally flakes
