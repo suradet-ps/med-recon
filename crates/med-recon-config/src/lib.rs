@@ -73,7 +73,7 @@ pub struct SiteSettings {
     pub history_days: u32,
     /// `icode`s of the operator-configured current medications (from
     /// `drugitems`). Drives the BPMH active/lapsed split: only drugs on
-    /// this list are shown as ยาที่คาดว่ายังใช้อยู่.
+    /// this list are shown as ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่.
     pub current_med_codes: Vec<String>,
 }
 

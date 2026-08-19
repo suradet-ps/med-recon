@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ⇒ พ.ศ.), tolerating BE/CE/mixed sites without configuration.
 - **BPMH verdict is operator-configured** — the settings screen curates a
   current-medication list (search `drugitems`); only listed drugs are
-  labelled "ยาที่คาดว่ายังใช้อยู่" regardless of dispense recency. Days
+  labelled "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่" regardless of dispense recency. Days
   supply remains display-only.
 - **Settings split into two JSON files** — `connection.json` (encrypted
   credentials) and `settings.json` (plain, non-secret: site name, history

@@ -74,16 +74,16 @@ Top to bottom:
    sig data unavailable).
 3. **BPMH note** — persistent shield banner: dispensing-derived data is one
    source among several.
-4. **ยาที่คาดว่ายังใช้อยู่ (likely active)** — green verdict bands, one per
+4. **ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ (likely active)** — green verdict bands, one per
    deduplicated drug.
-5. **ยาที่คาดว่าหยุดใช้แล้ว (likely lapsed)** — neutral bands.
+5. **ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่าหยุดใช้แล้ว (likely lapsed)** — neutral bands.
 6. **แพ้ยา / อาการไม่พึงประสงค์** — red bands.
 7. **ประวัติการเข้ารับบริการ** — visit timeline (date, OPD/IPD badge,
    department, visit id).
 
 ### 2.4 Export
 
-"ส่งออกรายงาน" saves a self-contained HTML report (same BPMH disclaimer +
+"พิมพ์ประวัติการได้รับยา" saves a self-contained HTML report (same BPMH disclaimer +
 PHI notice) through the native save dialog.
 
 ### 2.5 Settings (revisiting)

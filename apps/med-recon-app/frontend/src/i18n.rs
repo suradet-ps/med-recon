@@ -58,7 +58,11 @@ impl Lang {
 
 /// UI strings. Keys are short identifiers; every key has both languages.
 pub const KEYS: &[(&str, &str, &str)] = &[
-    ("app.name", "Med Recon", "Med Recon"),
+    (
+        "app.name",
+        "Med Recon ระบบการบริหารจัดการความสอดคล้องต่อเนื่องของยา โรงพยาบาลสระโบสถ์",
+        "Med Recon",
+    ),
     (
         "app.tagline",
         "ประวัติยาผู้ป่วยจาก HOSxP",
@@ -124,7 +128,7 @@ pub const KEYS: &[(&str, &str, &str)] = &[
     ),
     (
         "settings.meds_note",
-        "เฉพาะยาที่ตั้งค่าไว้เท่านั้นจะแสดงในหัวข้อ ยาที่คาดว่ายังใช้อยู่ — ยาที่ไม่ตั้งค่า (แม้เพิ่งได้รับ) จะถือว่าหยุดใช้แล้ว",
+        "เฉพาะยาที่ตั้งค่าไว้เท่านั้นจะแสดงในหัวข้อ ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ — ยาที่ไม่ตั้งค่า (แม้เพิ่งได้รับ) จะถือว่าหยุดใช้แล้ว",
         "Only configured drugs are shown under 'likely active' — any drug not configured (even recently dispensed) is treated as stopped.",
     ),
     ("settings.meds_search", "ค้นหาชื่อยา…", "Search drug name…"),
@@ -227,12 +231,12 @@ pub const KEYS: &[(&str, &str, &str)] = &[
     ),
     (
         "canvas.active",
-        "ยาที่คาดว่ายังใช้อยู่ ({n})",
+        "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ ({n})",
         "Likely active ({n})",
     ),
     (
         "canvas.lapsed",
-        "ยาที่คาดว่าหยุดใช้แล้ว ({n})",
+        "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่าหยุดใช้แล้ว ({n})",
         "Likely lapsed ({n})",
     ),
     (
@@ -263,7 +267,7 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "No dispensing records in the configured window",
     ),
     ("canvas.age", "อายุ {n} ปี", "Age {n}"),
-    ("canvas.export", "ส่งออกรายงาน", "Export report"),
+    ("canvas.export", "พิมพ์ประวัติการได้รับยา", "Export report"),
     ("canvas.exporting", "กำลังส่งออก…", "Exporting…"),
     (
         "canvas.export_done",
@@ -287,6 +291,52 @@ pub const KEYS: &[(&str, &str, &str)] = &[
     ("visit.id", "รหัส visit", "Visit ID"),
     ("visit.opd", "OPD", "OPD"),
     ("visit.ipd", "IPD", "IPD"),
+    (
+        "report.heading",
+        "ประวัติยาและการใช้ยา — Med Recon",
+        "Medication history — Med Recon",
+    ),
+    ("report.generated", "สร้างเมื่อ {date}", "Generated {date}"),
+    ("report.site_default", "สถานบริการ", "Healthcare facility"),
+    (
+        "report.title",
+        "ประวัติยา {name} ({hn})",
+        "Medication history {name} ({hn})",
+    ),
+    (
+        "report.disclaimer",
+        "⚠️ เอกสารนี้สร้างจากข้อมูลการจ่ายยา (dispensing) ใน HOSxP ซึ่งเป็นเพียงแหล่งข้อมูลหนึ่งในหลายแหล่ง สำหรับ Best Possible Medication History (BPMH) ยังไม่ถือว่าเป็นรายการยาที่สมบูรณ์หรือได้รับการยืนยัน ควรสอบทานร่วมกับผู้ป่วย/ญาติก่อนนำไปใช้ทางคลินิก",
+        "⚠️ This document is generated from dispensing data in HOSxP, which is only one source among several for a Best Possible Medication History (BPMH). It is not a complete or verified medication list. Reconcile with the patient or family before clinical use.",
+    ),
+    ("report.section.patient", "ข้อมูลผู้ป่วย", "Patient"),
+    (
+        "report.section.allergy",
+        "แพ้ยา / อาการไม่พึงประสงค์ ({n})",
+        "Allergies / ADR ({n})",
+    ),
+    (
+        "report.section.visits",
+        "ประวัติการเข้ารับบริการ ({n})",
+        "Visit history ({n})",
+    ),
+    ("report.last", "ครั้งล่าสุด", "Last dispensed"),
+    (
+        "report.dispenses",
+        "dispense {n} ครั้ง",
+        "dispensed {n} times",
+    ),
+    ("report.total", "รวม", "Total"),
+    ("report.supply", "supply ≈ {n} วัน", "supply ≈ {n} days"),
+    ("report.freq_per_day", "/วัน", "/day"),
+    ("report.reported_on", "รายงานเมื่อ {date}", "Reported {date}"),
+    ("report.by", "โดย {name}", "by {name}"),
+    ("report.note", "หมายเหตุ: {note}", "Note: {note}"),
+    (
+        "report.footer_phi",
+        "ข้อมูลนี้เป็นข้อมูลสุขภาพส่วนบุคคล (PHI) ต้องจัดเก็บและส่งต่อตามระเบียบปฏิบัติด้านการคุ้มครองข้อมูลส่วนบุคคล",
+        "This document contains personal health information (PHI); store and share it in accordance with privacy regulations.",
+    ),
+    ("report.html_lang", "th", "en"),
     (
         "about.license",
         "v0.1.0 · MIT/Apache-2.0",
@@ -331,7 +381,10 @@ mod tests {
 
     #[test]
     fn tr_returns_translation_or_key() {
-        assert_eq!(tr(Lang::Thai, "canvas.active"), "ยาที่คาดว่ายังใช้อยู่ ({n})");
+        assert_eq!(
+            tr(Lang::Thai, "canvas.active"),
+            "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ ({n})"
+        );
         assert_eq!(tr(Lang::English, "canvas.active"), "Likely active ({n})");
         assert_eq!(tr(Lang::Thai, "no.such.key"), "no.such.key");
     }
