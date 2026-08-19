@@ -8,8 +8,8 @@
 
 use chrono::NaiveDate;
 use med_recon_core::{
-    AllergyRecord, Dispense, EncounterSource, MedicationItem, PatientHistory, PatientSummary,
-    VisitSummary, aggregate_medications, normalize_date,
+    AllergyRecord, Dispense, EncounterSource, MedicationItem, OpdScreenRecord, PatientHistory,
+    PatientSummary, VisitSummary, aggregate_medications, normalize_date,
 };
 use secrecy::ExposeSecret;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPool, MySqlPoolOptions};
@@ -185,6 +185,7 @@ impl HosxpClient {
         }
 
         let allergies = self.load_allergies(hn, &mut warnings).await?;
+        let screen_records = self.load_screen_records(hn, cutoff, &mut warnings).await?;
         let mut visits = self.load_visits(hn, cutoff, &mut warnings).await?;
         visits.sort_by_key(|a| std::cmp::Reverse(a.date));
 
@@ -195,6 +196,7 @@ impl HosxpClient {
             patient,
             medications,
             allergies,
+            screen_records,
             visits,
             warnings,
         })
@@ -358,6 +360,40 @@ impl HosxpClient {
                     &[r.s_name1, r.s_name2, r.s_name3],
                 )?;
                 Some(((visit_id, r.icode), sig))
+            })
+            .collect())
+    }
+
+    /// Load OPD screening records (`opdscreen` CC/PE) for one patient, newest
+    /// visit first. If the table is missing on this site (MySQL 1146) the
+    /// section degrades to empty with a user-visible warning.
+    async fn load_screen_records(
+        &self,
+        hn: &str,
+        cutoff: NaiveDate,
+        warnings: &mut Vec<String>,
+    ) -> Result<Vec<OpdScreenRecord>> {
+        let rows: Vec<OpdScreenRow> = match self
+            .fetch_rows(
+                queries::OPD_SCREEN_SQL,
+                &[P::Str(hn.to_owned()), P::Date(cutoff)],
+            )
+            .await
+        {
+            Ok(rows) => rows,
+            Err(e) if is_schema_variation(&e) => {
+                warn_missing(warnings, "opdscreen", "การตรวจร่างกาย (CC/PE)");
+                return Ok(Vec::new());
+            }
+            Err(e) => return Err(e),
+        };
+        Ok(rows
+            .into_iter()
+            .map(|r| OpdScreenRecord {
+                vn: r.vn,
+                vstdate: r.vstdate,
+                cc: r.cc,
+                pe: r.pe,
             })
             .collect())
     }
@@ -610,6 +646,15 @@ struct SigRow {
     s_name1: Option<String>,
     s_name2: Option<String>,
     s_name3: Option<String>,
+}
+
+/// Raw row shape for `opdscreen` CC/PE queries.
+#[derive(sqlx::FromRow)]
+struct OpdScreenRow {
+    vn: String,
+    vstdate: NaiveDate,
+    cc: Option<String>,
+    pe: Option<String>,
 }
 
 /// Raw row shape for `opd_allergy` queries.

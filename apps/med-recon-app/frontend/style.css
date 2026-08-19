@@ -895,6 +895,7 @@ code, .mono, .code {
 
 .timeline-header {
   margin: 0;
+  font-family: var(--font-thai);
   font-size: 12.5px;
   font-weight: 700;
   color: var(--slate);
@@ -1001,6 +1002,24 @@ code, .mono, .code {
 .med-table__appt {
   white-space: nowrap;
   color: var(--slate);
+}
+
+/* Screening table (CC/PE) — fixed layout so the text columns share the
+   remaining width equally after the numbered/date columns. */
+.med-table--screen {
+  table-layout: fixed;
+}
+
+.med-table--screen th:first-child {
+  width: 40px;
+}
+
+.med-table--screen th:nth-child(2) {
+  width: 92px;
+}
+
+.med-table--screen td {
+  overflow-wrap: break-word;
 }
 
 /* ==========================================================================

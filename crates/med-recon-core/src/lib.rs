@@ -17,8 +17,8 @@ pub use eras::{
     BUDDHIST_ERA_YEAR_THRESHOLD, buddhist_to_christian, is_buddhist_era_year, normalize_date,
 };
 pub use model::{
-    AllergyRecord, Dispense, EncounterSource, MedicationItem, MedicationStatus, PatientHistory,
-    PatientSummary, Sig, VisitSummary,
+    AllergyRecord, Dispense, EncounterSource, MedicationItem, MedicationStatus, OpdScreenRecord,
+    PatientHistory, PatientSummary, Sig, VisitSummary,
 };
 pub use query_kind::{QueryKind, detect_query_kind};
 pub use redact::{redact_cid, redact_hn};

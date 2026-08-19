@@ -167,6 +167,20 @@ pub struct VisitSummary {
     pub department: Option<String>,
 }
 
+/// OPD screening record (`opdscreen`) — chief complaint and physical exam
+/// text, keyed by the visit id (`vn`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OpdScreenRecord {
+    /// OPD visit id.
+    pub vn: String,
+    /// Screening date.
+    pub vstdate: NaiveDate,
+    /// Chief complaint (`cc`).
+    pub cc: Option<String>,
+    /// Physical examination text (`pe`).
+    pub pe: Option<String>,
+}
+
 /// The full cross-visit history for one patient.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PatientHistory {
@@ -178,6 +192,8 @@ pub struct PatientHistory {
     pub allergies: Vec<AllergyRecord>,
     /// Visit history, most recent first.
     pub visits: Vec<VisitSummary>,
+    /// OPD screening records (CC/PE), most recent first.
+    pub screen_records: Vec<OpdScreenRecord>,
     /// Data-completeness warnings (e.g. a HOSxP table missing on this site,
     /// so part of the history was skipped). Shown to the user verbatim.
     pub warnings: Vec<String>,

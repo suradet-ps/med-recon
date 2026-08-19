@@ -1,6 +1,6 @@
 //! Main canvas — the complete medication history for the selected patient:
 //! patient bar, data-completeness warnings, allergy bands, BPMH active /
-//! lapsed sections, and the visit timeline.
+//! lapsed sections, and the CC/PE screening table.
 
 use chrono::{Datelike, NaiveDate};
 use leptos::prelude::*;
@@ -8,11 +8,11 @@ use leptos::task::spawn_local;
 
 use crate::api;
 use crate::components::icons::{
-    IconAlert, IconCheckCircle, IconChevron, IconPrinter, IconUser, IconXCircle,
+    IconAlert, IconCheckCircle, IconChevron, IconClipboard, IconPrinter, IconUser, IconXCircle,
 };
 use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
-use med_recon_core::{MedicationItem, MedicationStatus, PatientHistory, Sig};
+use med_recon_core::{MedicationItem, MedicationStatus, OpdScreenRecord, PatientHistory, Sig};
 
 #[component]
 pub fn HistoryCanvas(state: AppState) -> impl IntoView {
@@ -113,6 +113,15 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
     );
     let has_lapsed = lapsed_count > 0;
     let lapsed_open = RwSignal::new(false);
+    let screen_records = history.screen_records.clone();
+    let screen_count = screen_records.len();
+    let screen_title = tr_f(
+        lang.get_untracked(),
+        "canvas.screen",
+        &[("n", &screen_count.to_string())],
+    );
+    let has_screen = screen_count > 0;
+    let screen_open = RwSignal::new(false);
     let allergy_count = history.allergies.len();
     let allergies_title = tr_f(
         lang.get_untracked(),
@@ -254,6 +263,31 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                 }}
             </section>
 
+            <section class="canvas-section">
+                <button
+                    class="timeline-header timeline-header--button"
+                    on:click=move |_| screen_open.update(|v| *v = !*v)
+                    aria-expanded=move || if screen_open.get() { "true" } else { "false" }
+                >
+                    <IconClipboard class="icon" />
+                    {screen_title}
+                    <IconChevron class="timeline-header__chevron" />
+                </button>
+                {move || {
+                    if !has_screen {
+                        view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_screen")}</p> }.into_any()
+                    } else if screen_open.get() {
+                        screen_table(&screen_records, lang).into_any()
+                    } else {
+                        view! { <p class="canvas-empty__sub">{tr_f(
+                            lang.get(),
+                            "canvas.screen_collapsed",
+                            &[("n", &screen_count.to_string())],
+                        )}</p> }.into_any()
+                    }
+                }}
+            </section>
+
         </>
     }
 }
@@ -314,6 +348,37 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                         }
                     }).collect_view()
                 }}
+            </tbody>
+        </table>
+    }
+}
+
+/// Render screening records (CC/PE) as a table styled like `med_table`:
+/// ลำดับ / วันที่ / CC / PE, newest visit first, "—" for blanks.
+fn screen_table(items: &[OpdScreenRecord], lang: RwSignal<crate::i18n::Lang>) -> impl IntoView {
+    view! {
+        <table class="med-table med-table--screen">
+            <thead>
+                <tr>
+                    <th class="med-table__no">{tr(lang.get(), "med.col_no")}</th>
+                    <th>{tr(lang.get(), "visit.date")}</th>
+                    <th>{tr(lang.get(), "med.col_cc")}</th>
+                    <th>{tr(lang.get(), "med.col_pe")}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {items.iter().enumerate().map(|(i, r)| {
+                    let no = (i + 1).to_string();
+                    let date = format!("{:02}/{:02}/{}", r.vstdate.day(), r.vstdate.month(), r.vstdate.year());
+                    view! {
+                        <tr class="med-table__row">
+                            <td class="med-table__no">{no}</td>
+                            <td class="med-table__date">{date}</td>
+                            <td class="med-table__sig">{r.cc.clone().unwrap_or_else(|| "—".into())}</td>
+                            <td class="med-table__sig">{r.pe.clone().unwrap_or_else(|| "—".into())}</td>
+                        </tr>
+                    }
+                }).collect_view()}
             </tbody>
         </table>
     }

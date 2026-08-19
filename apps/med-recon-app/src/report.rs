@@ -480,6 +480,7 @@ mod tests {
                 date: chrono::NaiveDate::from_ymd_opt(2026, 7, 1).unwrap(),
                 department: Some("OPD".into()),
             }],
+            screen_records: vec![],
             warnings: vec![],
         }
     }

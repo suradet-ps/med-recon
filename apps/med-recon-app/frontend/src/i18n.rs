@@ -281,6 +281,23 @@ pub const KEYS: &[(&str, &str, &str)] = &[
     ("med.col_sig", "วิธีใช้", "Directions"),
     ("med.col_qty", "จำนวนที่จ่าย", "Qty dispensed"),
     ("med.col_appt", "วันนัด", "Next appt"),
+    (
+        "canvas.screen",
+        "การตรวจ / อาการสำคัญ (CC/PE) ({n})",
+        "Screening / CC-PE ({n})",
+    ),
+    (
+        "canvas.screen_collapsed",
+        "คลิกเพื่อดู {n} รายการการตรวจ",
+        "Click to view {n} screening records",
+    ),
+    (
+        "canvas.no_screen",
+        "ไม่พบข้อมูลการตรวจ (CC/PE)",
+        "No screening (CC/PE) records",
+    ),
+    ("med.col_cc", "CC (อาการสำคัญ)", "CC (chief complaint)"),
+    ("med.col_pe", "PE (ผลตรวจร่างกาย)", "PE (physical exam)"),
     ("visit.date", "วันที่", "Date"),
     ("visit.type", "ประเภท", "Type"),
     ("visit.department", "แผนก / หอผู้ป่วย", "Department / Ward"),

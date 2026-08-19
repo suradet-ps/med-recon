@@ -138,6 +138,17 @@ LEFT JOIN sp_use s ON s.sp_use = o.sp_use
 WHERE o.hn = ?
   AND o.vstdate >= ?"#;
 
+/// OPD screening records (`opdscreen`) — chief complaint and physical exam
+/// text. Columns confirmed against the target site's live schema.
+///
+/// Parameters: `(hn, cutoff)`.
+pub const OPD_SCREEN_SQL: &str = r#"
+SELECT vn, vstdate, cc, pe
+FROM opdscreen
+WHERE hn = ?
+  AND vstdate >= ?
+ORDER BY vstdate DESC"#;
+
 /// Allergy / ADR records.
 ///
 /// Columns confirmed against the live schema: `report_date` (date),
@@ -390,6 +401,7 @@ mod tests {
             IPD_DISPENSE_SQL_FALLBACK,
             SIG_SQL,
             ALLERGY_SQL,
+            OPD_SCREEN_SQL,
             DRUG_SEARCH_SQL,
             OPD_VISIT_SQL,
             IPD_VISIT_SQL,
