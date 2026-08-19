@@ -15,7 +15,7 @@ const DEBOUNCE_MS: u64 = 250;
 
 #[component]
 pub fn PatientSearch(state: AppState) -> impl IntoView {
-    let query = RwSignal::new(String::new());
+    let query = state.search_query;
     let results = RwSignal::new(Vec::<PatientSummary>::new());
     let searching = RwSignal::new(false);
     let error = RwSignal::new(None::<String>);
@@ -82,9 +82,11 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
         }
         query.set(name);
         state.patient.set(Some(patient));
+        state.patient_photo.set(None);
         state.history.set(None);
         state.history_error.set(None);
         state.history_loading.set(true);
+        let hn_photo = hn.clone();
         spawn_local(async move {
             match api::load_history(&hn).await {
                 Ok(history) => {
@@ -97,6 +99,12 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
                 }
             }
             state.history_loading.set(false);
+        });
+        // Photo is decorative — a failure just keeps the placeholder avatar.
+        spawn_local(async move {
+            if let Ok(Some(photo)) = api::load_patient_image(&hn_photo).await {
+                state.patient_photo.set(Some(photo));
+            }
         });
     };
 

@@ -62,6 +62,19 @@ FROM patient
 WHERE hn = ?
 LIMIT 1"#;
 
+/// Patient photo (`patient_image.image`, JPEG/PNG BLOB) keyed by HN.
+///
+/// Photos are supplementary identity data: if the table or column is
+/// missing on this site (MySQL 1146/1054) the client degrades silently to
+/// `None` and the UI shows a placeholder avatar — never a load failure.
+///
+/// Parameters: `(hn)`.
+pub const PATIENT_IMAGE_SQL: &str = r#"
+SELECT image
+FROM patient_image
+WHERE hn = ?
+LIMIT 1"#;
+
 /// OPD dispensing history (orders/dispense via `opitemrece`).
 ///
 /// `qty` is CAST to CHAR because sqlx cannot decode MySQL DECIMAL as `f64`;
@@ -395,6 +408,7 @@ mod tests {
             PATIENT_SEARCH_NAME_PREFIX,
             PATIENT_SEARCH_NAME_CONTAINS,
             PATIENT_BY_HN_SQL,
+            PATIENT_IMAGE_SQL,
             OPD_DISPENSE_SQL,
             OPD_DISPENSE_SQL_FALLBACK,
             IPD_DISPENSE_SQL,

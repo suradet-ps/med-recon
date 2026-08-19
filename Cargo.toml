@@ -37,6 +37,7 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "fs"] 
 tauri = { version = "2", features = [] }                    # desktop shell
 tauri-build = "2"                                           # tauri context generation
 rfd = "0.17"                                                # native save dialog for report export
+base64 = "0.22"                                             # patient photo BLOB → data URL over IPC
 leptos = "0.8"                                              # reactive UI framework (frontend)
 leptos_router = "0.8"                                       # client-side routing
 wasm-bindgen = "0.2"                                        # wasm interop

@@ -633,6 +633,43 @@ pub async fn load_history(
     Ok(history)
 }
 
+/// Encode an image BLOB as a `data:` URL for the webview `<img>`.
+///
+/// The MIME type is sniffed from the magic bytes: HOSxP `patient_image`
+/// stores JPEG at the target site, but some sites keep PNG. Anything else
+/// falls back to `image/jpeg` per the schema reference.
+fn image_data_url(bytes: &[u8]) -> String {
+    let mime = if bytes.starts_with(&[0x89, b'P', b'N', b'G']) {
+        "image/png"
+    } else {
+        "image/jpeg"
+    };
+    use base64::Engine;
+    let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
+    format!("data:{mime};base64,{encoded}")
+}
+
+/// Load the patient's photo (`patient_image` BLOB) as a `data:` URL;
+/// `None` when the site has no photo on file. The BLOB never crosses
+/// logging or error paths.
+#[tauri::command]
+pub async fn load_patient_image(
+    state: State<'_, AppState>,
+    hn: String,
+) -> Result<Option<String>, CommandError> {
+    let client = client(&state, "อ่านรูปผู้ป่วย").await?;
+    let image = client
+        .load_patient_image(&hn)
+        .await
+        .map_err(|e| map_repo_error(e, "อ่านรูปผู้ป่วย"))?;
+    tracing::debug!(
+        hn = %med_recon_core::redact_hn(&hn),
+        has_photo = image.is_some(),
+        "patient photo loaded"
+    );
+    Ok(image.map(|bytes| image_data_url(&bytes)))
+}
+
 /// Export a printable HTML medication history report for a patient.
 #[tauri::command]
 pub async fn export_report(

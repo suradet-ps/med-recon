@@ -32,6 +32,7 @@ pub fn run() {
             commands::search_drugs,
             commands::get_current_meds,
             commands::load_history,
+            commands::load_patient_image,
             commands::export_report,
         ])
         .run(tauri::generate_context!())

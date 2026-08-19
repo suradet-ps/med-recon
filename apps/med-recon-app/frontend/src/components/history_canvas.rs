@@ -1,14 +1,13 @@
 //! Main canvas — the complete medication history for the selected patient:
-//! patient bar, data-completeness warnings, allergy bands, BPMH active /
-//! lapsed sections, and the CC/PE screening table.
+//! data-completeness warnings, allergy bands, BPMH active / lapsed
+//! sections, and the CC/PE screening table. The patient identity lives in
+//! the sidebar card, so this panel keeps its full vertical space for data.
 
 use chrono::{Datelike, NaiveDate};
 use leptos::prelude::*;
-use leptos::task::spawn_local;
 
-use crate::api;
 use crate::components::icons::{
-    IconAlert, IconCheckCircle, IconChevron, IconClipboard, IconPrinter, IconUser, IconXCircle,
+    IconAlert, IconCheckCircle, IconChevron, IconClipboard, IconUser, IconXCircle,
 };
 use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
@@ -52,38 +51,6 @@ fn EmptyState(state: AppState) -> impl IntoView {
 #[component]
 fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
     let lang = state.lang;
-    let exporting = RwSignal::new(false);
-    let export_msg = RwSignal::new(None::<(bool, String)>);
-    let on_export = move |_| {
-        let Some(patient) = state.patient.get() else {
-            return;
-        };
-        exporting.set(true);
-        export_msg.set(None);
-        spawn_local(async move {
-            let labels = api::report_labels(lang.get_untracked());
-            match api::export_report(&patient.hn, &labels).await {
-                Ok(path) => export_msg.set(Some((
-                    true,
-                    tr_f(
-                        lang.get_untracked(),
-                        "canvas.export_done",
-                        &[("path", &path)],
-                    ),
-                ))),
-                Err(e) => export_msg.set(Some((false, e.message))),
-            }
-            exporting.set(false);
-        });
-    };
-    let patient = history.patient.clone();
-    let name = patient.display_name();
-    let hn = patient.hn.clone();
-    let cid = patient.cid.clone();
-    let birthday = patient
-        .birthday
-        .map(|d| format!("{:02}/{:02}/{}", d.day(), d.month(), d.year()));
-    let age = patient.birthday.map(age_years);
 
     let active: Vec<MedicationItem> = history
         .medications
@@ -133,37 +100,6 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
 
     view! {
         <>
-            <div class="patient-bar">
-                <IconUser class="patient-bar__icon" />
-                <div class="patient-bar__info">
-                    <h2 class="patient-bar__name">{name}</h2>
-                    <div class="patient-bar__meta">
-                        <span class="code">{"HN "}{hn.clone()}</span>
-                        {move || cid.as_ref().map(|c| view! { <><span class="sep">"·"</span><span class="code">{c.clone()}</span></> })}
-                        {move || birthday.as_ref().map(|b| view! { <><span class="sep">"·"</span><span>{b.clone()}</span></> })}
-                        {move || age.map(|a| view! { <><span class="sep">"·"</span><span>{tr_f(lang.get(), "canvas.age", &[("n", &a.to_string())])}</span></> })}
-                    </div>
-                </div>
-                <div class="patient-bar__change">
-                    <button
-                        class="button-primary button-primary--inline"
-                        on:click=on_export
-                        prop:disabled=move || exporting.get()
-                    >
-                        <IconPrinter class="icon" />
-                        {move || if exporting.get() { tr(lang.get(), "canvas.exporting") } else { tr(lang.get(), "canvas.export") }}
-                    </button>
-                </div>
-            </div>
-
-            {move || export_msg.get().map(|(ok, msg)| {
-                if ok {
-                    view! { <div class="banner-warning" style="border-color:var(--verdict-found-border);background:var(--verdict-found);color:var(--verdict-found-text)">{msg.clone()}</div> }.into_any()
-                } else {
-                    view! { <div class="banner-warning">{msg.clone()}</div> }.into_any()
-                }
-            })}
-
             {move || {
                 if !warnings.is_empty() {
                     Some(view! {
@@ -415,24 +351,4 @@ fn format_qty(q: f64) -> String {
         s.pop();
     }
     s
-}
-
-/// Whole-years age as of today, computed from a birthday.
-///
-/// Uses the browser's local date (`js_sys::Date`) — `std::time::SystemTime`
-/// panics under `wasm32`.
-fn age_years(birthday: NaiveDate) -> i32 {
-    let today = js_sys::Date::new_0();
-    let year = today.get_full_year() as i32;
-    let month = today.get_month() + 1;
-    let day = today.get_date();
-    let today = match NaiveDate::from_ymd_opt(year, month, day) {
-        Some(d) => d,
-        None => return 0,
-    };
-    let mut age = today.year() - birthday.year();
-    if (month, day) < (birthday.month(), birthday.day()) {
-        age -= 1;
-    }
-    age
 }

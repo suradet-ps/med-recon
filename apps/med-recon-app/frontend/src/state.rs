@@ -28,8 +28,13 @@ pub struct AppState {
     pub settings_open: RwSignal<bool>,
     /// Polled live reachability — top-bar dot source.
     pub health: RwSignal<ConnectionHealth>,
+    /// Search input text — shared so the patient card can reset it.
+    pub search_query: RwSignal<String>,
     /// Selected patient; `None` until one is picked from search results.
     pub patient: RwSignal<Option<PatientSummary>>,
+    /// Selected patient's photo as a `data:` URL; `None` until loaded or
+    /// when the site has no photo on file.
+    pub patient_photo: RwSignal<Option<String>>,
     /// Loaded cross-visit history for the selected patient.
     pub history: RwSignal<Option<PatientHistory>>,
     /// Whether a history load is in flight.
@@ -47,7 +52,9 @@ impl AppState {
             configured: RwSignal::new(false),
             settings_open: RwSignal::new(false),
             health: RwSignal::new(ConnectionHealth::Unconfigured),
+            search_query: RwSignal::new(String::new()),
             patient: RwSignal::new(None),
+            patient_photo: RwSignal::new(None),
             history: RwSignal::new(None),
             history_loading: RwSignal::new(false),
             history_error: RwSignal::new(None),

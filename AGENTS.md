@@ -55,6 +55,7 @@ the live schema before writing code — do not guess HOSxP field names.
 | Table | Key fields | Notes |
 |---|---|---|
 | `patient` | `hn` (PK), `cid`, `pname`, `fname`, `lname`, `birthday` | `hn` is the cross-visit join key. Check `hn_change_log` for HN merge/mapping history before treating `hn` as immutable. |
+| `patient_image` | `hn` (PK), `image` (BLOB) | Patient photo, JPEG/PNG binary. Confirmed at the target site. Decorative identity data: if the table/column is missing (MySQL 1146/1054) the UI degrades silently to a placeholder avatar — never a load failure. |
 
 ### Visits / Encounters
 | Table | Key fields | Notes |

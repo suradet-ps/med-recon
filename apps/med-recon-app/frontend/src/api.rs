@@ -198,6 +198,12 @@ pub async fn load_history(hn: &str) -> Result<PatientHistory, ApiError> {
     call_string_arg("load_history", "hn", hn).await
 }
 
+/// Load the patient's photo (`patient_image` BLOB) as a `data:` URL;
+/// `None` when the site has no photo on file.
+pub async fn load_patient_image(hn: &str) -> Result<Option<String>, ApiError> {
+    call_string_arg("load_patient_image", "hn", hn).await
+}
+
 /// Export a printable HTML report; returns the saved path.
 ///
 /// `labels` carries every user-visible report string, resolved from the i18n

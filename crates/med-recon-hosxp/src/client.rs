@@ -218,6 +218,28 @@ impl HosxpClient {
             })
     }
 
+    /// Load the patient photo (`patient_image.image`, JPEG/PNG BLOB), if
+    /// one is on file.
+    ///
+    /// The photo is decorative identity data — when the table or column is
+    /// missing on this site (MySQL 1146/1054) it returns `None` silently
+    /// instead of warning, and the UI shows a placeholder avatar.
+    pub async fn load_patient_image(&self, hn: &str) -> Result<Option<Vec<u8>>> {
+        let rows: Vec<PatientImageRow> = match self
+            .fetch_rows(queries::PATIENT_IMAGE_SQL, &[P::Str(hn.to_owned())])
+            .await
+        {
+            Ok(rows) => rows,
+            Err(e) if is_schema_variation(&e) => return Ok(None),
+            Err(e) => return Err(e),
+        };
+        Ok(rows
+            .into_iter()
+            .next()
+            .map(|r| r.image)
+            .filter(|bytes| !bytes.is_empty()))
+    }
+
     /// Load the BPMH medication list for a patient (used by the report
     /// export).
     pub async fn load_medications(
@@ -616,6 +638,12 @@ struct PatientRow {
     fname: String,
     lname: String,
     birthday: Option<NaiveDate>,
+}
+
+/// Raw row shape for `patient_image` photo queries.
+#[derive(sqlx::FromRow)]
+struct PatientImageRow {
+    image: Vec<u8>,
 }
 
 /// Raw row shape for dispensing queries (OPD and IPD share column aliases).
