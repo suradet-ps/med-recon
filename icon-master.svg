@@ -12,6 +12,19 @@
     </filter>
   </defs>
 
+  <!-- ============================================================
+       FULL-CANVAS SCALE-UP
+       The whole artwork is scaled 1.12x about the canvas center so
+       the disc + shadow fills ~92% of the icon instead of ~82%.
+       Without this the generated icons looked small next to other
+       apps' icons. The pop-art shadow stays inside the canvas
+       (bottom edge: (230+6+12) * 1.12 = 277.8 <= 280).
+       ============================================================ -->
+
+  <g
+    transform="translate(280, 280) scale(1.12) translate(-280, -280)"
+  >
+
 <!-- ============================================================
        MED RECON BRAND BACKGROUND
        Disc: warm yellow #FBC02D
@@ -212,6 +225,8 @@
       stroke="#14161A"
       stroke-width="1"
     />
+
+  </g>
 
   </g>
 </svg>
