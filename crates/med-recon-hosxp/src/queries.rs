@@ -124,11 +124,12 @@ ORDER BY o.vstdate"#;
 /// Sig (directions for use) — `opitemrece.drugusage` / `opitemrece.sp_use`
 /// hold codes resolved through the `drugusage` and `sp_use` lookup tables
 /// (`name1`/`name2`/`name3` each). LEFT JOIN so rows without a code still
-/// come back with empty sig text.
+/// come back with empty sig text. Covers both OPD (`vn`) and IPD (`an`)
+/// dispensing rows; the client keys each row by whichever visit id is set.
 ///
 /// Parameters: `(hn, cutoff)`.
 pub const SIG_SQL: &str = r#"
-SELECT o.vn, o.icode,
+SELECT o.vn, o.an, o.icode,
        d.name1 AS d_name1, d.name2 AS d_name2, d.name3 AS d_name3,
        s.name1 AS s_name1, s.name2 AS s_name2, s.name3 AS s_name3
 FROM opitemrece o

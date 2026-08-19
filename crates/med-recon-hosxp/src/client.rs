@@ -174,7 +174,8 @@ impl HosxpClient {
             .load_opd_dispenses(hn, cutoff, &appointments, &mut warnings)
             .await?;
         let mut ipd_dispenses = self.load_ipd_dispenses(hn, cutoff, &mut warnings).await?;
-        let mut dispenses = opd_dispenses.clone();
+        let mut dispenses = opd_dispenses;
+        dispenses.append(&mut ipd_dispenses);
 
         let sigs = self.load_sigs(hn, cutoff, &mut warnings).await?;
         for d in &mut dispenses {
@@ -182,7 +183,6 @@ impl HosxpClient {
                 d.sig = Some(sig.clone());
             }
         }
-        dispenses.append(&mut ipd_dispenses);
 
         let allergies = self.load_allergies(hn, &mut warnings).await?;
         let mut visits = self.load_visits(hn, cutoff, &mut warnings).await?;
@@ -352,12 +352,12 @@ impl HosxpClient {
         Ok(rows
             .into_iter()
             .filter_map(|r| {
-                let vn = r.vn?;
+                let visit_id = r.an.or(r.vn)?;
                 let sig = queries::sig_from_names(
                     &[r.d_name1, r.d_name2, r.d_name3],
                     &[r.s_name1, r.s_name2, r.s_name3],
                 )?;
-                Some(((vn, r.icode), sig))
+                Some(((visit_id, r.icode), sig))
             })
             .collect())
     }
@@ -596,10 +596,13 @@ struct DispenseRow {
     disp_date: NaiveDate,
 }
 
-/// Raw row shape for `drugusage`/`sp_use` sig queries.
+/// Raw row shape for `drugusage`/`sp_use` sig queries. `vn` (OPD) and `an`
+/// (IPD) are mutually exclusive on a given row; the visit-id key is the
+/// populated one.
 #[derive(sqlx::FromRow)]
 struct SigRow {
     vn: Option<String>,
+    an: Option<String>,
     icode: String,
     d_name1: Option<String>,
     d_name2: Option<String>,
