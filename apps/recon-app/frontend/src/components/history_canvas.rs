@@ -254,33 +254,43 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                 </tr>
             </thead>
             <tbody>
-                {items.iter().enumerate().map(|(i, m)| {
-                    let no = (i + 1).to_string();
-                    let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), m.last_dispense.month(), m.last_dispense.year());
-                    let drug = drug_label(m);
-                    let sig = m.sig.as_ref().map(format_sig).unwrap_or_default();
-                    let qty = format_qty(m.last_qty);
-                    let units = m.units.clone().unwrap_or_default();
-                    let source = m.sources.iter().map(|s| match s {
-                        EncounterSource::Opd => "OPD",
-                        EncounterSource::Ipd => "IPD",
-                    }).collect::<Vec<_>>().join("/");
-                    view! {
-                        <tr>
-                            <td class="med-table__no">{no}</td>
-                            <td class="med-table__date">{date}</td>
-                            <td class="med-table__drug">{drug}</td>
-                            <td class="med-table__sig">
-                                {if sig.is_empty() { "—".to_string() } else { sig }}
-                            </td>
-                            <td class="med-table__qty">
-                                {qty}
-                                {if units.is_empty() { String::new() } else { format!(" {units}") }}
-                            </td>
-                            <td class="med-table__source">{source}</td>
-                        </tr>
-                    }
-                }).collect_view()}
+                {{
+                    let mut band = false;
+                    let mut last_date: Option<NaiveDate> = None;
+                    items.iter().enumerate().map(|(i, m)| {
+                        let date_changed = last_date.as_ref() != Some(&m.last_dispense);
+                        if date_changed {
+                            band = !band;
+                            last_date = Some(m.last_dispense);
+                        }
+                        let row_band = band;
+                        let no = (i + 1).to_string();
+                        let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), m.last_dispense.month(), m.last_dispense.year());
+                        let drug = drug_label(m);
+                        let sig = m.sig.as_ref().map(format_sig).unwrap_or_default();
+                        let qty = format_qty(m.last_qty);
+                        let units = m.units.clone().unwrap_or_default();
+                        let source = m.sources.iter().map(|s| match s {
+                            EncounterSource::Opd => "OPD",
+                            EncounterSource::Ipd => "IPD",
+                        }).collect::<Vec<_>>().join("/");
+                        view! {
+                            <tr class=move || if row_band { "med-table__row med-table__row--band" } else { "med-table__row" }>
+                                <td class="med-table__no">{no}</td>
+                                <td class="med-table__date">{date}</td>
+                                <td class="med-table__drug">{drug}</td>
+                                <td class="med-table__sig">
+                                    {if sig.is_empty() { "—".to_string() } else { sig }}
+                                </td>
+                                <td class="med-table__qty">
+                                    {qty}
+                                    {if units.is_empty() { String::new() } else { format!(" {units}") }}
+                                </td>
+                                <td class="med-table__source">{source}</td>
+                            </tr>
+                        }
+                    }).collect_view()
+                }}
             </tbody>
         </table>
     }

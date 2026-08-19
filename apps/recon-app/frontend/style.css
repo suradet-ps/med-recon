@@ -963,6 +963,10 @@ code, .mono, .code {
   background: var(--surface-muted);
 }
 
+.med-table__row--band {
+  background: #FBF9F2;
+}
+
 .med-table__no {
   width: 40px;
   color: var(--slate);
