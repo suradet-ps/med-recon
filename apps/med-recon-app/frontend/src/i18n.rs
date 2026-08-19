@@ -60,7 +60,7 @@ impl Lang {
 pub const KEYS: &[(&str, &str, &str)] = &[
     (
         "app.name",
-        "Med Recon ระบบการบริหารจัดการความสอดคล้องต่อเนื่องของยา โรงพยาบาลสระโบสถ์",
+        "Med Recon โรงพยาบาลสระโบสถ์",
         "Med Recon",
     ),
     (
