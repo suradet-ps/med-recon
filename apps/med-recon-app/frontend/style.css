@@ -172,7 +172,7 @@ body {
   background: var(--canvas);
   color: var(--ink);
   font-family: var(--font-thai);
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 400;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -316,7 +316,7 @@ code, .mono, .code {
   border-radius: var(--rounded-sm);
   padding: 4px 10px;
   font-family: var(--font-thai);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
@@ -371,7 +371,7 @@ code, .mono, .code {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--slate);
   text-transform: uppercase;
@@ -524,7 +524,7 @@ code, .mono, .code {
 
 .patient-bar__name {
   margin: 0;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   line-height: 1.3;
   color: var(--ink);
@@ -545,7 +545,7 @@ code, .mono, .code {
 
 .patient-bar__meta .code {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--ink);
 }
 
@@ -678,6 +678,7 @@ code, .mono, .code {
 .canvas-loading {
   color: var(--steel);
   font-size: 22px;
+  font-weight: 600;
   text-align: center;
   padding: var(--sp-xl) 0;
 }
@@ -699,7 +700,7 @@ code, .mono, .code {
 .canvas-empty__title {
   margin: 0 0 var(--sp-xs);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink);
 }
 
@@ -745,7 +746,7 @@ code, .mono, .code {
 
 .verdict-band__detail {
   margin: 4px 0 0;
-  font-size: 12.5px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -844,7 +845,7 @@ code, .mono, .code {
 
 .timeline-row__date {
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--ink);
   white-space: nowrap;
@@ -860,7 +861,7 @@ code, .mono, .code {
 .badge {
   background: var(--surface-muted);
   color: var(--slate);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
   border-radius: var(--rounded-full);
@@ -877,7 +878,7 @@ code, .mono, .code {
 .timeline-row__drug {
   margin: 0;
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.35;
   color: var(--ink);
   overflow: hidden;
@@ -916,8 +917,6 @@ code, .mono, .code {
   margin: 0;
   width: 100%;
   cursor: pointer;
-  color: inherit;
-  font: inherit;
   border-radius: var(--rounded-sm);
   transition: background 0.12s ease;
 }
@@ -1035,8 +1034,8 @@ code, .mono, .code {
 
 .modal__title {
   margin: 0 0 var(--sp-xs);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   line-height: 1.3;
   color: var(--ink);
 }
@@ -1166,8 +1165,8 @@ code, .mono, .code {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 700;
   color: var(--ink);
   margin-bottom: var(--sp-xs);
 }
