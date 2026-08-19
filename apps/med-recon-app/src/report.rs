@@ -405,8 +405,8 @@ mod tests {
             disclaimer: "เอกสารนี้สร้างจากข้อมูลการจ่ายยา".into(),
             section_patient: "ข้อมูลผู้ป่วย".into(),
             section_allergy: "แพ้ยา / อาการไม่พึงประสงค์ ({n})".into(),
-            section_active: "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ ({n})".into(),
-            section_lapsed: "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่าหยุดใช้แล้ว ({n})".into(),
+            section_active: "ยาที่ผู้ป่วยเคยได้รับ ({n})".into(),
+            section_lapsed: "ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ) ({n})".into(),
             section_visits: "ประวัติการเข้ารับบริการ ({n})".into(),
             col_date: "วันที่".into(),
             col_type: "ประเภท".into(),
@@ -494,10 +494,10 @@ mod tests {
             "สมชาย ใจดี",
             "แพ้ยา",
             "Penicillin",
-            "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่",
+            "ยาที่ผู้ป่วยเคยได้รับ",
             "Paracetamol",
             "Metformin",
-            "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่าหยุดใช้แล้ว",
+            "ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ)",
             "ประวัติการเข้ารับบริการ",
             "รพ.ทดสอบ",
         ] {
@@ -529,7 +529,7 @@ mod tests {
         labels.heading = "HEADING".into();
         let html = build_report(&sample_history(), "", &labels);
         assert!(html.contains("ACTIVE_SECTION 1"));
-        assert!(!html.contains("ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่"));
+        assert!(!html.contains("ยาที่ผู้ป่วยเคยได้รับ (1)"));
         assert!(!html.contains("ประวัติยาและการใช้ยา"));
         assert!(html.contains("HEADING"));
         assert!(

@@ -124,7 +124,7 @@ pub const KEYS: &[(&str, &str, &str)] = &[
     ),
     (
         "settings.meds_note",
-        "เฉพาะยาที่ตั้งค่าไว้เท่านั้นจะแสดงในหัวข้อ ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ — ยาที่ไม่ตั้งค่า (แม้เพิ่งได้รับ) จะถือว่าหยุดใช้แล้ว",
+        "เฉพาะยาที่ตั้งค่าไว้เท่านั้นจะแสดงในหัวข้อ ยาที่ผู้ป่วยเคยได้รับ — ยาที่ไม่ตั้งค่า (แม้เพิ่งได้รับ) จะถือว่าหยุดใช้แล้ว",
         "Only configured drugs are shown under 'likely active' — any drug not configured (even recently dispensed) is treated as stopped.",
     ),
     ("settings.meds_search", "ค้นหาชื่อยา…", "Search drug name…"),
@@ -227,12 +227,12 @@ pub const KEYS: &[(&str, &str, &str)] = &[
     ),
     (
         "canvas.active",
-        "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ ({n})",
+        "ยาที่ผู้ป่วยเคยได้รับ ({n})",
         "Likely active ({n})",
     ),
     (
         "canvas.lapsed",
-        "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่าหยุดใช้แล้ว ({n})",
+        "ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ) ({n})",
         "Likely lapsed ({n})",
     ),
     (
@@ -401,10 +401,7 @@ mod tests {
 
     #[test]
     fn tr_returns_translation_or_key() {
-        assert_eq!(
-            tr(Lang::Thai, "canvas.active"),
-            "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ ({n})"
-        );
+        assert_eq!(tr(Lang::Thai, "canvas.active"), "ยาที่ผู้ป่วยเคยได้รับ ({n})");
         assert_eq!(tr(Lang::English, "canvas.active"), "Likely active ({n})");
         assert_eq!(tr(Lang::Thai, "no.such.key"), "no.such.key");
     }

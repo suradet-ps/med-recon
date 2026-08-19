@@ -77,7 +77,7 @@ continuous/injectable regimens. It is display-only metadata — the
 active/lapsed BPMH verdict is **operator-configured**: the settings
 screen curates a current-medication list (`drugitems` icodes, stored
 encrypted with the site config) and only drugs on it are shown as
-ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่. See docs/DESIGN.md for the full BPMH rules.
+ยาที่ผู้ป่วยเคยได้รับ. See docs/DESIGN.md for the full BPMH rules.
 
 ### Drug Master
 | Table | Key fields | Notes |
