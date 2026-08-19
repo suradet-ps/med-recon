@@ -58,11 +58,7 @@ impl Lang {
 
 /// UI strings. Keys are short identifiers; every key has both languages.
 pub const KEYS: &[(&str, &str, &str)] = &[
-    (
-        "app.name",
-        "Med Recon โรงพยาบาลสระโบสถ์",
-        "Med Recon",
-    ),
+    ("app.name", "Med Recon โรงพยาบาลสระโบสถ์", "Med Recon"),
     (
         "app.tagline",
         "ประวัติยาผู้ป่วยจาก HOSxP",
