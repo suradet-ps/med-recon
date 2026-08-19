@@ -112,3 +112,91 @@ icon!(
     IconChevron,
     <path d="m9 18 6-6-6-6" />
 );
+
+/// Brand mark — a faithful miniature of `icon-master.svg`: warm-yellow
+/// disc, angled white blister board with four light-green pockets, and the
+/// reconciliation badge (white disc + medium-green cross) overlapping the
+/// bottom-right pocket. Colors follow the app's design tokens via CSS
+/// variables.
+#[component]
+pub fn IconLogo(class: &'static str) -> impl IntoView {
+    view! {
+        <svg class=class viewBox="0 0 24 24" aria-hidden="true">
+            <circle
+                cx="12"
+                cy="12"
+                r="11.25"
+                fill="var(--logo-disc, #FBC02D)"
+                stroke="var(--ink)"
+                stroke-width="1"
+            />
+            <circle
+                cx="12"
+                cy="12"
+                r="9.6"
+                fill="none"
+                stroke="var(--logo-ring, #FFF8E1)"
+                stroke-width="0.5"
+                opacity="0.55"
+            />
+            <g transform="rotate(-8 12 12)">
+                <rect
+                    x="4.6"
+                    y="4.2"
+                    width="14.8"
+                    height="15.6"
+                    rx="2.6"
+                    fill="var(--on-brand)"
+                    stroke="var(--ink)"
+                    stroke-width="0.8"
+                />
+                <circle
+                    cx="8.4"
+                    cy="8.6"
+                    r="2.1"
+                    fill="var(--logo-pocket, #66BB6A)"
+                    stroke="var(--ink)"
+                    stroke-width="0.55"
+                />
+                <circle
+                    cx="15.6"
+                    cy="8.6"
+                    r="2.1"
+                    fill="var(--logo-pocket, #66BB6A)"
+                    stroke="var(--ink)"
+                    stroke-width="0.55"
+                />
+                <circle
+                    cx="8.4"
+                    cy="15.6"
+                    r="2.1"
+                    fill="var(--logo-pocket, #66BB6A)"
+                    stroke="var(--ink)"
+                    stroke-width="0.55"
+                />
+                <circle
+                    cx="15.6"
+                    cy="15.6"
+                    r="2.1"
+                    fill="var(--logo-pocket, #66BB6A)"
+                    stroke="var(--ink)"
+                    stroke-width="0.55"
+                />
+            </g>
+            <circle
+                cx="16.4"
+                cy="15.2"
+                r="4.2"
+                fill="var(--on-brand)"
+                stroke="var(--logo-badge, #43A047)"
+                stroke-width="1.1"
+            />
+            <path
+                d="M16.4 13.2v4M14.4 15.2h4"
+                stroke="var(--logo-cross, #2E7D32)"
+                stroke-width="1.7"
+                stroke-linecap="round"
+            />
+        </svg>
+    }
+}

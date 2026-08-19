@@ -3,7 +3,7 @@
 
 use leptos::prelude::*;
 
-use crate::components::icons::{IconSearch, IconSettings};
+use crate::components::icons::{IconLogo, IconSettings};
 use crate::i18n::tr;
 use crate::state::{AppState, ConnectionHealth};
 
@@ -30,7 +30,7 @@ pub fn TopBar(state: AppState) -> impl IntoView {
     view! {
         <header class="top-bar">
             <div class="top-bar__left">
-                <IconSearch class="top-bar__logo" />
+                <IconLogo class="top-bar__logo" />
                 <h1 class="top-bar__title">{move || tr(state.lang.get(), "app.name")}</h1>
             </div>
             <div class="top-bar__right">
