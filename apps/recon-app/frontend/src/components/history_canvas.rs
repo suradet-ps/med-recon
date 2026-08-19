@@ -181,6 +181,21 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     history.allergies.iter().map(|a| {
                         let agent = a.agent.clone();
                         let symptom = a.symptom.clone();
+                        let mut meta_parts: Vec<String> = Vec::new();
+                        if let Some(d) = a.report_date {
+                            meta_parts.push(tr_f(
+                                lang.get_untracked(),
+                                "allergy.reported_on",
+                                &[("date", &format!("{:02}/{:02}/{}", d.day(), d.month(), d.year()))],
+                            ));
+                        }
+                        if let Some(r) = a.reporter.as_deref().filter(|r| !r.trim().is_empty()) {
+                            meta_parts.push(tr_f(lang.get_untracked(), "allergy.reported_by", &[("reporter", r)]));
+                        }
+                        if let Some(n) = a.note.as_deref().filter(|n| !n.trim().is_empty()) {
+                            meta_parts.push(tr_f(lang.get_untracked(), "allergy.note", &[("note", n)]));
+                        }
+                        let meta = meta_parts.join(" · ");
                         view! {
                             <div class="verdict-band verdict-notfound verdict-band--compact">
                                 <IconAlert class="verdict-band__icon" />
@@ -189,6 +204,11 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                                     {move || symptom.as_ref().map(|s| view! {
                                         <p class="verdict-band__detail">{s.clone()}</p>
                                     })}
+                                    {if meta.is_empty() {
+                                        None
+                                    } else {
+                                        Some(view! { <p class="verdict-band__meta">{meta}</p> }.into_any())
+                                    }}
                                 </div>
                             </div>
                         }

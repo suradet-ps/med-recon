@@ -747,6 +747,12 @@ code, .mono, .code {
   line-height: 1.5;
 }
 
+.verdict-band__meta {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
 .verdict-band__term {
   margin: 0;
   font-size: 14px;

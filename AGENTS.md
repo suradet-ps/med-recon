@@ -86,7 +86,7 @@ encrypted with the site config) and only drugs on it are shown as
 ### Allergy / ADR
 | Table | Key fields | Notes |
 |---|---|---|
-| `opd_allergy` | `hn`, `agent`, `symptom`, `allergy_group_id`, `reporter` | `agent` may be free-text or `icode`-linked depending on site configuration — do not assume structured data; plan for text cleaning/normalization. Confirmed at the target site: no `severy_id` column. |
+| `opd_allergy` | `hn`, `agent`, `symptom`, `reporter`, `report_date`, `note` | `agent` may be free-text or `icode`-linked depending on site configuration — do not assume structured data; plan for text cleaning/normalization. Confirmed at the target site: `report_date` (date) and `note` (text) columns exist; `allergy_group_id` is **not loaded** (site-dependent meaning, not displayed). No `severy_id` column. |
 
 ### Diagnosis (out of MVP scope, for future indication-linking)
 | Table | Key fields | Notes |

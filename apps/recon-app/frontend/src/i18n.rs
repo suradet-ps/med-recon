@@ -251,6 +251,21 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "No allergy records on file",
     ),
     (
+        "allergy.reported_on",
+        "รายงานเมื่อ {date}",
+        "Reported on {date}",
+    ),
+    (
+        "allergy.reported_by",
+        "โดย {reporter}",
+        "by {reporter}",
+    ),
+    (
+        "allergy.note",
+        "หมายเหตุ: {note}",
+        "Note: {note}",
+    ),
+    (
         "canvas.no_medications",
         "ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด",
         "No dispensing records in the configured window",

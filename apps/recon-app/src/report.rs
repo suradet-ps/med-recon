@@ -35,21 +35,25 @@ pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
         .allergies
         .iter()
         .map(|a| {
-            format!(
-                "<li class=\"allergy\"><strong>{}</strong>{}{}</li>",
-                escape_html(&a.agent),
-                a.symptom
-                    .as_deref()
-                    .map(|s| format!(" — {}", escape_html(s)))
-                    .unwrap_or_default(),
-                a.reporter
-                    .as_deref()
-                    .map(|r| format!(
-                        " <span class=\"muted\">(รายงานโดย {})</span>",
-                        escape_html(r)
-                    ))
-                    .unwrap_or_default()
-            )
+            let mut parts: Vec<String> = Vec::new();
+            if let Some(s) = a.symptom.as_deref() {
+                parts.push(escape_html(s).to_string());
+            }
+            if let Some(d) = a.report_date {
+                parts.push(format!("รายงานเมื่อ {}", format_date(d)));
+            }
+            if let Some(r) = a.reporter.as_deref() {
+                parts.push(format!("โดย {}", escape_html(r)));
+            }
+            if let Some(n) = a.note.as_deref().filter(|n| !n.trim().is_empty()) {
+                parts.push(format!("หมายเหตุ: {}", escape_html(n)));
+            }
+            let detail = if parts.is_empty() {
+                String::new()
+            } else {
+                format!("<span class=\"muted\"> — {}</span>", parts.join(" · "))
+            };
+            format!("<li class=\"allergy\"><strong>{}</strong>{detail}</li>", escape_html(&a.agent))
         })
         .collect::<Vec<_>>()
         .join("\n");
@@ -333,7 +337,8 @@ mod tests {
             allergies: vec![AllergyRecord {
                 agent: "Penicillin".into(),
                 symptom: Some("ผื่น".into()),
-                group_id: None,
+                report_date: Some(chrono::NaiveDate::from_ymd_opt(2026, 7, 1).unwrap()),
+                note: Some("แจ้งผู้ป่วยแล้ว".into()),
                 reporter: Some("นส. nurse".into()),
             }],
             visits: vec![VisitSummary {

@@ -139,9 +139,13 @@ WHERE o.hn = ?
 
 /// Allergy / ADR records.
 ///
+/// Columns confirmed against the live schema: `report_date` (date),
+/// `note` (text), `reporter` (varchar). `allergy_group_id` is not loaded —
+/// its meaning is site-dependent and it is not displayed.
+///
 /// Parameters: `(hn)`.
 pub const ALLERGY_SQL: &str = r#"
-SELECT hn, agent, symptom, allergy_group_id, reporter
+SELECT hn, agent, symptom, reporter, report_date, note
 FROM opd_allergy
 WHERE hn = ?
 ORDER BY agent"#;

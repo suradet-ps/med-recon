@@ -146,8 +146,10 @@ pub struct AllergyRecord {
     pub agent: String,
     /// Reported symptom(s).
     pub symptom: Option<String>,
-    /// Group id from `allergy_group_id` — site-dependent; passed through raw.
-    pub group_id: Option<String>,
+    /// Date the reaction was reported (`opd_allergy.report_date`).
+    pub report_date: Option<NaiveDate>,
+    /// Free-text note.
+    pub note: Option<String>,
     /// Reporter name/title.
     pub reporter: Option<String>,
 }

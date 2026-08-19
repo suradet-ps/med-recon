@@ -383,7 +383,8 @@ impl HosxpClient {
             .map(|r| AllergyRecord {
                 agent: clean_agent(&r.agent),
                 symptom: r.symptom,
-                group_id: r.allergy_group_id.map(|v| v.to_string()),
+                report_date: r.report_date.map(normalize_date),
+                note: r.note,
                 reporter: r.reporter,
             })
             .collect())
@@ -613,8 +614,9 @@ struct SigRow {
 struct AllergyRow {
     agent: String,
     symptom: Option<String>,
-    allergy_group_id: Option<i32>,
     reporter: Option<String>,
+    report_date: Option<NaiveDate>,
+    note: Option<String>,
 }
 
 /// Raw row shape for `oapp` next-appointment queries.
