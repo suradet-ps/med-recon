@@ -93,6 +93,7 @@ pub fn aggregate_medications(
                 sources: sources.into_keys().collect(),
                 days_supply,
                 sig: latest.sig.clone(),
+                appointment_date: latest.appointment,
                 status,
                 days_since_last_dispense: (reference_date - latest.date).num_days(),
             }
@@ -151,6 +152,7 @@ mod tests {
             qty,
             date,
             sig: None,
+            appointment: None,
         }
     }
 

@@ -189,6 +189,21 @@ WHERE hn = ?
   AND regdate >= ?
 ORDER BY regdate"#;
 
+/// Next-appointment dates from `oapp`, keyed by OPD visit (`vn`).
+///
+/// A visit may hold several `oapp` rows; the latest planned follow-up
+/// (`nextdate`) wins. `nextdate` may be พ.ศ. — era-normalized per value in
+/// the client.
+///
+/// Parameters: `(hn, cutoff)`.
+pub const APPOINTMENT_SQL: &str = r#"
+SELECT vn, MAX(nextdate) AS nextdate
+FROM oapp
+WHERE hn = ?
+  AND vstdate >= ?
+  AND nextdate IS NOT NULL
+GROUP BY vn"#;
+
 /// Escape `%`, `_`, and `\` so a user query cannot act as a LIKE wildcard.
 pub fn escape_like(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
@@ -373,6 +388,7 @@ mod tests {
             DRUG_SEARCH_SQL,
             OPD_VISIT_SQL,
             IPD_VISIT_SQL,
+            APPOINTMENT_SQL,
         ] {
             assert!(
                 crate::readonly::assert_read_only(stmt).is_ok(),

@@ -308,6 +308,7 @@ mod tests {
             qty,
             date,
             sig: None,
+            appointment: None,
         };
         let d1 = disp(
             "P1",

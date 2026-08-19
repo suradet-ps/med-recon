@@ -169,7 +169,10 @@ impl HosxpClient {
 
         let mut warnings = Vec::new();
 
-        let opd_dispenses = self.load_opd_dispenses(hn, cutoff, &mut warnings).await?;
+        let appointments = self.load_appointments(hn, cutoff, &mut warnings).await?;
+        let opd_dispenses = self
+            .load_opd_dispenses(hn, cutoff, &appointments, &mut warnings)
+            .await?;
         let mut ipd_dispenses = self.load_ipd_dispenses(hn, cutoff, &mut warnings).await?;
         let mut dispenses = opd_dispenses.clone();
 
@@ -264,6 +267,7 @@ impl HosxpClient {
         &self,
         hn: &str,
         cutoff: NaiveDate,
+        appointments: &HashMap<String, NaiveDate>,
         warnings: &mut Vec<String>,
     ) -> Result<Vec<Dispense>> {
         let rows: Vec<DispenseRow> = match self
@@ -289,6 +293,10 @@ impl HosxpClient {
         Ok(rows
             .into_iter()
             .filter_map(|r| map_dispense(r, hn, EncounterSource::Opd, cutoff))
+            .map(|mut d| {
+                d.appointment = appointments.get(&d.visit_id).copied();
+                d
+            })
             .collect())
     }
 
@@ -378,6 +386,38 @@ impl HosxpClient {
                 group_id: r.allergy_group_id.map(|v| v.to_string()),
                 reporter: r.reporter,
             })
+            .collect())
+    }
+
+    /// Load each OPD visit's next appointment date (`oapp.nextdate`), keyed
+    /// by `vn`. The latest planned follow-up wins per visit.
+    ///
+    /// If the `oapp` table is missing on this site (MySQL 1146) the section
+    /// degrades to empty with a user-visible warning — appointment display
+    /// is supplementary, not load-critical.
+    async fn load_appointments(
+        &self,
+        hn: &str,
+        cutoff: NaiveDate,
+        warnings: &mut Vec<String>,
+    ) -> Result<HashMap<String, NaiveDate>> {
+        let rows: Vec<AppointmentRow> = match self
+            .fetch_rows(
+                queries::APPOINTMENT_SQL,
+                &[P::Str(hn.to_owned()), P::Date(cutoff)],
+            )
+            .await
+        {
+            Ok(rows) => rows,
+            Err(e) if is_schema_variation(&e) => {
+                warn_missing(warnings, "oapp", "วันนัด");
+                return Ok(HashMap::new());
+            }
+            Err(e) => return Err(e),
+        };
+        Ok(rows
+            .into_iter()
+            .map(|r| (r.vn, normalize_date(r.nextdate)))
             .collect())
     }
 
@@ -577,6 +617,13 @@ struct AllergyRow {
     reporter: Option<String>,
 }
 
+/// Raw row shape for `oapp` next-appointment queries.
+#[derive(sqlx::FromRow)]
+struct AppointmentRow {
+    vn: String,
+    nextdate: NaiveDate,
+}
+
 /// Raw row shape for OPD visit queries.
 #[derive(sqlx::FromRow)]
 struct OpdVisitRow {
@@ -643,6 +690,7 @@ fn map_dispense(
         qty: parse_qty(&r.qty),
         date,
         sig: None,
+        appointment: None,
     })
 }
 

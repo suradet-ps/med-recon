@@ -84,6 +84,10 @@ pub struct Dispense {
     pub date: NaiveDate,
     /// Sig / directions for use, if available.
     pub sig: Option<Sig>,
+    /// Next appointment date for this visit (`oapp.nextdate`), if any.
+    /// OPD visits only — IPD rows carry an admission number and have no
+    /// direct `oapp` row.
+    pub appointment: Option<NaiveDate>,
 }
 
 /// Whether a medication is considered part of the current regimen.
@@ -126,6 +130,9 @@ pub struct MedicationItem {
     pub days_supply: Option<u32>,
     /// Sig from the most recent event.
     pub sig: Option<Sig>,
+    /// Next appointment date (`oapp.nextdate`) of the most recent event's
+    /// visit, if any.
+    pub appointment_date: Option<NaiveDate>,
     /// Active/lapsed inference.
     pub status: MedicationStatus,
     /// Days between `last_dispense` and the status inference date.

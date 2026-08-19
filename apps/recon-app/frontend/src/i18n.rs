@@ -273,7 +273,7 @@ pub const KEYS: &[(&str, &str, &str)] = &[
     ("med.col_drug", "ชื่อยา + ความแรง", "Drug + strength"),
     ("med.col_sig", "วิธีใช้", "Directions"),
     ("med.col_qty", "จำนวนที่จ่าย", "Qty dispensed"),
-    ("med.col_source", "OPD/IPD", "OPD/IPD"),
+    ("med.col_appt", "วันนัด", "Next appt"),
     ("visit.date", "วันที่", "Date"),
     ("visit.type", "ประเภท", "Type"),
     ("visit.department", "แผนก / หอผู้ป่วย", "Department / Ward"),

@@ -991,7 +991,7 @@ code, .mono, .code {
   color: var(--slate);
 }
 
-.med-table__source {
+.med-table__appt {
   white-space: nowrap;
   color: var(--slate);
 }

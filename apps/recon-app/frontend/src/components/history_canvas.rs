@@ -12,7 +12,7 @@ use crate::components::icons::{
 };
 use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
-use recon_core::{EncounterSource, MedicationItem, MedicationStatus, PatientHistory, Sig};
+use recon_core::{MedicationItem, MedicationStatus, PatientHistory, Sig};
 
 #[component]
 pub fn HistoryCanvas(state: AppState) -> impl IntoView {
@@ -239,7 +239,8 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
 
 /// Render a medication list as a table:
 /// ลำดับ / วันที่จ่าย / ชื่อยา + ความแรง / วิธีใช้ / จำนวนที่จ่าย (ครั้งล่าสุด) /
-/// OPD/IPD. Used identically for both the active and lapsed sections.
+/// วันนัด (`oapp.nextdate` ของ visit ที่จ่ายครั้งล่าสุด, "—" ถ้าไม่มี)
+/// Used identically for both the active and lapsed sections.
 fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> impl IntoView {
     view! {
         <table class="med-table">
@@ -250,7 +251,7 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                     <th>{tr(lang.get(), "med.col_drug")}</th>
                     <th>{tr(lang.get(), "med.col_sig")}</th>
                     <th>{tr(lang.get(), "med.col_qty")}</th>
-                    <th>{tr(lang.get(), "med.col_source")}</th>
+                    <th>{tr(lang.get(), "med.col_appt")}</th>
                 </tr>
             </thead>
             <tbody>
@@ -270,10 +271,9 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                         let sig = m.sig.as_ref().map(format_sig).unwrap_or_default();
                         let qty = format_qty(m.last_qty);
                         let units = m.units.clone().unwrap_or_default();
-                        let source = m.sources.iter().map(|s| match s {
-                            EncounterSource::Opd => "OPD",
-                            EncounterSource::Ipd => "IPD",
-                        }).collect::<Vec<_>>().join("/");
+                        let appt = m.appointment_date.map(|d| {
+                            format!("{:02}/{:02}/{}", d.day(), d.month(), d.year())
+                        }).unwrap_or_default();
                         view! {
                             <tr class=move || if row_band { "med-table__row med-table__row--band" } else { "med-table__row" }>
                                 <td class="med-table__no">{no}</td>
@@ -286,7 +286,9 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                                     {qty}
                                     {if units.is_empty() { String::new() } else { format!(" {units}") }}
                                 </td>
-                                <td class="med-table__source">{source}</td>
+                                <td class="med-table__appt">
+                                    {if appt.is_empty() { "—".to_string() } else { appt }}
+                                </td>
                             </tr>
                         }
                     }).collect_view()
