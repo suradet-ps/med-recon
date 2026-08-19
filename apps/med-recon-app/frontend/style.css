@@ -566,6 +566,9 @@ code, .mono, .code {
   height: 72px;
   border-radius: 50%;
   object-fit: cover;
+  /* ID-photo faces sit in the upper half — bias the crop upward so the
+     face stays visible and the shoulders/background get cut instead. */
+  object-position: center 25%;
   flex-shrink: 0;
   border: 2px solid var(--brand-soft);
   background: var(--surface-muted);
