@@ -255,16 +255,8 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "รายงานเมื่อ {date}",
         "Reported on {date}",
     ),
-    (
-        "allergy.reported_by",
-        "โดย {reporter}",
-        "by {reporter}",
-    ),
-    (
-        "allergy.note",
-        "หมายเหตุ: {note}",
-        "Note: {note}",
-    ),
+    ("allergy.reported_by", "โดย {reporter}", "by {reporter}"),
+    ("allergy.note", "หมายเหตุ: {note}", "Note: {note}"),
     (
         "canvas.no_medications",
         "ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด",

@@ -53,7 +53,10 @@ pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
             } else {
                 format!("<span class=\"muted\"> — {}</span>", parts.join(" · "))
             };
-            format!("<li class=\"allergy\"><strong>{}</strong>{detail}</li>", escape_html(&a.agent))
+            format!(
+                "<li class=\"allergy\"><strong>{}</strong>{detail}</li>",
+                escape_html(&a.agent)
+            )
         })
         .collect::<Vec<_>>()
         .join("\n");
