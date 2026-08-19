@@ -635,13 +635,17 @@ pub async fn load_history(
 
 /// Export a printable HTML medication history report for a patient.
 #[tauri::command]
-pub async fn export_report(state: State<'_, AppState>, hn: String) -> Result<String, CommandError> {
-    let client = client(&state, "ส่งออกรายงาน").await?;
+pub async fn export_report(
+    state: State<'_, AppState>,
+    hn: String,
+    labels: crate::report::ReportLabels,
+) -> Result<String, CommandError> {
+    let client = client(&state, "พิมพ์ประวัติการได้รับยา").await?;
     let current_codes = configured_med_codes(&state);
     let history = client
         .load_history(&hn, &current_codes)
         .await
-        .map_err(|e| map_repo_error(e, "ส่งออกรายงาน"))?;
+        .map_err(|e| map_repo_error(e, "พิมพ์ประวัติการได้รับยา"))?;
 
     let site_name = state
         .store
@@ -649,7 +653,7 @@ pub async fn export_report(state: State<'_, AppState>, hn: String) -> Result<Str
         .map(|s| s.site_name)
         .unwrap_or_default();
 
-    let html = crate::report::build_report(&history, &site_name);
+    let html = crate::report::build_report(&history, &site_name, &labels);
     let path = rfd::AsyncFileDialog::new()
         .set_title("Export medication history report")
         .set_file_name(format!("med-recon-report-{hn}.html"))

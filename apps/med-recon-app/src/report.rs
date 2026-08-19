@@ -4,20 +4,84 @@
 //! be saved, printed, or emailed without a network connection. It always
 //! carries the BPMH disclaimer: dispensing-derived data is one source among
 //! several and must not be presented as a complete or verified list.
+//!
+//! Every user-visible string comes from [`ReportLabels`], resolved by the
+//! frontend from the i18n tokens — this module hard-codes no display text.
 
 use chrono::Datelike;
 use med_recon_core::{MedicationItem, MedicationStatus, PatientHistory};
 
+/// User-visible strings for the report, resolved from the frontend i18n
+/// tokens in the current UI language.
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReportLabels {
+    /// `<html lang>` attribute value (`"th"` / `"en"`).
+    pub html_lang: String,
+    /// Report h1 heading.
+    pub heading: String,
+    /// Header sub-line template with `{date}`.
+    pub generated: String,
+    /// Fallback site label when no site name is configured.
+    pub site_default: String,
+    /// `<title>` template with `{name}` and `{hn}`.
+    pub title: String,
+    /// BPMH disclaimer paragraph.
+    pub disclaimer: String,
+    /// Patient identity section heading.
+    pub section_patient: String,
+    /// Allergy section heading template with `{n}`.
+    pub section_allergy: String,
+    /// Active-medications section heading template with `{n}` — same token
+    /// as the UI canvas so the wording stays identical everywhere.
+    pub section_active: String,
+    /// Lapsed-medications section heading template with `{n}`.
+    pub section_lapsed: String,
+    /// Visit history section heading template with `{n}`.
+    pub section_visits: String,
+    /// Visit table column headers.
+    pub col_date: String,
+    pub col_type: String,
+    pub col_dept: String,
+    pub col_visit: String,
+    /// Medication meta line labels.
+    pub last_dispensed: String,
+    /// Template with `{n}` — e.g. `dispense {n} ครั้ง`.
+    pub dispenses: String,
+    pub total: String,
+    /// Days-supply chip template with `{n}`.
+    pub supply: String,
+    /// Frequency unit suffix, e.g. `/วัน`.
+    pub freq_per_day: String,
+    /// Allergy meta templates.
+    pub reported_on: String,
+    pub by: String,
+    pub note: String,
+    /// Data-completeness warnings heading (same token as the UI).
+    pub warnings_title: String,
+    /// PHI handling notice in the report footer.
+    pub footer_phi: String,
+}
+
+/// Substitute `{key}` placeholders in a label template.
+fn fill(tpl: &str, pairs: &[(&str, &str)]) -> String {
+    let mut out = tpl.to_string();
+    for (key, value) in pairs {
+        out = out.replace(&format!("{{{key}}}"), value);
+    }
+    out
+}
+
 /// Build the full HTML document for a patient history.
-pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
+pub fn build_report(history: &PatientHistory, site_name: &str, labels: &ReportLabels) -> String {
     let now = chrono::Local::now();
     let patient = &history.patient;
-    // Empty site name falls back to a generic label so the header never
-    // renders a bare separator.
+    // Empty site name falls back to the label so the header never renders a
+    // bare separator.
     let site_label = if site_name.trim().is_empty() {
-        "สถานบริการ".to_string()
+        &labels.site_default
     } else {
-        site_name.trim().to_string()
+        site_name.trim()
     };
 
     let active: Vec<&MedicationItem> = history
@@ -40,13 +104,13 @@ pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
                 parts.push(escape_html(s).to_string());
             }
             if let Some(d) = a.report_date {
-                parts.push(format!("รายงานเมื่อ {}", format_date(d)));
+                parts.push(fill(&labels.reported_on, &[("date", &format_date(d))]));
             }
             if let Some(r) = a.reporter.as_deref() {
-                parts.push(format!("โดย {}", escape_html(r)));
+                parts.push(fill(&labels.by, &[("name", &escape_html(r))]));
             }
             if let Some(n) = a.note.as_deref().filter(|n| !n.trim().is_empty()) {
-                parts.push(format!("หมายเหตุ: {}", escape_html(n)));
+                parts.push(fill(&labels.note, &[("note", &escape_html(n))]));
             }
             let detail = if parts.is_empty() {
                 String::new()
@@ -75,7 +139,9 @@ pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
                     let freq = s.frequency_per_day.map(|f| format!("{f}"));
                     let note = s.note.as_deref().map(escape_html).unwrap_or_default();
                     match (dose, freq) {
-                        (Some(d), Some(f)) => format!("{d} × {f}/วัน{note}"),
+                        (Some(d), Some(f)) => {
+                            format!("{d} × {f}{}", labels.freq_per_day)
+                        }
                         _ => note,
                     }
                 });
@@ -85,7 +151,12 @@ pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
                     .unwrap_or_default();
                 let supply = m
                     .days_supply
-                    .map(|d| format!("<span class=\"chip\">supply ≈ {d} วัน</span>"))
+                    .map(|d| {
+                        format!(
+                            "<span class=\"chip\">{}</span>",
+                            fill(&labels.supply, &[("n", &d.to_string())])
+                        )
+                    })
                     .unwrap_or_default();
                 let sources = m
                     .sources
@@ -99,18 +170,20 @@ pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
                 format!(
                     "<li class=\"med\">\
                        <div class=\"med-head\"><strong>{}</strong> <span class=\"muted\">{}{}</span></div>\
-                       <div class=\"meta\">ครั้งล่าสุด {} · dispense {} ครั้ง · รวม {} · <span class=\"chip\">{}</span>{}</div>\
+                       <div class=\"meta\">{last} {} · {dispenses} · {total} {} · <span class=\"chip\">{}</span>{}</div>\
                        {}\
                      </li>",
                     escape_html(&m.drug_name),
                     if strength.is_empty() { String::new() } else { format!(" · {strength}") },
                     if units.is_empty() { String::new() } else { format!(" {units}") },
                     format_date(m.last_dispense),
-                    m.visit_count,
                     m.total_qty,
                     sources,
                     supply,
                     sig_html,
+                    last = labels.last_dispensed.clone(),
+                    dispenses = fill(&labels.dispenses, &[("n", &m.visit_count.to_string())]),
+                    total = labels.total.clone(),
                 )
             })
             .collect::<Vec<_>>()
@@ -147,16 +220,17 @@ pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
         String::new()
     } else {
         format!(
-            "<section><h2>คำเตือนความครบถ้วนของข้อมูล</h2><ul style='color:#8a6d00'>{warnings}</ul></section>"
+            "<section><h2>{}</h2><ul style='color:#8a6d00'>{warnings}</ul></section>",
+            escape_html(&labels.warnings_title)
         )
     };
 
     format!(
         r#"<!DOCTYPE html>
-<html lang="th">
+<html lang="{lang}">
 <head>
 <meta charset="utf-8">
-<title>ประวัติยา {name} ({hn})</title>
+<title>{title}</title>
 <style>
   :root {{
     --green: #006241; --accent: #00754A; --house: #1E3932;
@@ -200,48 +274,56 @@ pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
 </head>
 <body>
   <div class="header">
-    <h1>ประวัติยาและการใช้ยา — Med Recon</h1>
-    <div class="sub">{site} · สร้างเมื่อ {generated}</div>
+    <h1>{heading}</h1>
+    <div class="sub">{site} · {generated}</div>
   </div>
   <div class="disclaimer">
-    ⚠️ เอกสารนี้สร้างจากข้อมูลการจ่ายยา (dispensing) ใน HOSxP ซึ่งเป็นเพียงแหล่งข้อมูลหนึ่งในหลายแหล่ง
-    สำหรับ Best Possible Medication History (BPMH) ยังไม่ถือว่าเป็นรายการยาที่สมบูรณ์หรือได้รับการยืนยัน
-    ควรสอบทานร่วมกับผู้ป่วย/ญาติก่อนนำไปใช้ทางคลินิก
+    {disclaimer}
   </div>
   <main>
     <section>
-      <h2>ข้อมูลผู้ป่วย</h2>
+      <h2>{section_patient}</h2>
       <p style="margin:0">{name} — HN <strong>{hn}</strong>{cid}</p>
     </section>
     {warnings_html}
     <section>
-      <h2>แพ้ยา / อาการไม่พึงประสงค์ ({allergy_count})</h2>
+      <h2>{section_allergy}</h2>
       <ul>{allergies}</ul>
     </section>
     <section>
-      <h2>ยาที่คาดว่ายังใช้อยู่ (Active) — {active_count}</h2>
+      <h2>{section_active}</h2>
       <ul>{active_html}</ul>
     </section>
     <section>
-      <h2>ยาที่คาดว่าหยุดใช้แล้ว (Lapsed) — {lapsed_count}</h2>
+      <h2>{section_lapsed}</h2>
       <ul>{lapsed_html}</ul>
     </section>
     <section>
-      <h2>ประวัติการเข้ารับบริการ ({visit_count})</h2>
+      <h2>{section_visits}</h2>
       <table>
-        <thead><tr><th>วันที่</th><th>ประเภท</th><th>แผนก/หอผู้ป่วย</th><th>รหัส visit</th></tr></thead>
+        <thead><tr><th>{col_date}</th><th>{col_type}</th><th>{col_dept}</th><th>{col_visit}</th></tr></thead>
         <tbody>{visits}</tbody>
       </table>
     </section>
   </main>
   <div class="footer">
-    Med Recon v0.1.0 · ข้อมูลนี้เป็นข้อมูลสุขภาพส่วนบุคคล (PHI) ต้องจัดเก็บและส่งต่อตามระเบียบ
-    ปฏิบัติด้านการคุ้มครองข้อมูลส่วนบุคคล
+    Med Recon v0.1.0 · {footer_phi}
   </div>
 </body>
 </html>"#,
-        site = escape_html(&site_label),
-        generated = format_date(now.date_naive()),
+        lang = escape_html(&labels.html_lang),
+        title = escape_html(&fill(
+            &labels.title,
+            &[("name", &patient.display_name()), ("hn", &patient.hn)],
+        )),
+        heading = escape_html(&labels.heading),
+        site = escape_html(site_label),
+        generated = fill(
+            &labels.generated,
+            &[("date", &format_date(now.date_naive()))]
+        ),
+        disclaimer = escape_html(&labels.disclaimer),
+        section_patient = escape_html(&labels.section_patient),
         name = escape_html(&patient.display_name()),
         hn = escape_html(&patient.hn),
         cid = patient
@@ -250,22 +332,39 @@ pub fn build_report(history: &PatientHistory, site_name: &str) -> String {
             .map(|c| format!(" — CID {}", escape_html(c)))
             .unwrap_or_default(),
         warnings_html = warnings_html,
-        allergy_count = history.allergies.len(),
+        section_allergy = escape_html(&fill(
+            &labels.section_allergy,
+            &[("n", &history.allergies.len().to_string())],
+        )),
         allergies = if allergies.is_empty() {
             "<p class=\"muted\">—</p>".to_string()
         } else {
             allergies
         },
-        active_count = active.len(),
+        section_active = escape_html(&fill(
+            &labels.section_active,
+            &[("n", &active.len().to_string())],
+        )),
         active_html = meds_html(&active),
-        lapsed_count = lapsed.len(),
+        section_lapsed = escape_html(&fill(
+            &labels.section_lapsed,
+            &[("n", &lapsed.len().to_string())],
+        )),
         lapsed_html = meds_html(&lapsed),
-        visit_count = history.visits.len(),
+        section_visits = escape_html(&fill(
+            &labels.section_visits,
+            &[("n", &history.visits.len().to_string())],
+        )),
+        col_date = escape_html(&labels.col_date),
+        col_type = escape_html(&labels.col_type),
+        col_dept = escape_html(&labels.col_dept),
+        col_visit = escape_html(&labels.col_visit),
         visits = if visits.is_empty() {
             "<tr><td colspan=\"4\" class=\"muted\">—</td></tr>".to_string()
         } else {
             visits
         },
+        footer_phi = escape_html(&labels.footer_phi),
     )
 }
 
@@ -294,6 +393,37 @@ fn format_date(d: chrono::NaiveDate) -> String {
 mod tests {
     use super::*;
     use med_recon_core::{AllergyRecord, Dispense, EncounterSource, PatientSummary, VisitSummary};
+
+    /// Thai labels for tests — mirrors the frontend i18n token values.
+    fn th_labels() -> ReportLabels {
+        ReportLabels {
+            html_lang: "th".into(),
+            heading: "ประวัติยาและการใช้ยา — Med Recon".into(),
+            generated: "สร้างเมื่อ {date}".into(),
+            site_default: "สถานบริการ".into(),
+            title: "ประวัติยา {name} ({hn})".into(),
+            disclaimer: "เอกสารนี้สร้างจากข้อมูลการจ่ายยา".into(),
+            section_patient: "ข้อมูลผู้ป่วย".into(),
+            section_allergy: "แพ้ยา / อาการไม่พึงประสงค์ ({n})".into(),
+            section_active: "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ ({n})".into(),
+            section_lapsed: "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่าหยุดใช้แล้ว ({n})".into(),
+            section_visits: "ประวัติการเข้ารับบริการ ({n})".into(),
+            col_date: "วันที่".into(),
+            col_type: "ประเภท".into(),
+            col_dept: "แผนก/หอผู้ป่วย".into(),
+            col_visit: "รหัส visit".into(),
+            last_dispensed: "ครั้งล่าสุด".into(),
+            dispenses: "dispense {n} ครั้ง".into(),
+            total: "รวม".into(),
+            supply: "supply ≈ {n} วัน".into(),
+            freq_per_day: "/วัน".into(),
+            reported_on: "รายงานเมื่อ {date}".into(),
+            by: "โดย {name}".into(),
+            note: "หมายเหตุ: {note}".into(),
+            warnings_title: "คำเตือนความครบถ้วนของข้อมูล".into(),
+            footer_phi: "ข้อมูลนี้เป็นข้อมูลสุขภาพส่วนบุคคล".into(),
+        }
+    }
 
     fn sample_history() -> PatientHistory {
         let patient = PatientSummary {
@@ -356,17 +486,17 @@ mod tests {
 
     #[test]
     fn report_contains_core_sections() {
-        let html = build_report(&sample_history(), "รพ.ทดสอบ");
+        let html = build_report(&sample_history(), "รพ.ทดสอบ", &th_labels());
         for needle in [
             "ประวัติยาและการใช้ยา",
             "ข้อมูลผู้ป่วย",
             "สมชาย ใจดี",
             "แพ้ยา",
             "Penicillin",
-            "ยาที่คาดว่ายังใช้อยู่",
+            "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่",
             "Paracetamol",
             "Metformin",
-            "ยาที่คาดว่าหยุดใช้แล้ว",
+            "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่าหยุดใช้แล้ว",
             "ประวัติการเข้ารับบริการ",
             "รพ.ทดสอบ",
         ] {
@@ -378,7 +508,7 @@ mod tests {
     fn report_renders_warnings() {
         let mut h = sample_history();
         h.warnings = vec!["ไม่พบตาราง drugusage/sp_use".to_string()];
-        let html = build_report(&h, "รพ.ทดสอบ");
+        let html = build_report(&h, "รพ.ทดสอบ", &th_labels());
         assert!(html.contains("ไม่พบตาราง drugusage/sp_use"));
     }
 
@@ -386,8 +516,24 @@ mod tests {
     fn report_escapes_html_in_user_data() {
         let mut h = sample_history();
         h.patient.first_name = "<script>alert(1)</script>".into();
-        let html = build_report(&h, "site");
+        let html = build_report(&h, "site", &th_labels());
         assert!(html.contains("&lt;script&gt;"));
         assert!(!html.contains("<script>"));
+    }
+
+    #[test]
+    fn report_uses_labels_instead_of_hardcoded_text() {
+        let mut labels = th_labels();
+        labels.section_active = "ACTIVE_SECTION {n}".into();
+        labels.heading = "HEADING".into();
+        let html = build_report(&sample_history(), "", &labels);
+        assert!(html.contains("ACTIVE_SECTION 1"));
+        assert!(!html.contains("ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่"));
+        assert!(!html.contains("ประวัติยาและการใช้ยา"));
+        assert!(html.contains("HEADING"));
+        assert!(
+            html.contains("สถานบริการ"),
+            "empty site falls back to the label"
+        );
     }
 }

@@ -61,7 +61,8 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
         exporting.set(true);
         export_msg.set(None);
         spawn_local(async move {
-            match api::export_report(&patient.hn).await {
+            let labels = api::report_labels(lang.get_untracked());
+            match api::export_report(&patient.hn, &labels).await {
                 Ok(path) => export_msg.set(Some((
                     true,
                     tr_f(
