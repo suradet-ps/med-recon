@@ -350,7 +350,12 @@ code, .mono, .code {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
   height: calc(100vh - var(--topbar-height));
-  background: var(--canvas);
+  /* Dot grid (codeframe technique): a 1px dot per 24px tile, tiled by
+     background-size. Sits behind the floating cards so they read as
+     elevated surfaces instead of flat sections. */
+  background-color: var(--canvas);
+  background-image: radial-gradient(circle, var(--hairline) 1px, transparent 1px);
+  background-size: 24px 24px;
   border-right: 1px solid var(--hairline);
   display: flex;
   flex-direction: column;
@@ -518,7 +523,8 @@ code, .mono, .code {
   border: 1px solid var(--hairline);
   border-radius: var(--rounded-lg);
   padding: var(--sp-md);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  /* Lift the card above the sidebar dot grid so it reads as floating. */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 16px -6px rgba(0, 0, 0, 0.14);
 }
 
 .patient-card__head {
