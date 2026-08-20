@@ -77,15 +77,21 @@ jobs:
           # GitHub release downloads occasionally drop the connection;
           # retry before giving up. Windows ships trunk as a .zip
           # (trunk.exe at the archive root); every other target is .tar.gz.
-          if [ "$RUNNER_OS" = "Windows" ]; then CURL=curl.exe; else CURL=curl; fi
+          # Expand-Archive keys off the file extension, so use a .zip name
+          # on Windows.
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            CURL=curl.exe; ARCHIVE=trunk.zip
+          else
+            CURL=curl; ARCHIVE=trunk.tar.gz
+          fi
           for attempt in 1 2 3 4; do
-            $CURL -LsSf https://github.com/trunk-rs/trunk/releases/download/v0.21.14/${{ matrix.trunk-artifact }} -o trunk-download \
+            $CURL -LsSf https://github.com/trunk-rs/trunk/releases/download/v0.21.14/${{ matrix.trunk-artifact }} -o "$ARCHIVE" \
               && mkdir -p "$HOME/.cargo/bin" \
               && if [ "$RUNNER_OS" = "Windows" ]; then
-                   powershell -Command "Expand-Archive -Force -Path trunk-download -DestinationPath trunk-extract"
+                   powershell -Command "Expand-Archive -Force -Path trunk.zip -DestinationPath trunk-extract"
                    cp trunk-extract/trunk.exe "$HOME/.cargo/bin/"
                  else
-                   tar -xzf trunk-download -C "$HOME/.cargo/bin"
+                   tar -xzf "$ARCHIVE" -C "$HOME/.cargo/bin"
                  fi \
               && break
             echo "trunk download failed (attempt $attempt/4) — retrying in 10s"
