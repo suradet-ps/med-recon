@@ -1129,10 +1129,6 @@ code, .mono, .code {
   background: #F0F9F4;
 }
 
-.med-table__row--latest td:first-child {
-  box-shadow: inset 3px 0 0 var(--brand);
-}
-
 /* Out-specifies the generic row hover so the tint survives hover. */
 .med-table .med-table__row--latest:hover {
   background: #E7F5EE;
