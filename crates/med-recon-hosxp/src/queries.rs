@@ -162,6 +162,23 @@ WHERE hn = ?
   AND vstdate >= ?
 ORDER BY vstdate DESC"#;
 
+/// Latest past medical history (`opdscreen.pmh`) for one patient.
+///
+/// PMH is cumulative history, so unlike the other sections there is **no
+/// cutoff** — the most recent record wins regardless of the history window.
+/// The `pmh` column is site-dependent; if it is missing (MySQL 1054) the
+/// section degrades to empty with a user-visible warning.
+///
+/// Parameters: `(hn)`.
+pub const PMH_SQL: &str = r#"
+SELECT vstdate, pmh
+FROM opdscreen
+WHERE hn = ?
+  AND pmh IS NOT NULL
+  AND TRIM(pmh) <> ''
+ORDER BY vstdate DESC
+LIMIT 1"#;
+
 /// Allergy / ADR records.
 ///
 /// Columns confirmed against the live schema: `report_date` (date),

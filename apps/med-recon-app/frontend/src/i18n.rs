@@ -263,6 +263,12 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "No dispensing records in the configured window",
     ),
     ("patient.title", "ข้อมูลผู้ป่วย", "Patient"),
+    (
+        "pmh.title",
+        "ประวัติการเจ็บป่วย (PMH)",
+        "Past medical history (PMH)",
+    ),
+    ("pmh.empty", "ไม่มีข้อมูล", "No data recorded"),
     ("patient.photo_alt", "รูปผู้ป่วย", "Patient photo"),
     ("patient.clear", "ยกเลิกการเลือกผู้ป่วย", "Deselect patient"),
     ("patient.hn", "HN", "HN"),

@@ -61,7 +61,7 @@ the live schema before writing code — do not guess HOSxP field names.
 | Table | Key fields | Notes |
 |---|---|---|
 | `ovst` | `seq_id`, `hn`, `vn`, `vstdate`, `vsttime`, `main_dep` | OPD visit |
-| `opdscreen` | — | OPD screening point |
+| `opdscreen` | `hn`, `vn`, `vstdate`, `cc`, `pe`, `pmh` | OPD screening point. `pmh` (past medical history, free text) confirmed at the target site; the latest `vstdate` row wins (cumulative history, no window). If the `pmh` column is missing (MySQL 1054) the PMH card degrades silently to "ไม่มีข้อมูล". |
 | `ipt` | `an`, `hn`, `vn`, `regdate`, `dchdate`, `ward` | IPD admission. `ipt.vn` carries the originating OPD `vn`, so `vn` bridges OPD → IPD for the same episode. |
 
 ### Drug Orders / Dispensing

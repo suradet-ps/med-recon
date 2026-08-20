@@ -198,6 +198,10 @@ pub struct PatientHistory {
     pub visits: Vec<VisitSummary>,
     /// OPD screening records (CC/PE), most recent first.
     pub screen_records: Vec<OpdScreenRecord>,
+    /// Past medical history (`opdscreen.pmh`), free text. When several
+    /// records exist, the latest `vstdate` wins — cumulative history, so it
+    /// is **not** bounded by the history window.
+    pub pmh: Option<String>,
     /// Data-completeness warnings (e.g. a HOSxP table missing on this site,
     /// so part of the history was skipped). Shown to the user verbatim.
     pub warnings: Vec<String>,
