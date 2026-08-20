@@ -186,6 +186,7 @@ impl HosxpClient {
 
         let allergies = self.load_allergies(hn, &mut warnings).await?;
         let screen_records = self.load_screen_records(hn, cutoff, &mut warnings).await?;
+        let pmh = self.load_pmh(hn, &mut warnings).await?;
         let mut visits = self.load_visits(hn, cutoff, &mut warnings).await?;
         visits.sort_by_key(|a| std::cmp::Reverse(a.date));
 
@@ -197,6 +198,7 @@ impl HosxpClient {
             medications,
             allergies,
             screen_records,
+            pmh,
             visits,
             warnings,
         })
@@ -418,6 +420,25 @@ impl HosxpClient {
                 pe: r.pe,
             })
             .collect())
+    }
+
+    /// Load the latest past medical history (`opdscreen.pmh`) for one
+    /// patient — the most recent record wins. If the table or the `pmh`
+    /// column is missing on this site (MySQL 1146/1054) it degrades to
+    /// `None` with a user-visible warning.
+    async fn load_pmh(&self, hn: &str, warnings: &mut Vec<String>) -> Result<Option<String>> {
+        let rows: Vec<PmhRow> = match self
+            .fetch_rows(queries::PMH_SQL, &[P::Str(hn.to_owned())])
+            .await
+        {
+            Ok(rows) => rows,
+            Err(e) if is_schema_variation(&e) => {
+                warn_missing(warnings, "opdscreen.pmh", "ประวัติการเจ็บป่วย (PMH)");
+                return Ok(None);
+            }
+            Err(e) => return Err(e),
+        };
+        Ok(rows.into_iter().next().map(|r| r.pmh))
     }
 
     async fn load_allergies(
@@ -683,6 +704,14 @@ struct OpdScreenRow {
     vstdate: NaiveDate,
     cc: Option<String>,
     pe: Option<String>,
+}
+
+/// Raw row shape for the latest-`opdscreen.pmh` query.
+#[derive(sqlx::FromRow)]
+struct PmhRow {
+    #[allow(dead_code)]
+    vstdate: NaiveDate,
+    pmh: String,
 }
 
 /// Raw row shape for `opd_allergy` queries.

@@ -594,6 +594,23 @@ code, .mono, .code {
   height: 30px;
 }
 
+/* PMH card (sidebar, below the profile card) — free-text past medical
+   history, kept multi-line and readable. */
+.pmh-card__text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+  white-space: pre-line;
+  overflow-wrap: break-word;
+}
+
+.pmh-card__empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--steel);
+}
+
 .patient-card__info {
   flex: 1;
   min-width: 0;

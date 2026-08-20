@@ -481,6 +481,7 @@ mod tests {
                 department: Some("OPD".into()),
             }],
             screen_records: vec![],
+            pmh: None,
             warnings: vec![],
         }
     }

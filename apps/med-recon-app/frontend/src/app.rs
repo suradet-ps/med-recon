@@ -15,6 +15,7 @@ use wasm_bindgen::JsCast;
 use crate::components::history_canvas::HistoryCanvas;
 use crate::components::patient_card::PatientCard;
 use crate::components::patient_search::PatientSearch;
+use crate::components::pmh_card::PmhCard;
 use crate::components::settings_modal::SettingsModal;
 use crate::components::top_bar::TopBar;
 use crate::state::{AppState, ConnectionHealth};
@@ -80,6 +81,7 @@ fn App() -> impl IntoView {
                 <aside class="sidebar">
                     <PatientSearch state=state />
                     <PatientCard state=state />
+                    <PmhCard state=state />
                 </aside>
                 <HistoryCanvas state=state />
             </div>
