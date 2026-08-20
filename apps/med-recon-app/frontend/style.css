@@ -1080,6 +1080,22 @@ code, .mono, .code {
   background: #FBF9F2;
 }
 
+/* Most recent visit group — the first date group in the (newest-first)
+   table. Green tint + left brand accent bar so the latest visit reads as
+   the most prominent row block, above the alternating banding. */
+.med-table__row--latest {
+  background: #F0F9F4;
+}
+
+.med-table__row--latest td:first-child {
+  box-shadow: inset 3px 0 0 var(--brand);
+}
+
+/* Out-specifies the generic row hover so the tint survives hover. */
+.med-table .med-table__row--latest:hover {
+  background: #E7F5EE;
+}
+
 .med-table__no {
   width: 40px;
   color: var(--slate);

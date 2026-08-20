@@ -250,12 +250,26 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                     let mut band = false;
                     let mut last_date: Option<NaiveDate> = None;
                     items.iter().enumerate().map(|(i, m)| {
+                        // First date group = the most recent visit; highlight
+                        // it above the alternating banding. Rows are sorted
+                        // newest-first, so every row sharing the first item's
+                        // date belongs to the latest visit.
+                        let is_latest = items
+                            .first()
+                            .is_some_and(|f| f.last_dispense == m.last_dispense);
                         let date_changed = last_date.as_ref() != Some(&m.last_dispense);
                         if date_changed {
                             band = !band;
                             last_date = Some(m.last_dispense);
                         }
                         let row_band = band;
+                        let row_class = if is_latest {
+                            "med-table__row med-table__row--latest"
+                        } else if row_band {
+                            "med-table__row med-table__row--band"
+                        } else {
+                            "med-table__row"
+                        };
                         let no = (i + 1).to_string();
                         let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), m.last_dispense.month(), m.last_dispense.year());
                         let drug = drug_label(m);
@@ -275,7 +289,7 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                             format!("{:02}/{:02}/{}", d.day(), d.month(), d.year())
                         }).unwrap_or_default();
                         view! {
-                            <tr class=move || if row_band { "med-table__row med-table__row--band" } else { "med-table__row" }>
+                            <tr class=row_class>
                                 <td class="med-table__no">{no}</td>
                                 <td class="med-table__date">{date}</td>
                                 <td class="med-table__drug">
