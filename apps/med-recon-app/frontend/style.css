@@ -380,6 +380,12 @@ code, .mono, .code {
   user-select: none;
 }
 
+/* The tagline embeds the proper-case product name "HOSxP" —
+   text-transform: uppercase would render it "HOSXP". */
+.sidebar__label--tagline {
+  text-transform: none;
+}
+
 .sidebar__label .icon {
   width: 14px;
   height: 14px;
@@ -636,8 +642,17 @@ code, .mono, .code {
   user-select: none;
 }
 
+.patient-card__actions {
+  display: flex;
+  gap: var(--sp-sm);
+}
+
 .patient-card__export {
-  width: 100%;
+  flex: 1.4;
+}
+
+.patient-card__capture {
+  flex: 1;
 }
 
 .patient-card__status {
@@ -1049,6 +1064,10 @@ code, .mono, .code {
 
 .med-table {
   width: 100%;
+  /* Fixed layout + pinned short columns (see below) — every medication
+     table renders with identical column proportions, no matter which
+     section (active / lapsed) or how the row contents differ. */
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 13.5px;
   margin-top: var(--sp-sm);
@@ -1102,6 +1121,7 @@ code, .mono, .code {
 }
 
 .med-table__date {
+  width: 88px;
   white-space: nowrap;
   color: var(--slate);
 }
@@ -1109,6 +1129,7 @@ code, .mono, .code {
 .med-table__drug {
   font-weight: 500;
   color: var(--ink);
+  overflow-wrap: break-word;
 }
 
 /* OPD/IPD provenance pill inside the drug cell — reuse the generic .badge,
@@ -1120,14 +1141,17 @@ code, .mono, .code {
 
 .med-table__sig {
   color: var(--slate);
+  overflow-wrap: break-word;
 }
 
 .med-table__qty {
+  width: 110px;
   white-space: nowrap;
   color: var(--slate);
 }
 
 .med-table__appt {
+  width: 80px;
   white-space: nowrap;
   color: var(--slate);
 }

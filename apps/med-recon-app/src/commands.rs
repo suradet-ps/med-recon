@@ -710,3 +710,181 @@ pub async fn export_report(
     tracing::debug!(hn = %med_recon_core::redact_hn(&hn), "report exported");
     Ok(path.display().to_string())
 }
+
+/// Supersample factor for screenshots: the captured PNG is rendered at
+/// `devicePixelRatio × SCREENSHOT_SUPERSAMPLE`, clamped to 4× the CSS
+/// resolution, so the output stays sharp even when viewed at zoom. The
+/// surface bitmap is finite-resolution, so beyond `devicePixelRatio` this
+/// mostly enlarges the file rather than adding detail — raise the factor
+/// only if the extra pixel dimensions are actually needed.
+#[cfg(target_os = "windows")]
+const SCREENSHOT_SUPERSAMPLE: f64 = 2.0;
+
+/// Capture the current webview content as a PNG and save it through a
+/// native dialog — the "screenshot" sibling of [`export_report`].
+///
+/// Windows re-rasterizes the page via the DevTools Protocol
+/// (`Page.captureScreenshot` with `scale = devicePixelRatio`) instead of
+/// grabbing the on-screen surface: `CapturePreview` returns the DPI-scaled
+/// surface bitmap, which comes out soft on 125–200% displays, while CDP
+/// renders at physical pixels. The capture happens *before* the save dialog
+/// opens, keeping the dialog out of the image. `base_name` becomes
+/// `{base_name}-YYYYMMDD-HHMMSS.png`.
+#[tauri::command]
+pub async fn capture_screenshot(
+    window: tauri::WebviewWindow,
+    base_name: String,
+    scale: f64,
+) -> Result<String, CommandError> {
+    #[cfg(target_os = "windows")]
+    {
+        // WebView2 callbacks resolve on the main thread and we wait on them;
+        // a blocking thread keeps a wedged webview from parking an async
+        // worker thread (which would stall every other command).
+        let scale = (scale * SCREENSHOT_SUPERSAMPLE).clamp(1.0, 4.0);
+        let png = tauri::async_runtime::spawn_blocking(move || screenshot_png(&window, scale))
+            .await
+            .map_err(|e| {
+                dev_log(
+                    "capture_screenshot",
+                    &e,
+                    CommandErrorKind::Query,
+                    "ถ่ายภาพหน้าจอไม่สำเร็จ",
+                )
+            })??;
+
+        let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
+        let path = rfd::AsyncFileDialog::new()
+            .set_title("Export screenshot")
+            .set_file_name(format!("{base_name}-{stamp}.png"))
+            .save_file()
+            .await
+            .map(|handle| handle.path().to_path_buf())
+            .ok_or_else(|| CommandError::new(CommandErrorKind::Query, "ยกเลิกการถ่ายภาพหน้าจอ"))?;
+
+        std::fs::write(&path, png).map_err(|e| {
+            dev_log(
+                "capture_screenshot",
+                &e,
+                CommandErrorKind::Query,
+                "เขียนไฟล์ภาพไม่สำเร็จ",
+            )
+        })?;
+        tracing::info!("screenshot saved");
+        Ok(path.display().to_string())
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = (window, base_name, scale);
+        Err(CommandError::new(
+            CommandErrorKind::Query,
+            "การถ่ายภาพหน้าจอรองรับเฉพาะระบบ Windows",
+        ))
+    }
+}
+
+/// Windows-only: re-rasterize the page into an in-memory PNG via the
+/// DevTools Protocol.
+#[cfg(target_os = "windows")]
+fn screenshot_png(window: &tauri::WebviewWindow, scale: f64) -> Result<Vec<u8>, CommandError> {
+    use std::sync::mpsc;
+    use std::time::Duration;
+
+    const TIMEOUT: Duration = Duration::from_secs(10);
+
+    let (tx, rx) = mpsc::channel::<Result<Vec<u8>, String>>();
+
+    window
+        .with_webview(move |webview| {
+            // Setup failures (controller/CoreWebView2/CDP call) and the async
+            // completion result both land on the channel; the `with_webview`
+            // closure itself returns `()`.
+            let _ = capture_webview(&webview, scale, tx);
+        })
+        .map_err(|e| {
+            dev_log(
+                "capture_screenshot",
+                &e,
+                CommandErrorKind::Query,
+                "ถ่ายภาพหน้าจอไม่สำเร็จ",
+            )
+        })?;
+
+    rx.recv_timeout(TIMEOUT)
+        .map_err(|e| {
+            dev_log(
+                "capture_screenshot",
+                &e,
+                CommandErrorKind::Query,
+                "ถ่ายภาพหน้าจอไม่สำเร็จ",
+            )
+        })?
+        .map_err(|e| {
+            dev_log(
+                "capture_screenshot",
+                &e,
+                CommandErrorKind::Query,
+                "ถ่ายภาพหน้าจอไม่สำเร็จ",
+            )
+        })
+}
+
+/// Windows-only: ask the core webview for a `Page.captureScreenshot` at
+/// `scale` (the display's device pixel ratio) and send the decoded PNG
+/// bytes (or the error) back through the channel.
+#[cfg(target_os = "windows")]
+fn capture_webview(
+    webview: &tauri::webview::PlatformWebview,
+    scale: f64,
+    tx: std::sync::mpsc::Sender<Result<Vec<u8>, String>>,
+) -> Result<(), String> {
+    use webview2_com::{CallDevToolsProtocolMethodCompletedHandler, CoTaskMemPWSTR};
+
+    let tx_err = tx.clone();
+    let setup = (move || -> Result<(), String> {
+        let core_webview =
+            unsafe { webview.controller().CoreWebView2() }.map_err(|e| e.to_string())?;
+        let method = CoTaskMemPWSTR::from("Page.captureScreenshot");
+        let params_json = format!(r#"{{"format":"png","fromSurface":true,"scale":{scale}}}"#);
+        let params = CoTaskMemPWSTR::from(params_json.as_str());
+        let handler = CallDevToolsProtocolMethodCompletedHandler::create(Box::new(
+            move |result, response| {
+                let out = result
+                    .map_err(|e| e.to_string())
+                    .and_then(|()| parse_cdp_screenshot(&response).map_err(|e| e.to_string()));
+                let _ = tx.send(out);
+                Ok(())
+            },
+        ));
+        unsafe {
+            core_webview
+                .CallDevToolsProtocolMethod(
+                    *method.as_ref().as_pcwstr(),
+                    *params.as_ref().as_pcwstr(),
+                    &handler,
+                )
+                .map_err(|e| e.to_string())?;
+        }
+        Ok(())
+    })();
+    if let Err(e) = setup {
+        let _ = tx_err.send(Err(e));
+    }
+    Ok(())
+}
+
+/// Decode the CDP screenshot response (`{"data":"<base64 png>"}`).
+#[cfg(target_os = "windows")]
+fn parse_cdp_screenshot(response: &str) -> Result<Vec<u8>, String> {
+    use base64::Engine;
+    let json: serde_json::Value =
+        serde_json::from_str(response).map_err(|e| format!("bad CDP response: {e}"))?;
+    let data = json
+        .get("data")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "CDP screenshot response missing data".to_string())?;
+    base64::engine::general_purpose::STANDARD
+        .decode(data)
+        .map_err(|e| e.to_string())
+}

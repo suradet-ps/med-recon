@@ -26,3 +26,10 @@ rfd = { workspace = true }
 base64 = { workspace = true }        # patient photo BLOB → data URL over IPC
 secrecy = { workspace = true }          # password wrapper in SiteConfigInput conversion
 encryptman = "0.3.0"                    # ephemeral vault fallback (headless)
+
+[target.'cfg(windows)'.dependencies]
+# WebView2 COM bindings for the screenshot feature (DevTools Protocol
+# Page.captureScreenshot — re-rasterizes at devicePixelRatio, unlike
+# CapturePreview which grabs the DPI-scaled on-screen surface). Already in
+# the tree via wry; added as a direct dep only.
+webview2-com = "0.38"
