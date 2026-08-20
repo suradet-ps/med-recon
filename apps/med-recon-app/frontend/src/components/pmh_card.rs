@@ -16,6 +16,12 @@ pub fn PmhCard(state: AppState) -> impl IntoView {
     let lang = state.lang;
     view! {
         {move || {
+            // Only appear once a patient is picked and the history has
+            // actually loaded — hiding while the load is in flight avoids a
+            // misleading flash of "ไม่มีข้อมูล" before the data arrives.
+            if state.patient.get().is_none() || state.history_loading.get() {
+                return None;
+            }
             let pmh = state
                 .history
                 .get()
