@@ -68,35 +68,15 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
         .collect();
 
     let active_count = active.len();
-    let active_title = tr_f(
-        lang.get_untracked(),
-        "canvas.active",
-        &[("n", &active_count.to_string())],
-    );
     let has_active = active_count > 0;
     let lapsed_count = lapsed.len();
-    let lapsed_title = tr_f(
-        lang.get_untracked(),
-        "canvas.lapsed",
-        &[("n", &lapsed_count.to_string())],
-    );
     let has_lapsed = lapsed_count > 0;
     let lapsed_open = RwSignal::new(false);
     let screen_records = history.screen_records.clone();
     let screen_count = screen_records.len();
-    let screen_title = tr_f(
-        lang.get_untracked(),
-        "canvas.screen",
-        &[("n", &screen_count.to_string())],
-    );
     let has_screen = screen_count > 0;
     let screen_open = RwSignal::new(false);
     let allergy_count = history.allergies.len();
-    let allergies_title = tr_f(
-        lang.get_untracked(),
-        "canvas.allergies",
-        &[("n", &allergy_count.to_string())],
-    );
     let has_allergies = allergy_count > 0;
     let warnings = history.warnings.clone();
 
@@ -121,58 +101,62 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
             <section class="canvas-section">
                 <h3 class="timeline-header">
                     <IconAlert class="icon" />
-                    {allergies_title}
+                    {move || tr_f(lang.get(), "canvas.allergies", &[("n", &allergy_count.to_string())])}
                 </h3>
-                {if !has_allergies {
-                    view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_allergies")}</p> }.into_any()
-                } else {
-                    history.allergies.iter().map(|a| {
-                        let agent = a.agent.clone();
-                        let symptom = a.symptom.clone();
-                        let mut meta_parts: Vec<String> = Vec::new();
-                        if let Some(d) = a.report_date {
-                            meta_parts.push(tr_f(
-                                lang.get_untracked(),
-                                "allergy.reported_on",
-                                &[("date", &format!("{:02}/{:02}/{}", d.day(), d.month(), d.year()))],
-                            ));
-                        }
-                        if let Some(r) = a.reporter.as_deref().filter(|r| !r.trim().is_empty()) {
-                            meta_parts.push(tr_f(lang.get_untracked(), "allergy.reported_by", &[("reporter", r)]));
-                        }
-                        if let Some(n) = a.note.as_deref().filter(|n| !n.trim().is_empty()) {
-                            meta_parts.push(tr_f(lang.get_untracked(), "allergy.note", &[("note", n)]));
-                        }
-                        let meta = meta_parts.join(" · ");
-                        view! {
-                            <div class="verdict-band verdict-notfound verdict-band--compact">
-                                <IconAlert class="verdict-band__icon" />
-                                <div class="verdict-band__content">
-                                    <p class="verdict-band__term">{agent}</p>
-                                    {move || symptom.as_ref().map(|s| view! {
-                                        <p class="verdict-band__detail">{s.clone()}</p>
-                                    })}
-                                    {if meta.is_empty() {
-                                        None
-                                    } else {
-                                        Some(view! { <p class="verdict-band__meta">{meta}</p> }.into_any())
-                                    }}
+                {move || {
+                    if !has_allergies {
+                        view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_allergies")}</p> }.into_any()
+                    } else {
+                        history.allergies.iter().map(|a| {
+                            let agent = a.agent.clone();
+                            let symptom = a.symptom.clone();
+                            let mut meta_parts: Vec<String> = Vec::new();
+                            if let Some(d) = a.report_date {
+                                meta_parts.push(tr_f(
+                                    lang.get(),
+                                    "allergy.reported_on",
+                                    &[("date", &format!("{:02}/{:02}/{}", d.day(), d.month(), d.year()))],
+                                ));
+                            }
+                            if let Some(r) = a.reporter.as_deref().filter(|r| !r.trim().is_empty()) {
+                                meta_parts.push(tr_f(lang.get(), "allergy.reported_by", &[("reporter", r)]));
+                            }
+                            if let Some(n) = a.note.as_deref().filter(|n| !n.trim().is_empty()) {
+                                meta_parts.push(tr_f(lang.get(), "allergy.note", &[("note", n)]));
+                            }
+                            let meta = meta_parts.join(" · ");
+                            view! {
+                                <div class="verdict-band verdict-notfound verdict-band--compact">
+                                    <IconAlert class="verdict-band__icon" />
+                                    <div class="verdict-band__content">
+                                        <p class="verdict-band__term">{agent}</p>
+                                        {move || symptom.as_ref().map(|s| view! {
+                                            <p class="verdict-band__detail">{s.clone()}</p>
+                                        })}
+                                        {if meta.is_empty() {
+                                            None
+                                        } else {
+                                            Some(view! { <p class="verdict-band__meta">{meta}</p> }.into_any())
+                                        }}
+                                    </div>
                                 </div>
-                            </div>
-                        }
-                    }).collect_view().into_any()
+                            }
+                        }).collect_view().into_any()
+                    }
                 }}
             </section>
 
             <section class="canvas-section">
                 <h3 class="timeline-header">
                     <IconCheckCircle class="icon" />
-                    {active_title}
+                    {move || tr_f(lang.get(), "canvas.active", &[("n", &active_count.to_string())])}
                 </h3>
-                {if !has_active {
-                    view! { <p class="canvas-empty__sub">{tr(lang.get_untracked(), "canvas.no_medications")}</p> }.into_any()
-                } else {
-                    med_table(&active, lang).into_any()
+                {move || {
+                    if !has_active {
+                        view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_medications")}</p> }.into_any()
+                    } else {
+                        med_table(&active, lang).into_any()
+                    }
                 }}
             </section>
 
@@ -183,7 +167,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     aria-expanded=move || if lapsed_open.get() { "true" } else { "false" }
                 >
                     <IconXCircle class="icon" />
-                    {lapsed_title}
+                    {move || tr_f(lang.get(), "canvas.lapsed", &[("n", &lapsed_count.to_string())])}
                     <IconChevron class="timeline-header__chevron" />
                 </button>
                 {move || {
@@ -208,7 +192,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     aria-expanded=move || if screen_open.get() { "true" } else { "false" }
                 >
                     <IconClipboard class="icon" />
-                    {screen_title}
+                    {move || tr_f(lang.get(), "canvas.screen", &[("n", &screen_count.to_string())])}
                     <IconChevron class="timeline-header__chevron" />
                 </button>
                 {move || {
