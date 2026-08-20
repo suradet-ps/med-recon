@@ -1058,6 +1058,10 @@ code, .mono, .code {
 
 .med-table {
   width: 100%;
+  /* Fixed layout + pinned short columns (see below) — every medication
+     table renders with identical column proportions, no matter which
+     section (active / lapsed) or how the row contents differ. */
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 13.5px;
   margin-top: var(--sp-sm);
@@ -1111,6 +1115,7 @@ code, .mono, .code {
 }
 
 .med-table__date {
+  width: 88px;
   white-space: nowrap;
   color: var(--slate);
 }
@@ -1118,6 +1123,7 @@ code, .mono, .code {
 .med-table__drug {
   font-weight: 500;
   color: var(--ink);
+  overflow-wrap: break-word;
 }
 
 /* OPD/IPD provenance pill inside the drug cell — reuse the generic .badge,
@@ -1129,14 +1135,17 @@ code, .mono, .code {
 
 .med-table__sig {
   color: var(--slate);
+  overflow-wrap: break-word;
 }
 
 .med-table__qty {
+  width: 110px;
   white-space: nowrap;
   color: var(--slate);
 }
 
 .med-table__appt {
+  width: 80px;
   white-space: nowrap;
   color: var(--slate);
 }

@@ -240,11 +240,11 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
             <thead>
                 <tr>
                     <th class="med-table__no">{tr(lang.get(), "med.col_no")}</th>
-                    <th>{tr(lang.get(), "med.col_date")}</th>
+                    <th class="med-table__date">{tr(lang.get(), "med.col_date")}</th>
                     <th>{tr(lang.get(), "med.col_drug")}</th>
                     <th>{tr(lang.get(), "med.col_sig")}</th>
-                    <th>{tr(lang.get(), "med.col_qty")}</th>
-                    <th>{tr(lang.get(), "med.col_appt")}</th>
+                    <th class="med-table__qty">{tr(lang.get(), "med.col_qty")}</th>
+                    <th class="med-table__appt">{tr(lang.get(), "med.col_appt")}</th>
                 </tr>
             </thead>
             <tbody>
