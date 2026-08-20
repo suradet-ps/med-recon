@@ -711,6 +711,14 @@ pub async fn export_report(
     Ok(path.display().to_string())
 }
 
+/// Supersample factor for screenshots: the captured PNG is rendered at
+/// `devicePixelRatio × SCREENSHOT_SUPERSAMPLE`, clamped to 4× the CSS
+/// resolution, so the output stays sharp even when viewed at zoom. The
+/// surface bitmap is finite-resolution, so beyond `devicePixelRatio` this
+/// mostly enlarges the file rather than adding detail — raise the factor
+/// only if the extra pixel dimensions are actually needed.
+const SCREENSHOT_SUPERSAMPLE: f64 = 2.0;
+
 /// Capture the current webview content as a PNG and save it through a
 /// native dialog — the "screenshot" sibling of [`export_report`].
 ///
@@ -732,7 +740,7 @@ pub async fn capture_screenshot(
         // WebView2 callbacks resolve on the main thread and we wait on them;
         // a blocking thread keeps a wedged webview from parking an async
         // worker thread (which would stall every other command).
-        let scale = scale.clamp(1.0, 3.0);
+        let scale = (scale * SCREENSHOT_SUPERSAMPLE).clamp(1.0, 4.0);
         let png = tauri::async_runtime::spawn_blocking(move || screenshot_png(&window, scale))
             .await
             .map_err(|e| {
