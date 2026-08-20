@@ -3022,6 +3022,8 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "webview2-com",
+ "windows",
 ]
 
 [[package]]

@@ -26,3 +26,9 @@ rfd = { workspace = true }
 base64 = { workspace = true }        # patient photo BLOB → data URL over IPC
 secrecy = { workspace = true }          # password wrapper in SiteConfigInput conversion
 encryptman = "0.3.0"                    # ephemeral vault fallback (headless)
+
+[target.'cfg(windows)'.dependencies]
+# WebView2 COM bindings for the screenshot feature (CapturePreview). Both
+# are already in the tree via wry — these add them as direct deps only.
+webview2-com = "0.38"                       # ICoreWebView2 / CapturePreview
+windows = { version = "0.61", default-features = false, features = ["Win32_System_Com_StructuredStorage"] }  # IStream / CreateStreamOnHGlobal

@@ -34,6 +34,7 @@ pub fn run() {
             commands::load_history,
             commands::load_patient_image,
             commands::export_report,
+            commands::capture_screenshot,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Med Recon");

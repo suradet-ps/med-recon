@@ -18,6 +18,10 @@ use tauri::State;
 
 use crate::state::AppState;
 
+/// Windows-only: the WebView2 stream type used by the screenshot capture.
+#[cfg(target_os = "windows")]
+use windows::Win32::System::Com::IStream;
+
 /// Ephemeral vault used when the OS keychain is unavailable (headless
 /// environments). Config saved through it is never persisted to disk.
 #[derive(Default)]
@@ -709,4 +713,180 @@ pub async fn export_report(
     })?;
     tracing::debug!(hn = %med_recon_core::redact_hn(&hn), "report exported");
     Ok(path.display().to_string())
+}
+
+/// Capture the current webview content as a PNG and save it through a
+/// native dialog — the "screenshot" sibling of [`export_report`].
+///
+/// Windows uses WebView2 `CapturePreview`, so the shot is exactly what the
+/// app renders (no OS chrome, other windows never leak in). The capture
+/// happens *before* the save dialog opens, keeping the dialog out of the
+/// image. `base_name` becomes `{base_name}-YYYYMMDD-HHMMSS.png`.
+#[tauri::command]
+pub async fn capture_screenshot(
+    window: tauri::WebviewWindow,
+    base_name: String,
+) -> Result<String, CommandError> {
+    #[cfg(target_os = "windows")]
+    {
+        // WebView2 callbacks resolve on the main thread and we wait on them;
+        // a blocking thread keeps a wedged webview from parking an async
+        // worker thread (which would stall every other command).
+        let png = tauri::async_runtime::spawn_blocking(move || screenshot_png(&window))
+            .await
+            .map_err(|e| {
+                dev_log(
+                    "capture_screenshot",
+                    &e,
+                    CommandErrorKind::Query,
+                    "ถ่ายภาพหน้าจอไม่สำเร็จ",
+                )
+            })??;
+
+        let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
+        let path = rfd::AsyncFileDialog::new()
+            .set_title("Export screenshot")
+            .set_file_name(format!("{base_name}-{stamp}.png"))
+            .save_file()
+            .await
+            .map(|handle| handle.path().to_path_buf())
+            .ok_or_else(|| CommandError::new(CommandErrorKind::Query, "ยกเลิกการถ่ายภาพหน้าจอ"))?;
+
+        std::fs::write(&path, png).map_err(|e| {
+            dev_log(
+                "capture_screenshot",
+                &e,
+                CommandErrorKind::Query,
+                "เขียนไฟล์ภาพไม่สำเร็จ",
+            )
+        })?;
+        tracing::info!("screenshot saved");
+        Ok(path.display().to_string())
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = (window, base_name);
+        Err(CommandError::new(
+            CommandErrorKind::Query,
+            "การถ่ายภาพหน้าจอรองรับเฉพาะระบบ Windows",
+        ))
+    }
+}
+
+/// Windows-only: WebView2 `CapturePreview` into an in-memory PNG.
+#[cfg(target_os = "windows")]
+fn screenshot_png(window: &tauri::WebviewWindow) -> Result<Vec<u8>, CommandError> {
+    use std::sync::mpsc;
+    use std::time::Duration;
+
+    const TIMEOUT: Duration = Duration::from_secs(10);
+
+    let (tx, rx) = mpsc::channel::<Result<Vec<u8>, String>>();
+
+    window
+        .with_webview(move |webview| {
+            // Setup failures (controller/CoreWebView2/stream/CapturePreview)
+            // and the async completion result both land on the channel; the
+            // `with_webview` closure itself returns `()`.
+            let _ = capture_webview(&webview, tx);
+        })
+        .map_err(|e| {
+            dev_log(
+                "capture_screenshot",
+                &e,
+                CommandErrorKind::Query,
+                "ถ่ายภาพหน้าจอไม่สำเร็จ",
+            )
+        })?;
+
+    rx.recv_timeout(TIMEOUT)
+        .map_err(|e| {
+            dev_log(
+                "capture_screenshot",
+                &e,
+                CommandErrorKind::Query,
+                "ถ่ายภาพหน้าจอไม่สำเร็จ",
+            )
+        })?
+        .map_err(|e| {
+            dev_log(
+                "capture_screenshot",
+                &e,
+                CommandErrorKind::Query,
+                "ถ่ายภาพหน้าจอไม่สำเร็จ",
+            )
+        })
+}
+
+/// Windows-only: run `CapturePreview` against the platform webview handle
+/// and send the PNG bytes (or the error) back through the channel.
+#[cfg(target_os = "windows")]
+fn capture_webview(
+    webview: &tauri::webview::PlatformWebview,
+    tx: std::sync::mpsc::Sender<Result<Vec<u8>, String>>,
+) -> Result<(), String> {
+    use webview2_com::{
+        CapturePreviewCompletedHandler,
+        Microsoft::Web::WebView2::Win32::COREWEBVIEW2_CAPTURE_PREVIEW_IMAGE_FORMAT_PNG,
+    };
+    use windows::Win32::Foundation::HGLOBAL;
+    use windows::Win32::System::Com::{IStream, StructuredStorage::CreateStreamOnHGlobal};
+
+    let tx_err = tx.clone();
+    let setup = (move || -> Result<(), String> {
+        let controller = webview.controller();
+        let core_webview = unsafe { controller.CoreWebView2() }.map_err(|e| e.to_string())?;
+        let stream: IStream = unsafe { CreateStreamOnHGlobal(HGLOBAL::default(), true) }
+            .map_err(|e| e.to_string())?;
+        let stream_clone = stream.clone();
+        let handler = CapturePreviewCompletedHandler::create(Box::new(move |result| {
+            let out = result
+                .map_err(|e| e.to_string())
+                .and_then(|()| read_stream(&stream_clone).map_err(|e| e.to_string()));
+            let _ = tx.send(out);
+            Ok(())
+        }));
+        unsafe {
+            core_webview
+                .CapturePreview(
+                    COREWEBVIEW2_CAPTURE_PREVIEW_IMAGE_FORMAT_PNG,
+                    &stream,
+                    &handler,
+                )
+                .map_err(|e| e.to_string())?;
+        }
+        Ok(())
+    })();
+    if let Err(e) = setup {
+        let _ = tx_err.send(Err(e));
+    }
+    Ok(())
+}
+
+/// Windows-only: drain an in-memory `IStream` into bytes.
+#[cfg(target_os = "windows")]
+fn read_stream(stream: &IStream) -> Result<Vec<u8>, String> {
+    use windows::Win32::System::Com::{STATFLAG_NONAME, STATSTG, STREAM_SEEK_SET};
+    unsafe {
+        let mut stat = STATSTG::default();
+        stream
+            .Stat(&mut stat, STATFLAG_NONAME)
+            .map_err(|e| e.to_string())?;
+        stream
+            .Seek(0, STREAM_SEEK_SET, None)
+            .map_err(|e| e.to_string())?;
+        let mut buf = vec![0u8; stat.cbSize as usize];
+        let mut read: u32 = 0;
+        stream
+            .Read(
+                buf.as_mut_ptr() as *mut core::ffi::c_void,
+                buf.len() as u32,
+                Some(&mut read),
+            )
+            .ok()
+            .map_err(|e| e.to_string())?;
+        buf.truncate(read as usize);
+        Ok(buf)
+    }
 }
