@@ -380,6 +380,12 @@ code, .mono, .code {
   user-select: none;
 }
 
+/* The tagline embeds the proper-case product name "HOSxP" —
+   text-transform: uppercase would render it "HOSXP". */
+.sidebar__label--tagline {
+  text-transform: none;
+}
+
 .sidebar__label .icon {
   width: 14px;
   height: 14px;

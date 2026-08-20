@@ -110,7 +110,7 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
 
     view! {
         <div class="sidebar__section">
-            <p class="sidebar__label">
+            <p class="sidebar__label sidebar__label--tagline">
                 <IconSearch class="icon" />
                 {move || tr(lang.get(), "app.tagline")}
             </p>
