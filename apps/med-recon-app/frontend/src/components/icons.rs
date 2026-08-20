@@ -78,6 +78,13 @@ icon!(
 );
 
 icon!(
+    /// Camera — capture a screenshot of the current screen.
+    IconCamera,
+    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+    <circle cx="12" cy="13" r="3" />
+);
+
+icon!(
     /// Alert triangle — warnings.
     IconAlert,
     <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />

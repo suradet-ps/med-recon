@@ -9,7 +9,7 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 
 use crate::api;
-use crate::components::icons::{IconPrinter, IconUser, IconX};
+use crate::components::icons::{IconCamera, IconPrinter, IconUser, IconX};
 use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
 
@@ -18,13 +18,17 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
     let lang = state.lang;
     let exporting = RwSignal::new(false);
     let export_msg = RwSignal::new(None::<(bool, String)>);
+    let capturing = RwSignal::new(false);
+    let capture_msg = RwSignal::new(None::<(bool, String)>);
 
-    // The status message belongs to one patient — reset it whenever the
+    // The status messages belong to one patient — reset them whenever the
     // selection changes so a stale "บันทึกรายงานแล้ว" never lingers.
     Effect::new(move |_| {
         state.patient.get();
         exporting.set(false);
         export_msg.set(None);
+        capturing.set(false);
+        capture_msg.set(None);
     });
 
     let on_export = move |_| {
@@ -53,6 +57,34 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                 Err(e) => export_msg.set(Some((false, e.message))),
             }
             exporting.set(false);
+        });
+    };
+
+    let on_capture = move |_| {
+        let Some(patient) = state.patient.get() else {
+            return;
+        };
+        capturing.set(true);
+        capture_msg.set(None);
+        spawn_local(async move {
+            // The capture happens before the save dialog opens (back-end
+            // order), so the dialog itself never appears in the shot.
+            let result = api::capture_screenshot(&format!("med-recon-screen-{}", patient.hn)).await;
+            if state.patient.get().as_ref() != Some(&patient) {
+                return;
+            }
+            match result {
+                Ok(path) => capture_msg.set(Some((
+                    true,
+                    tr_f(
+                        lang.get_untracked(),
+                        "canvas.screenshot_done",
+                        &[("path", &path)],
+                    ),
+                ))),
+                Err(e) => capture_msg.set(Some((false, e.message))),
+            }
+            capturing.set(false);
         });
     };
 
@@ -141,15 +173,32 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                                 </p>
                             </div>
                         </div>
-                        <button
-                            class="button-primary patient-card__export"
-                            on:click=on_export
-                            prop:disabled=move || exporting.get()
-                        >
-                            <IconPrinter class="icon" />
-                            {move || if exporting.get() { tr(lang.get(), "canvas.exporting") } else { tr(lang.get(), "canvas.export") }}
-                        </button>
+                        <div class="patient-card__actions">
+                            <button
+                                class="button-primary patient-card__export"
+                                on:click=on_export
+                                prop:disabled=move || exporting.get()
+                            >
+                                <IconPrinter class="icon" />
+                                {move || if exporting.get() { tr(lang.get(), "canvas.exporting") } else { tr(lang.get(), "canvas.export") }}
+                            </button>
+                            <button
+                                class="button-secondary patient-card__capture"
+                                on:click=on_capture
+                                prop:disabled=move || capturing.get()
+                            >
+                                <IconCamera class="icon" />
+                                {move || if capturing.get() { tr(lang.get(), "canvas.screenshotting") } else { tr(lang.get(), "canvas.screenshot") }}
+                            </button>
+                        </div>
                         {move || export_msg.get().map(|(ok, msg)| {
+                            if ok {
+                                view! { <p class="patient-card__status patient-card__status--ok">{msg.clone()}</p> }.into_any()
+                            } else {
+                                view! { <p class="patient-card__status patient-card__status--error">{msg.clone()}</p> }.into_any()
+                            }
+                        })}
+                        {move || capture_msg.get().map(|(ok, msg)| {
                             if ok {
                                 view! { <p class="patient-card__status patient-card__status--ok">{msg.clone()}</p> }.into_any()
                             } else {

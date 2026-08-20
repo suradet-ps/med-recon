@@ -636,8 +636,17 @@ code, .mono, .code {
   user-select: none;
 }
 
+.patient-card__actions {
+  display: flex;
+  gap: var(--sp-sm);
+}
+
 .patient-card__export {
-  width: 100%;
+  flex: 1.4;
+}
+
+.patient-card__capture {
+  flex: 1;
 }
 
 .patient-card__status {

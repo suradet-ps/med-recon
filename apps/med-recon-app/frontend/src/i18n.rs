@@ -277,6 +277,13 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "บันทึกรายงานแล้ว: {path}",
         "Report saved: {path}",
     ),
+    ("canvas.screenshot", "ถ่ายภาพหน้าจอ", "Capture screenshot"),
+    ("canvas.screenshotting", "กำลังถ่ายภาพ…", "Capturing…"),
+    (
+        "canvas.screenshot_done",
+        "บันทึกภาพแล้ว: {path}",
+        "Screenshot saved: {path}",
+    ),
     (
         "canvas.load_error",
         "โหลดประวัติไม่สำเร็จ: {msg}",

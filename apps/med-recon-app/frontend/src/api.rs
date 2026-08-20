@@ -216,6 +216,17 @@ pub async fn export_report(hn: &str, labels: &ReportLabels) -> Result<String, Ap
     .await
 }
 
+/// Capture the current webview content as a PNG (Windows WebView2
+/// `CapturePreview`); returns the saved path. `base_name` is the suggested
+/// file name stem — the backend appends a timestamp and `.png`.
+pub async fn capture_screenshot(base_name: &str) -> Result<String, ApiError> {
+    invoke_raw(
+        "capture_screenshot",
+        serde_json::json!({ "baseName": base_name }),
+    )
+    .await
+}
+
 /// Every user-visible string in the exported report, resolved from i18n
 /// tokens by the frontend. Mirrors the backend `ReportLabels` shape.
 #[derive(Debug, Clone, Serialize)]
