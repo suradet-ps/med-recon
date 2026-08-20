@@ -28,7 +28,8 @@ secrecy = { workspace = true }          # password wrapper in SiteConfigInput co
 encryptman = "0.3.0"                    # ephemeral vault fallback (headless)
 
 [target.'cfg(windows)'.dependencies]
-# WebView2 COM bindings for the screenshot feature (CapturePreview). Both
-# are already in the tree via wry — these add them as direct deps only.
-webview2-com = "0.38"                       # ICoreWebView2 / CapturePreview
-windows = { version = "0.61", default-features = false, features = ["Win32_System_Com_StructuredStorage"] }  # IStream / CreateStreamOnHGlobal
+# WebView2 COM bindings for the screenshot feature (DevTools Protocol
+# Page.captureScreenshot — re-rasterizes at devicePixelRatio, unlike
+# CapturePreview which grabs the DPI-scaled on-screen surface). Already in
+# the tree via wry; added as a direct dep only.
+webview2-com = "0.38"

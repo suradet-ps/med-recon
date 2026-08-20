@@ -3023,7 +3023,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "webview2-com",
- "windows",
 ]
 
 [[package]]

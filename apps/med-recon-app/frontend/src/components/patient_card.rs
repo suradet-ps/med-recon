@@ -69,7 +69,13 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
         spawn_local(async move {
             // The capture happens before the save dialog opens (back-end
             // order), so the dialog itself never appears in the shot.
-            let result = api::capture_screenshot(&format!("med-recon-screen-{}", patient.hn)).await;
+            // devicePixelRatio is passed so the backend re-rasterizes at
+            // physical resolution (crisp on 125–200% displays).
+            let dpr = web_sys::window()
+                .map(|w| w.device_pixel_ratio())
+                .unwrap_or(1.0);
+            let result =
+                api::capture_screenshot(&format!("med-recon-screen-{}", patient.hn), dpr).await;
             if state.patient.get().as_ref() != Some(&patient) {
                 return;
             }
