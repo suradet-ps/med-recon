@@ -37,10 +37,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Windows Build
+          # Windows Build (binary ships as a .zip containing trunk.exe)
           - platform: "windows-latest"
             args: ""
-            trunk-artifact: "trunk-x86_64-pc-windows-msvc.tar.gz"
+            trunk-artifact: "trunk-x86_64-pc-windows-msvc.zip"
           # Linux Build (Ubuntu 24.04)
           - platform: "ubuntu-24.04"
             args: ""
@@ -75,17 +75,27 @@ jobs:
         shell: bash
         run: |
           # GitHub release downloads occasionally drop the connection;
-          # retry before giving up.
+          # retry before giving up. Windows ships trunk as a .zip
+          # (trunk.exe at the archive root); every other target is .tar.gz.
           if [ "$RUNNER_OS" = "Windows" ]; then CURL=curl.exe; else CURL=curl; fi
           for attempt in 1 2 3 4; do
-            $CURL -LsSf https://github.com/trunk-rs/trunk/releases/download/v0.21.14/${{ matrix.trunk-artifact }} -o trunk.tar.gz \
+            $CURL -LsSf https://github.com/trunk-rs/trunk/releases/download/v0.21.14/${{ matrix.trunk-artifact }} -o trunk-download \
               && mkdir -p "$HOME/.cargo/bin" \
-              && tar -xzf trunk.tar.gz -C "$HOME/.cargo/bin" \
+              && if [ "$RUNNER_OS" = "Windows" ]; then
+                   powershell -Command "Expand-Archive -Force -Path trunk-download -DestinationPath trunk-extract"
+                   cp trunk-extract/trunk.exe "$HOME/.cargo/bin/"
+                 else
+                   tar -xzf trunk-download -C "$HOME/.cargo/bin"
+                 fi \
               && break
             echo "trunk download failed (attempt $attempt/4) — retrying in 10s"
             sleep 10
           done
-          test -x "$HOME/.cargo/bin/trunk"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            test -x "$HOME/.cargo/bin/trunk.exe"
+          else
+            test -x "$HOME/.cargo/bin/trunk"
+          fi
 
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0

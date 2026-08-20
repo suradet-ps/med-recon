@@ -1,0 +1,12 @@
+# cargo-audit configuration (used by the Publish Release workflow).
+# Mirrors the cargo-deny ignores in deny.toml so the release-path audit
+# does not fail on the same accepted advisories.
+[advisories]
+ignore = [
+  # Marvin Attack timing sidechannel on rsa: transitive dep of sqlx-mysql
+  # used only for the caching_sha2_password RSA auth exchange. Med Recon
+  # always connects over TLS (rustls) on the local hospital LAN; the
+  # advisory itself notes local use on a non-compromised computer is fine.
+  # No patched release exists.
+  "RUSTSEC-2023-0071",
+]
