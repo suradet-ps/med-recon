@@ -126,6 +126,10 @@ pub struct MedicationItem {
     pub visit_count: u32,
     /// Sources this drug was seen in.
     pub sources: Vec<EncounterSource>,
+    /// Source of the most recent dispense event — the row-level anchor:
+    /// date/qty/sig all come from the latest event, so the provenance badge
+    /// follows the same event.
+    pub last_source: EncounterSource,
     /// Derived days supply from the most recent event's sig.
     pub days_supply: Option<u32>,
     /// Sig from the most recent event.

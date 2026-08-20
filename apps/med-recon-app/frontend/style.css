@@ -1095,6 +1095,13 @@ code, .mono, .code {
   color: var(--ink);
 }
 
+/* OPD/IPD provenance pill inside the drug cell — reuse the generic .badge,
+   only spacing differs. OPD-only rows render no pill at all. */
+.med-table__drug .badge {
+  margin-left: 6px;
+  vertical-align: 1px;
+}
+
 .med-table__sig {
   color: var(--slate);
 }

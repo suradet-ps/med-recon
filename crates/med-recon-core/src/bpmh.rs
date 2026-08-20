@@ -91,6 +91,7 @@ pub fn aggregate_medications(
                 total_qty,
                 visit_count: visit_ids.len() as u32,
                 sources: sources.into_keys().collect(),
+                last_source: latest.source,
                 days_supply,
                 sig: latest.sig.clone(),
                 appointment_date: latest.appointment,
@@ -244,6 +245,9 @@ mod tests {
         assert_eq!(a1.visit_count, 2);
         assert_eq!(a1.first_dispense, date(2026, 1, 1));
         assert_eq!(a1.last_dispense, date(2026, 2, 1));
+        assert_eq!(a1.last_source, EncounterSource::Opd); // latest event is OPD
+        let b2 = items.iter().find(|i| i.icode == "B2").unwrap();
+        assert_eq!(b2.last_source, EncounterSource::Ipd);
     }
 
     #[test]
@@ -270,6 +274,7 @@ mod tests {
         let a1 = &items[0];
         assert_eq!(a1.days_supply, Some(30));
         assert_eq!(a1.sources, vec![EncounterSource::Opd, EncounterSource::Ipd]);
+        assert_eq!(a1.last_source, EncounterSource::Ipd); // latest event is IPD
         assert_eq!(a1.status, MedicationStatus::Active);
         assert_eq!(a1.days_since_last_dispense, 1);
     }

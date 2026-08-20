@@ -11,7 +11,7 @@ use crate::components::icons::{
 };
 use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
-use med_recon_core::{MedicationItem, MedicationStatus, OpdScreenRecord, PatientHistory, Sig};
+use med_recon_core::{EncounterSource, MedicationItem, MedicationStatus, OpdScreenRecord, PatientHistory, Sig};
 
 #[component]
 pub fn HistoryCanvas(state: AppState) -> impl IntoView {
@@ -259,6 +259,15 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                         let no = (i + 1).to_string();
                         let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), m.last_dispense.month(), m.last_dispense.year());
                         let drug = drug_label(m);
+                        // Provenance pill — only when the most recent dispense
+                        // was IPD: OPD is the default and stays silent so the
+                        // table stays clean.
+                        let badge = match m.last_source {
+                            EncounterSource::Ipd => {
+                                Some(tr(lang.get_untracked(), "visit.ipd").to_string())
+                            }
+                            EncounterSource::Opd => None,
+                        };
                         let sig = m.sig.as_ref().map(format_sig).unwrap_or_default();
                         let qty = format_qty(m.last_qty);
                         let units = m.units.clone().unwrap_or_default();
@@ -269,7 +278,10 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                             <tr class=move || if row_band { "med-table__row med-table__row--band" } else { "med-table__row" }>
                                 <td class="med-table__no">{no}</td>
                                 <td class="med-table__date">{date}</td>
-                                <td class="med-table__drug">{drug}</td>
+                                <td class="med-table__drug">
+                                    {drug}
+                                    {badge.map(|b| view! { <span class="badge">{b}</span> })}
+                                </td>
                                 <td class="med-table__sig">
                                     {if sig.is_empty() { "—".to_string() } else { sig }}
                                 </td>
