@@ -717,6 +717,7 @@ pub async fn export_report(
 /// surface bitmap is finite-resolution, so beyond `devicePixelRatio` this
 /// mostly enlarges the file rather than adding detail — raise the factor
 /// only if the extra pixel dimensions are actually needed.
+#[cfg(target_os = "windows")]
 const SCREENSHOT_SUPERSAMPLE: f64 = 2.0;
 
 /// Capture the current webview content as a PNG and save it through a
