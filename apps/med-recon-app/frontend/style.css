@@ -1139,6 +1139,17 @@ code, .mono, .code {
   vertical-align: 1px;
 }
 
+/* Repeat-dispensing count "(N)" after the drug name — frequent dispensing
+   (plus recency, shown by the latest-visit highlight) is the BPMH signal
+   for an ongoing medication. The full "จ่าย N ครั้ง" text sits in the
+   title tooltip; the cell keeps just the number. */
+.med-table__repeat {
+  color: var(--slate);
+  font-weight: 700;
+  white-space: nowrap;
+  margin-left: 4px;
+}
+
 .med-table__sig {
   color: var(--slate);
   overflow-wrap: break-word;

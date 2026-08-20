@@ -275,6 +275,21 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                         let no = (i + 1).to_string();
                         let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), m.last_dispense.month(), m.last_dispense.year());
                         let drug = drug_label(m);
+                        // Repeat-dispensing count — how many visits this
+                        // drug was dispensed on. Frequent + recent dispensing
+                        // is the BPMH signal for an ongoing medication, so the
+                        // count sits right after the drug name. Single
+                        // dispenses stay silent to keep the table clean.
+                        let repeat = (m.visit_count >= 2).then(|| {
+                            (
+                                m.visit_count,
+                                tr_f(
+                                    lang.get_untracked(),
+                                    "med.repeat_times",
+                                    &[("n", &m.visit_count.to_string())],
+                                ),
+                            )
+                        });
                         // Provenance pill — only when the most recent dispense
                         // was IPD: OPD is the default and stays silent so the
                         // table stays clean.
@@ -296,6 +311,12 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                                 <td class="med-table__date">{date}</td>
                                 <td class="med-table__drug">
                                     {drug}
+                                    {repeat.map(|(n, tip)| {
+                                    let text = format!("({n})");
+                                    view! {
+                                        <span class="med-table__repeat" title=tip>{text}</span>
+                                    }
+                                })}
                                     {badge.map(|b| view! { <span class="badge">{b}</span> })}
                                 </td>
                                 <td class="med-table__sig">

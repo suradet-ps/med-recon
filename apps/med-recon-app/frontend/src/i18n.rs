@@ -295,6 +295,7 @@ pub const KEYS: &[(&str, &str, &str)] = &[
     ("med.col_sig", "วิธีใช้", "Directions"),
     ("med.col_qty", "จำนวนที่จ่าย", "Qty dispensed"),
     ("med.col_appt", "วันนัด", "Next appt"),
+    ("med.repeat_times", "จ่าย {n} ครั้ง", "Dispensed {n} times"),
     (
         "canvas.screen",
         "การตรวจ / อาการสำคัญ (CC/PE) ({n})",
