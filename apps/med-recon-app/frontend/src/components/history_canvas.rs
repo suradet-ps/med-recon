@@ -11,7 +11,9 @@ use crate::components::icons::{
 };
 use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
-use med_recon_core::{EncounterSource, MedicationItem, MedicationStatus, OpdScreenRecord, PatientHistory, Sig};
+use med_recon_core::{
+    EncounterSource, MedicationItem, MedicationStatus, OpdScreenRecord, PatientHistory, Sig,
+};
 
 #[component]
 pub fn HistoryCanvas(state: AppState) -> impl IntoView {
