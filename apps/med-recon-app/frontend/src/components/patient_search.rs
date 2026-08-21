@@ -86,6 +86,11 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
         state.history.set(None);
         state.history_error.set(None);
         state.history_loading.set(true);
+        // Each new patient starts at the configured default window. This is a
+        // programmatic reset (no window_epoch bump) so the HistoryCanvas
+        // re-fetch effect stays dormant and the patient-search fetch below is
+        // the only in-flight request.
+        state.history_days_override.set(None);
         let hn_photo = hn.clone();
         let override_days = state.history_days_override.get_untracked();
         spawn_local(async move {

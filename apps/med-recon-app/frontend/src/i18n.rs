@@ -236,6 +236,11 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "Search history window",
     ),
     (
+        "canvas.history_window_default",
+        "ค่าเริ่มต้น",
+        "Default",
+    ),
+    (
         "canvas.lapsed",
         "ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ) ({n})",
         "Likely lapsed ({n})",

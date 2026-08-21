@@ -22,15 +22,19 @@ pub fn HistoryCanvas(state: AppState) -> impl IntoView {
     // Re-fetch history when the window override changes (debounced).
     let last_timeout = RwSignal::new(None::<leptos::prelude::TimeoutHandle>);
     Effect::new(move |prev: Option<()>| {
-        let override_val = state.history_days_override.get();
+        // Re-fetch only when the operator changes the window (window_epoch).
+        // A programmatic reset on patient search bumps nothing here, so the
+        // patient-search fetch stays the single in-flight request.
+        let _ = state.window_epoch.get();
         if prev.is_some()
             && let Some(patient) = state.patient.get_untracked()
         {
+            let override_val = state.history_days_override.get_untracked();
             let hn = patient.hn.clone();
             state.history.set(None);
             state.history_error.set(None);
             state.history_loading.set(true);
-            if let Some(prev_handle) = last_timeout.get() {
+            if let Some(prev_handle) = last_timeout.get_untracked() {
                 prev_handle.clear();
             }
             last_timeout.set(Some(
@@ -121,8 +125,21 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
     let has_allergies = allergy_count > 0;
     let warnings = history.warnings.clone();
 
-    let window_options: &[(u32, &str)] =
-        &[(730, "2 ปี"), (1825, "5 ปี"), (3650, "10 ปี"), (5475, "15 ปี")];
+    let window_options = Signal::derive(move || {
+        let default_days = state.default_history_days.get();
+        let mut opts: Vec<(Option<u32>, String)> = vec![(
+            None,
+            format!(
+                "{} ({})",
+                tr(lang.get(), "canvas.history_window_default"),
+                format_window_years(default_days),
+            ),
+        )];
+        for &(d, lbl) in &[(730u32, "2 ปี"), (1825, "5 ปี"), (3650, "10 ปี"), (5475, "15 ปี")] {
+            opts.push((Some(d), lbl.to_string()));
+        }
+        opts
+    });
 
     view! {
         <>
@@ -200,28 +217,29 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                         <span class="segmented__label">
                             {move || tr(lang.get(), "canvas.history_window")}
                         </span>
-                        {window_options.iter().map(|&(days, label)| {
-                            let is_active = move || state.history_days_override.get() == Some(days);
-                            let label = label.to_string();
-                            view! {
-                                <button
-                                    class=move || {
-                                        if is_active() {
-                                            "segmented__btn segmented__btn--active"
-                                        } else {
-                                            "segmented__btn"
+                        {move || {
+                            window_options.get().into_iter().map(|(days_opt, label)| {
+                                let is_active = move || state.history_days_override.get() == days_opt;
+                                let label = label;
+                                view! {
+                                    <button
+                                        class=move || {
+                                            if is_active() {
+                                                "segmented__btn segmented__btn--active"
+                                            } else {
+                                                "segmented__btn"
+                                            }
                                         }
-                                    }
-                                    on:click=move |_| {
-                                        let current = state.history_days_override.get();
-                                        let new_val = if current == Some(days) { None } else { Some(days) };
-                                        state.history_days_override.set(new_val);
-                                    }
-                                >
-                                    {label}
-                                </button>
-                            }
-                        }).collect_view()}
+                                        on:click=move |_| {
+                                            state.history_days_override.set(days_opt);
+                                            state.window_epoch.update(|e| *e += 1);
+                                        }
+                                    >
+                                        {label}
+                                    </button>
+                                }
+                            }).collect_view()
+                        }}
                     </div>
                 </div>
                 {move || {
@@ -457,4 +475,15 @@ fn format_qty(q: f64) -> String {
         s.pop();
     }
     s
+}
+
+/// Format a day count as a Thai year label, e.g. `730` → `"2 ปี"`,
+/// `5475` → `"15 ปี"`. Fractional years fall back to one decimal.
+fn format_window_years(days: u32) -> String {
+    let years = days as f64 / 365.0;
+    if years.fract() < 0.01 {
+        format!("{} ปี", years as u32)
+    } else {
+        format!("{:.1} ปี", years)
+    }
 }

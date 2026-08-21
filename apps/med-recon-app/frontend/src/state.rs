@@ -44,6 +44,15 @@ pub struct AppState {
     /// Per-query history window override (days). `None` = use the
     /// configured default from settings; `Some(n)` overrides with `n` days.
     pub history_days_override: RwSignal<Option<u32>>,
+    /// Configured default history window (days), mirrored from site settings.
+    /// Drives the "ค่าเริ่มต้น" segment label so the operator always sees
+    /// what the default window resolves to.
+    pub default_history_days: RwSignal<u32>,
+    /// Bumped only when the operator changes the window via the segmented
+    /// control — not when a new patient resets the override. The history
+    /// re-fetch effect keys off this so programmatic resets don't trigger a
+    /// second fetch alongside the patient-search fetch.
+    pub window_epoch: RwSignal<u32>,
     /// Current UI language.
     pub lang: RwSignal<Lang>,
 }
@@ -62,6 +71,8 @@ impl AppState {
             history_loading: RwSignal::new(false),
             history_error: RwSignal::new(None),
             history_days_override: RwSignal::new(None),
+            default_history_days: RwSignal::new(730),
+            window_epoch: RwSignal::new(0),
             lang: RwSignal::new(Lang::from_storage()),
         }
     }
