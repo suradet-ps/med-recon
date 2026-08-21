@@ -197,10 +197,7 @@ pub async fn get_current_meds() -> Result<Vec<DrugInfo>, ApiError> {
 ///
 /// When `history_days` is `Some(n)`, the backend uses `n` days instead of
 /// the configured default — this powers the per-query history window UI.
-pub async fn load_history(
-    hn: &str,
-    history_days: Option<u32>,
-) -> Result<PatientHistory, ApiError> {
+pub async fn load_history(hn: &str, history_days: Option<u32>) -> Result<PatientHistory, ApiError> {
     invoke_raw(
         "load_history",
         serde_json::json!({ "hn": hn, "historyDays": history_days }),

@@ -5,7 +5,9 @@
 
 use chrono::{Datelike, NaiveDate};
 use leptos::prelude::*;
+use leptos::task::spawn_local;
 
+use crate::api;
 use crate::components::icons::{
     IconAlert, IconCheckCircle, IconChevron, IconClipboard, IconUser, IconXCircle,
 };
@@ -17,6 +19,45 @@ use med_recon_core::{
 
 #[component]
 pub fn HistoryCanvas(state: AppState) -> impl IntoView {
+    // Re-fetch history when the window override changes (debounced).
+    let last_timeout = RwSignal::new(None::<leptos::prelude::TimeoutHandle>);
+    Effect::new(move |prev: Option<()>| {
+        let override_val = state.history_days_override.get();
+        if prev.is_some()
+            && let Some(patient) = state.patient.get_untracked()
+        {
+            let hn = patient.hn.clone();
+            state.history.set(None);
+            state.history_error.set(None);
+            state.history_loading.set(true);
+            if let Some(prev_handle) = last_timeout.get() {
+                prev_handle.clear();
+            }
+            last_timeout.set(Some(
+                set_timeout_with_handle(
+                    move || {
+                        let hn = hn.clone();
+                        spawn_local(async move {
+                            match api::load_history(&hn, override_val).await {
+                                Ok(h) => {
+                                    state.history.set(Some(h));
+                                    state.history_error.set(None);
+                                }
+                                Err(e) => {
+                                    state.history.set(None);
+                                    state.history_error.set(Some(e.message));
+                                }
+                            }
+                            state.history_loading.set(false);
+                        });
+                    },
+                    std::time::Duration::from_millis(300),
+                )
+                .expect("invariant: setTimeout is available"),
+            ));
+        }
+    });
+
     view! {
         <main class="main-canvas">
             {move || {
@@ -79,6 +120,9 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
     let allergy_count = history.allergies.len();
     let has_allergies = allergy_count > 0;
     let warnings = history.warnings.clone();
+
+    let window_options: &[(u32, &str)] =
+        &[(730, "2 ปี"), (1825, "5 ปี"), (3650, "10 ปี"), (5475, "15 ปี")];
 
     view! {
         <>
@@ -147,10 +191,39 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
             </section>
 
             <section class="canvas-section">
-                <h3 class="timeline-header">
-                    <IconCheckCircle class="icon" />
-                    {move || tr_f(lang.get(), "canvas.active", &[("n", &active_count.to_string())])}
-                </h3>
+                <div class="timeline-header-row">
+                    <h3 class="timeline-header" style="margin:0">
+                        <IconCheckCircle class="icon" />
+                        {move || tr_f(lang.get(), "canvas.active", &[("n", &active_count.to_string())])}
+                    </h3>
+                    <div class="segmented">
+                        <span class="segmented__label">
+                            {move || tr(lang.get(), "canvas.history_window")}
+                        </span>
+                        {window_options.iter().map(|&(days, label)| {
+                            let is_active = move || state.history_days_override.get() == Some(days);
+                            let label = label.to_string();
+                            view! {
+                                <button
+                                    class=move || {
+                                        if is_active() {
+                                            "segmented__btn segmented__btn--active"
+                                        } else {
+                                            "segmented__btn"
+                                        }
+                                    }
+                                    on:click=move |_| {
+                                        let current = state.history_days_override.get();
+                                        let new_val = if current == Some(days) { None } else { Some(days) };
+                                        state.history_days_override.set(new_val);
+                                    }
+                                >
+                                    {label}
+                                </button>
+                            }
+                        }).collect_view()}
+                    </div>
+                </div>
                 {move || {
                     if !has_active {
                         view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_medications")}</p> }.into_any()

@@ -231,6 +231,11 @@ pub const KEYS: &[(&str, &str, &str)] = &[
         "Likely active ({n})",
     ),
     (
+        "canvas.history_window",
+        "ค้นหาประวัติในรอบ",
+        "Search history window",
+    ),
+    (
         "canvas.lapsed",
         "ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ) ({n})",
         "Likely lapsed ({n})",

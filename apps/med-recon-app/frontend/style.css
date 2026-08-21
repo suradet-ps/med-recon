@@ -1082,6 +1082,65 @@ code, .mono, .code {
 }
 
 /* ==========================================================================
+   History window segmented control
+   ========================================================================== */
+
+.timeline-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-sm);
+}
+
+.segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--hairline);
+  border-radius: var(--rounded-md);
+  background: var(--canvas-raised);
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.segmented__label {
+  font-family: var(--font-thai);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--slate);
+  white-space: nowrap;
+  padding: 0 var(--sp-sm);
+}
+
+.segmented__btn {
+  font-family: var(--font-thai);
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--slate);
+  padding: 3px 10px;
+  border-radius: var(--rounded-sm);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.segmented__btn:hover {
+  background: var(--surface-muted);
+}
+
+.segmented__btn--active {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+.segmented__btn--active:hover {
+  background: var(--brand-dark);
+}
+
+/* ==========================================================================
    Medication table
    ========================================================================== */
 
