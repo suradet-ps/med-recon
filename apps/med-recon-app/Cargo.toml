@@ -32,4 +32,4 @@ encryptman = "0.3.0"                    # ephemeral vault fallback (headless)
 # Page.captureScreenshot — re-rasterizes at devicePixelRatio, unlike
 # CapturePreview which grabs the DPI-scaled on-screen surface). Already in
 # the tree via wry; added as a direct dep only.
-webview2-com = "0.39"
+webview2-com = "0.38"
