@@ -87,8 +87,9 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
         state.history_error.set(None);
         state.history_loading.set(true);
         let hn_photo = hn.clone();
+        let override_days = state.history_days_override.get_untracked();
         spawn_local(async move {
-            match api::load_history(&hn).await {
+            match api::load_history(&hn, override_days).await {
                 Ok(history) => {
                     state.history.set(Some(history));
                     state.history_error.set(None);

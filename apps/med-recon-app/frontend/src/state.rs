@@ -41,6 +41,9 @@ pub struct AppState {
     pub history_loading: RwSignal<bool>,
     /// Last history-load error message, if any.
     pub history_error: RwSignal<Option<String>>,
+    /// Per-query history window override (days). `None` = use the
+    /// configured default from settings; `Some(n)` overrides with `n` days.
+    pub history_days_override: RwSignal<Option<u32>>,
     /// Current UI language.
     pub lang: RwSignal<Lang>,
 }
@@ -58,6 +61,7 @@ impl AppState {
             history: RwSignal::new(None),
             history_loading: RwSignal::new(false),
             history_error: RwSignal::new(None),
+            history_days_override: RwSignal::new(None),
             lang: RwSignal::new(Lang::from_storage()),
         }
     }
