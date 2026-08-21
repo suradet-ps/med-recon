@@ -213,8 +213,8 @@ pub async fn load_patient_image(hn: &str) -> Result<Option<String>, ApiError> {
 
 /// Export a printable HTML report; returns the saved path.
 ///
-/// `labels` carries every user-visible report string, resolved from the i18n
-/// tokens in the current UI language — the backend never hard-codes text.
+/// `labels` carries every user-visible report string — Thai-only, resolved
+/// once by [`report_labels`]. The backend never hard-codes text.
 pub async fn export_report(hn: &str, labels: &ReportLabels) -> Result<String, ApiError> {
     invoke_raw(
         "export_report",
@@ -236,67 +236,65 @@ pub async fn capture_screenshot(base_name: &str, scale: f64) -> Result<String, A
     .await
 }
 
-/// Every user-visible string in the exported report, resolved from i18n
-/// tokens by the frontend. Mirrors the backend `ReportLabels` shape.
+/// Every user-visible string in the exported report, fixed Thai — the UI
+/// is Thai-only. Mirrors the backend `ReportLabels` shape.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReportLabels {
-    pub html_lang: String,
-    pub heading: String,
-    pub generated: String,
-    pub site_default: String,
-    pub title: String,
-    pub disclaimer: String,
-    pub section_patient: String,
-    pub section_allergy: String,
-    pub section_active: String,
-    pub section_lapsed: String,
-    pub section_visits: String,
-    pub col_date: String,
-    pub col_type: String,
-    pub col_dept: String,
-    pub col_visit: String,
-    pub last_dispensed: String,
-    pub dispenses: String,
-    pub total: String,
-    pub supply: String,
-    pub freq_per_day: String,
-    pub reported_on: String,
-    pub by: String,
-    pub note: String,
-    pub warnings_title: String,
-    pub footer_phi: String,
+    pub html_lang: &'static str,
+    pub heading: &'static str,
+    pub generated: &'static str,
+    pub site_default: &'static str,
+    pub title: &'static str,
+    pub disclaimer: &'static str,
+    pub section_patient: &'static str,
+    pub section_allergy: &'static str,
+    pub section_active: &'static str,
+    pub section_lapsed: &'static str,
+    pub section_visits: &'static str,
+    pub col_date: &'static str,
+    pub col_type: &'static str,
+    pub col_dept: &'static str,
+    pub col_visit: &'static str,
+    pub last_dispensed: &'static str,
+    pub dispenses: &'static str,
+    pub total: &'static str,
+    pub supply: &'static str,
+    pub freq_per_day: &'static str,
+    pub reported_on: &'static str,
+    pub by: &'static str,
+    pub note: &'static str,
+    pub warnings_title: &'static str,
+    pub footer_phi: &'static str,
 }
 
-/// Resolve all report labels from the i18n tokens for a language.
-pub fn report_labels(lang: crate::i18n::Lang) -> ReportLabels {
-    use crate::i18n::tr;
-    let t = |k: &str| tr(lang, k).to_string();
+/// The fixed Thai report labels.
+pub fn report_labels() -> ReportLabels {
     ReportLabels {
-        html_lang: t("report.html_lang"),
-        heading: t("report.heading"),
-        generated: t("report.generated"),
-        site_default: t("report.site_default"),
-        title: t("report.title"),
-        disclaimer: t("report.disclaimer"),
-        section_patient: t("report.section.patient"),
-        section_allergy: t("report.section.allergy"),
-        section_active: t("canvas.active"),
-        section_lapsed: t("canvas.lapsed"),
-        section_visits: t("report.section.visits"),
-        col_date: t("visit.date"),
-        col_type: t("visit.type"),
-        col_dept: t("visit.department"),
-        col_visit: t("visit.id"),
-        last_dispensed: t("report.last"),
-        dispenses: t("report.dispenses"),
-        total: t("report.total"),
-        supply: t("report.supply"),
-        freq_per_day: t("report.freq_per_day"),
-        reported_on: t("report.reported_on"),
-        by: t("report.by"),
-        note: t("report.note"),
-        warnings_title: t("canvas.warnings"),
-        footer_phi: t("report.footer_phi"),
+        html_lang: "th",
+        heading: "ประวัติยาและการใช้ยา — Med Recon",
+        generated: "สร้างเมื่อ {date}",
+        site_default: "สถานบริการ",
+        title: "ประวัติยา {name} ({hn})",
+        disclaimer: "⚠️ เอกสารนี้สร้างจากข้อมูลการจ่ายยา (dispensing) ใน HOSxP ซึ่งเป็นเพียงแหล่งข้อมูลหนึ่งในหลายแหล่ง สำหรับ Best Possible Medication History (BPMH) ยังไม่ถือว่าเป็นรายการยาที่สมบูรณ์หรือได้รับการยืนยัน ควรสอบทานร่วมกับผู้ป่วย/ญาติก่อนนำไปใช้ทางคลินิก",
+        section_patient: "ข้อมูลผู้ป่วย",
+        section_allergy: "แพ้ยา / อาการไม่พึงประสงค์ ({n})",
+        section_active: "ยาที่ผู้ป่วยเคยได้รับ ({n})",
+        section_lapsed: "ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ) ({n})",
+        section_visits: "ประวัติการเข้ารับบริการ ({n})",
+        col_date: "วันที่",
+        col_type: "ประเภท",
+        col_dept: "แผนก / หอผู้ป่วย",
+        col_visit: "รหัส visit",
+        last_dispensed: "ครั้งล่าสุด",
+        dispenses: "dispense {n} ครั้ง",
+        total: "รวม",
+        supply: "supply ≈ {n} วัน",
+        freq_per_day: "/วัน",
+        reported_on: "รายงานเมื่อ {date}",
+        by: "โดย {name}",
+        note: "หมายเหตุ: {note}",
+        warnings_title: "คำเตือนความครบถ้วนของข้อมูล",
+        footer_phi: "ข้อมูลนี้เป็นข้อมูลสุขภาพส่วนบุคคล (PHI) ต้องจัดเก็บและส่งต่อตามระเบียบปฏิบัติด้านการคุ้มครองข้อมูลส่วนบุคคล",
     }
 }

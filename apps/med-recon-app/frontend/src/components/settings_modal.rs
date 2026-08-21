@@ -14,7 +14,6 @@ use leptos::task::spawn_local;
 
 use crate::api::{self, ConnectionInput, DrugInfo, SiteSettings};
 use crate::components::icons::{IconCheckCircle, IconPlug, IconSave, IconSearch, IconX};
-use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
 
 /// Default MySQL port, prefilled in the port field.
@@ -47,7 +46,6 @@ fn arm_operation_timeout(
     generation: RwSignal<u64>,
     busy: RwSignal<bool>,
     message: RwSignal<Option<(bool, String)>>,
-    lang: RwSignal<crate::i18n::Lang>,
 ) -> u64 {
     let token = generation.get_untracked() + 1;
     generation.set(token);
@@ -57,7 +55,8 @@ fn arm_operation_timeout(
                 busy.set(false);
                 message.set(Some((
                     false,
-                    tr(lang.get_untracked(), "settings.timeout").to_string(),
+                    "การดำเนินการใช้เวลานานเกินไป (เกิน 25 วินาที) — ตรวจสอบ Host/Port/เครือข่าย แล้วลองใหม่"
+                        .to_string(),
                 )));
             }
         },
@@ -68,8 +67,6 @@ fn arm_operation_timeout(
 
 #[component]
 pub fn SettingsModal(state: AppState) -> impl IntoView {
-    let lang = state.lang;
-
     // --- Connection section -------------------------------------------------
     let host = RwSignal::new(String::new());
     let port = RwSignal::new(DEFAULT_PORT.to_string());
@@ -150,7 +147,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             .get_untracked()
             .trim()
             .parse::<u16>()
-            .map_err(|_| tr(lang.get_untracked(), "settings.error_port").to_string())?;
+            .map_err(|_| "พอร์ตไม่ถูกต้อง".to_string())?;
         let input = ConnectionInput {
             host: host.get_untracked(),
             port: port_value,
@@ -162,7 +159,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             || input.database.trim().is_empty()
             || input.user.trim().is_empty()
         {
-            return Err(tr(lang.get_untracked(), "settings.error_required").to_string());
+            return Err("กรอก Site name, Host, Database, User ให้ครบ".to_string());
         }
         Ok(input)
     };
@@ -180,18 +177,14 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
         };
         conn_busy.set(true);
         conn_message.set(None);
-        let token = arm_operation_timeout(generation, conn_busy, conn_message, lang);
+        let token = arm_operation_timeout(generation, conn_busy, conn_message);
         spawn_local(async move {
             let result = api::test_connection(Some(&input)).await;
             if generation.get_untracked() == token {
                 match result {
                     Ok(test) => conn_message.set(Some((
                         true,
-                        tr_f(
-                            lang.get_untracked(),
-                            "settings.test_ok",
-                            &[("ms", &test.latency_ms.to_string())],
-                        ),
+                        format!("เชื่อมต่อได้ (latency {} ms)", test.latency_ms),
                     ))),
                     Err(error) => conn_message.set(Some((false, error.message))),
                 }
@@ -213,7 +206,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
         };
         conn_busy.set(true);
         conn_message.set(None);
-        let token = arm_operation_timeout(generation, conn_busy, conn_message, lang);
+        let token = arm_operation_timeout(generation, conn_busy, conn_message);
         spawn_local(async move {
             let result = api::save_connection(&input).await;
             if generation.get_untracked() == token {
@@ -221,10 +214,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                     Ok(()) => {
                         // Fields keep their values so the operator can see
                         // what is saved; they are only wiped on close.
-                        conn_message.set(Some((
-                            true,
-                            tr(lang.get_untracked(), "settings.save_ok").to_string(),
-                        )));
+                        conn_message.set(Some((true, "บันทึกการตั้งค่าและเชื่อมต่อแล้ว".to_string())));
                         state.configured.set(true);
                         state.health.set(ConnectionHealth::Connected);
                     }
@@ -250,17 +240,14 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                 .map(|d| d.icode.clone())
                 .collect(),
         };
-        let token = arm_operation_timeout(generation, settings_busy, settings_message, lang);
+        let token = arm_operation_timeout(generation, settings_busy, settings_message);
         spawn_local(async move {
             let result = api::save_site_settings(&settings).await;
             if generation.get_untracked() == token {
                 match result {
                     Ok(()) => {
                         state.default_history_days.set(settings.history_days);
-                        settings_message.set(Some((
-                            true,
-                            tr(lang.get_untracked(), "settings.save_ok").to_string(),
-                        )))
+                        settings_message.set(Some((true, "บันทึกการตั้งค่าและเชื่อมต่อแล้ว".to_string())))
                     }
                     Err(e) => settings_message.set(Some((false, e.message))),
                 }
@@ -274,11 +261,11 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             <section class="form-section">
                 <h3 class="form-section__title">
                     <IconPlug class="icon" />
-                    {move || tr(lang.get(), "settings.section_connection")}
+                    "การเชื่อมต่อ HOSxP"
                 </h3>
 
                 <div class="form-field">
-                    <label for="cfg-host">{move || tr(lang.get(), "settings.host")}</label>
+                    <label for="cfg-host">"Host"</label>
                     <input
                         id="cfg-host"
                         class="form-input form-input--mono"
@@ -289,7 +276,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                 </div>
                 <div class="form-row">
                     <div class="form-field" style="max-width:100px">
-                        <label for="cfg-port">{move || tr(lang.get(), "settings.port")}</label>
+                        <label for="cfg-port">"Port"</label>
                         <input
                             id="cfg-port"
                             class="form-input form-input--mono"
@@ -298,7 +285,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         />
                     </div>
                     <div class="form-field form-field--grow">
-                        <label for="cfg-database">{move || tr(lang.get(), "settings.database")}</label>
+                        <label for="cfg-database">"Database"</label>
                         <input
                             id="cfg-database"
                             class="form-input form-input--mono"
@@ -309,7 +296,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                     </div>
                 </div>
                 <div class="form-field">
-                    <label for="cfg-user">{move || tr(lang.get(), "settings.user")}</label>
+                    <label for="cfg-user">"User (แนะนำ: บัญชีอ่านอย่างเดียว)"</label>
                     <input
                         id="cfg-user"
                         class="form-input form-input--mono"
@@ -319,7 +306,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                     />
                 </div>
                 <div class="form-field">
-                    <label for="cfg-password">{move || tr(lang.get(), "settings.password")}</label>
+                    <label for="cfg-password">"Password"</label>
                     <input
                         id="cfg-password"
                         class="form-input form-input--mono"
@@ -327,7 +314,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         prop:value=move || password.get()
                         on:input=move |ev| password.set(event_target_value(&ev))
                     />
-                    <p class="modal__note">{move || tr(lang.get(), "settings.password_hint")}</p>
+                    <p class="modal__note">"รหัสผ่านถูกเข้ารหัส ไม่สามารถโหลดกลับมาแสดงได้ — กรอกใหม่ทุกครั้งที่เปิดตั้งค่า"</p>
                 </div>
 
                 {move || {
@@ -348,7 +335,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         prop:disabled=move || conn_busy.get()
                     >
                         <IconPlug class="icon" />
-                        {move || if conn_busy.get() { tr(lang.get(), "settings.testing") } else { tr(lang.get(), "settings.test") }}
+                        {move || if conn_busy.get() { "กำลังทดสอบ…" } else { "ทดสอบ" }}
                     </button>
                     <button
                         class="button-primary button-primary--inline"
@@ -356,11 +343,11 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         prop:disabled=move || conn_busy.get()
                     >
                         <IconSave class="icon" />
-                        {move || if conn_busy.get() { tr(lang.get(), "settings.saving") } else { tr(lang.get(), "settings.save") }}
+                        {move || if conn_busy.get() { "กำลังบันทึก…" } else { "บันทึก" }}
                     </button>
                 </div>
 
-                <p class="modal__note">{move || tr(lang.get(), "settings.note")}</p>
+                <p class="modal__note">"ข้อมูลการเชื่อมต่อถูกเข้ารหัส AES-256-GCM เก็บ master key ใน Keychain ของระบบปฏิบัติการ"</p>
             </section>
         }
         .into_any()
@@ -371,21 +358,21 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             <section class="form-section">
                 <h3 class="form-section__title">
                     <IconCheckCircle class="icon" />
-                    {move || tr(lang.get(), "settings.section_site")}
+                    "การตั้งค่าอื่นๆ"
                 </h3>
 
                 <div class="form-field">
-                    <label for="cfg-site">{move || tr(lang.get(), "settings.site_name")}</label>
+                    <label for="cfg-site">"ชื่อสถานบริการ"</label>
                     <input
                         id="cfg-site"
                         class="form-input"
-                        placeholder={move || tr(lang.get(), "settings.site_name_placeholder")}
+                        placeholder="เช่น โรงพยาบาลสมมติ (แสดงในรายงาน)"
                         prop:value=move || site_name.get()
                         on:input=move |ev| site_name.set(event_target_value(&ev))
                     />
                 </div>
                 <div class="form-field">
-                    <label for="cfg-window">{move || tr(lang.get(), "settings.history_days")}</label>
+                    <label for="cfg-window">"ค้นประวัติย้อนหลัง (วัน)"</label>
                     <input
                         id="cfg-window"
                         class="form-input form-input--mono"
@@ -401,8 +388,8 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                     />
                 </div>
 
-                <p class="modal__note">{move || tr(lang.get(), "settings.meds_note")}</p>
-                <CurrentMedsPanel state=state selected=selected_meds/>
+                <p class="modal__note">"เฉพาะยาที่ตั้งค่าไว้เท่านั้นจะแสดงในหัวข้อ ยาที่ผู้ป่วยเคยได้รับ — ยาที่ไม่ตั้งค่า (แม้เพิ่งได้รับ) จะถือว่าหยุดใช้แล้ว"</p>
+                <CurrentMedsPanel selected=selected_meds/>
 
                 {move || {
                     settings_message.get().map(|(is_success, text)| {
@@ -421,7 +408,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         on:click=move |_| close()
                     >
                         <IconX class="icon" />
-                        {move || tr(lang.get(), "settings.cancel")}
+                        "ปิด"
                     </button>
                     <button
                         class="button-primary button-primary--inline"
@@ -429,7 +416,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         prop:disabled=move || settings_busy.get()
                     >
                         <IconSave class="icon" />
-                        {move || if settings_busy.get() { tr(lang.get(), "settings.saving") } else { tr(lang.get(), "settings.save_settings") }}
+                        {move || if settings_busy.get() { "กำลังบันทึก…" } else { "บันทึกการตั้งค่า" }}
                     </button>
                 </div>
             </section>
@@ -450,13 +437,13 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             on:click=move |_| close()
         >
             <section class="modal" on:click=move |ev| ev.stop_propagation()>
-                <h2 class="modal__title">{move || tr(lang.get(), "settings.title")}</h2>
+                <h2 class="modal__title">"ตั้งค่า HOSxP"</h2>
                 <p class="modal__status">
                     {move || {
                         if state.configured.get() {
-                            tr(lang.get(), "settings.status_ok")
+                            "เชื่อมต่อแล้ว — เข้ารหัสเก็บในเครื่อง"
                         } else {
-                            tr(lang.get(), "settings.status_none")
+                            "ยังไม่ได้ตั้งค่า"
                         }
                     }}
                 </p>
@@ -473,7 +460,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         on:click=move |_| tab.set(SettingsTab::Connection)
                     >
                         <IconPlug class="icon" />
-                        {move || tr(lang.get(), "settings.tab_connection")}
+                        "การเชื่อมต่อ"
                     </button>
                     <button
                         class=move || {
@@ -486,7 +473,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         on:click=move |_| tab.set(SettingsTab::Site)
                     >
                         <IconCheckCircle class="icon" />
-                        {move || tr(lang.get(), "settings.tab_site")}
+                        "ตั้งค่าอื่นๆ"
                     </button>
                 </div>
 
@@ -511,8 +498,7 @@ pub use crate::state::ConnectionHealth;
 /// (the shared `selected` signal). Persistence happens through the parent
 /// section's save button — this panel only loads and edits.
 #[component]
-fn CurrentMedsPanel(state: AppState, selected: RwSignal<Vec<DrugInfo>>) -> impl IntoView {
-    let lang = state.lang;
+fn CurrentMedsPanel(selected: RwSignal<Vec<DrugInfo>>) -> impl IntoView {
     let query = RwSignal::new(String::new());
     let results = RwSignal::new(Vec::<DrugInfo>::new());
     let searching = RwSignal::new(false);
@@ -592,7 +578,7 @@ fn CurrentMedsPanel(state: AppState, selected: RwSignal<Vec<DrugInfo>>) -> impl 
                 <IconSearch class="search-icon" />
                 <input
                     class="search-input"
-                    placeholder={move || tr(lang.get(), "settings.meds_search")}
+                    placeholder="ค้นหาชื่อยา…"
                     prop:value=move || query.get()
                     on:input=move |ev| on_input(event_target_value(&ev))
                 />
@@ -602,13 +588,13 @@ fn CurrentMedsPanel(state: AppState, selected: RwSignal<Vec<DrugInfo>>) -> impl 
                 if searching.get() {
                     view! { <p class="modal__note">"…"</p> }.into_any()
                 } else if searched.get() && results.get().is_empty() {
-                    view! { <p class="modal__note">{tr(lang.get(), "settings.meds_no_results")}</p> }.into_any()
+                    view! { <p class="modal__note">"ไม่พบรายการยา"</p> }.into_any()
                 } else if !results.get().is_empty() {
                     let count = results.get().len();
                     view! {
                         <>
                             <p class="modal__note">
-                                {tr_f(lang.get(), "settings.meds_results", &[("n", &count.to_string())])}
+                                {format!("ผลการค้นหา ({count})")}
                             </p>
                             <ul class="result-list">
                                 {results.get().iter().map(|d| {
@@ -622,7 +608,7 @@ fn CurrentMedsPanel(state: AppState, selected: RwSignal<Vec<DrugInfo>>) -> impl 
                                                 class="button-secondary button-secondary--inline"
                                                 on:click=move |_| add(drug.clone())
                                             >
-                                                {move || tr(lang.get(), "settings.meds_add")}
+                                                "เพิ่ม"
                                             </button>
                                         </li>
                                     }
@@ -636,13 +622,13 @@ fn CurrentMedsPanel(state: AppState, selected: RwSignal<Vec<DrugInfo>>) -> impl 
             }}
 
             <p class="sidebar__label">
-                {move || tr_f(lang.get(), "settings.meds_selected", &[("n", &selected.get().len().to_string())])}
+                {move || format!("ยาที่ตั้งค่าไว้ ({})", selected.get().len())}
             </p>
             <ul class="result-list">
                 {move || {
                     let list = selected.get();
                     if list.is_empty() {
-                        view! { <p class="modal__note">{tr(lang.get(), "settings.meds_empty")}</p> }.into_any()
+                        view! { <p class="modal__note">"ยังไม่ได้ตั้งค่ายา — ยาทั้งหมดจะถือว่าหยุดใช้แล้ว"</p> }.into_any()
                     } else {
                         list.iter().map(|d| {
                             let drug = d.clone();
@@ -656,7 +642,7 @@ fn CurrentMedsPanel(state: AppState, selected: RwSignal<Vec<DrugInfo>>) -> impl 
                                         on:click=move |_| remove(drug.icode.clone())
                                     >
                                         <IconX class="icon" />
-                                        {move || tr(lang.get(), "settings.meds_remove")}
+                                        "ลบ"
                                     </button>
                                 </li>
                             }

@@ -10,7 +10,6 @@
 mod api;
 mod app;
 mod components;
-mod i18n;
 mod state;
 
 #[cfg(target_arch = "wasm32")]

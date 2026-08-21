@@ -52,7 +52,7 @@ Tauri 2 (shell) ── Leptos 0.8 CSR (WASM UI)
 | Patient | BPMH (active / lapsed), allergies, visits, HTML report export |
 | About | Project information |
 
-UI ships bilingual (**ไทย / English**) with a language toggle.
+The UI is Thai-only (ภาษาไทย).
 
 ## Requirements
 

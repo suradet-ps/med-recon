@@ -6,7 +6,6 @@ use leptos::task::spawn_local;
 
 use crate::api;
 use crate::components::icons::IconSearch;
-use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
 use med_recon_core::{PatientSummary, QueryKind, detect_query_kind};
 
@@ -20,7 +19,6 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
     let searching = RwSignal::new(false);
     let error = RwSignal::new(None::<String>);
     let searched = RwSignal::new(false);
-    let lang = state.lang;
 
     let run_search = move || {
         let q = query.get_untracked().trim().to_string();
@@ -62,9 +60,9 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
     let hint = move || {
         let kind = detect_query_kind(&query.get());
         match kind {
-            QueryKind::Cid => tr(lang.get(), "search.hint.cid"),
-            QueryKind::Hn => tr(lang.get(), "search.hint.hn"),
-            QueryKind::Name => tr(lang.get(), "search.hint.name"),
+            QueryKind::Cid => "ค้นหาด้วยเลขบัตรประชาชน 13 หลัก",
+            QueryKind::Hn => "ค้นหาด้วย HN ของโรงพยาบาล",
+            QueryKind::Name => "ค้นหาด้วยชื่อ — พิมพ์อย่างน้อย 2 ตัวอักษร",
         }
     };
 
@@ -118,13 +116,13 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
         <div class="sidebar__section">
             <p class="sidebar__label sidebar__label--tagline">
                 <IconSearch class="icon" />
-                {move || tr(lang.get(), "app.tagline")}
+                "ประวัติยาผู้ป่วยจาก HOSxP"
             </p>
             <div class="search-wrapper">
                 <IconSearch class="search-icon" />
                 <input
                     class="search-input"
-                    placeholder={move || tr(lang.get(), "search.placeholder")}
+                    placeholder="ชื่อ-สกุล, HN หรือ CID"
                     autofocus
                     prop:value=move || query.get()
                     on:input=move |ev| on_input(event_target_value(&ev))
@@ -145,7 +143,7 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
                 if searching.get() {
                     view! { <p class="sidebar__empty">"…"</p> }.into_any()
                 } else if searched.get() && results.get().is_empty() {
-                    view! { <p class="sidebar__empty">{tr(lang.get(), "search.no_results")}</p> }.into_any()
+                    view! { <p class="sidebar__empty">"ไม่พบผู้ป่วยที่ตรงกับคำค้นหา"</p> }.into_any()
                 } else {
                     view! { <span hidden></span> }.into_any()
                 }
@@ -156,7 +154,7 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
                     view! {
                         <>
                             <p class="sidebar__label">
-                                {tr_f(lang.get(), "search.results", &[("n", &count.to_string())])}
+                                {format!("พบ {count} ราย")}
                             </p>
                             <ul class="result-list">
                                 {results.get().iter().map(|p| {

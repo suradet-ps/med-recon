@@ -6,13 +6,13 @@
 //! several and must not be presented as a complete or verified list.
 //!
 //! Every user-visible string comes from [`ReportLabels`], resolved by the
-//! frontend from the i18n tokens — this module hard-codes no display text.
+//! frontend as fixed Thai — this module hard-codes no display text.
 
 use chrono::Datelike;
 use med_recon_core::{MedicationItem, MedicationStatus, PatientHistory};
 
-/// User-visible strings for the report, resolved from the frontend i18n
-/// tokens in the current UI language.
+/// User-visible strings for the report — fixed Thai, resolved by the
+/// frontend (the UI is Thai-only).
 #[derive(Debug, Clone, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReportLabels {
@@ -394,7 +394,7 @@ mod tests {
     use super::*;
     use med_recon_core::{AllergyRecord, Dispense, EncounterSource, PatientSummary, VisitSummary};
 
-    /// Thai labels for tests — mirrors the frontend i18n token values.
+    /// Thai labels for tests — mirrors the frontend's fixed report labels.
     fn th_labels() -> ReportLabels {
         ReportLabels {
             html_lang: "th".into(),

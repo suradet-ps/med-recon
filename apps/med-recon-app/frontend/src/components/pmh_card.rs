@@ -8,12 +8,10 @@
 use leptos::prelude::*;
 
 use crate::components::icons::IconClipboard;
-use crate::i18n::tr;
 use crate::state::AppState;
 
 #[component]
 pub fn PmhCard(state: AppState) -> impl IntoView {
-    let lang = state.lang;
     view! {
         {move || {
             // Only appear once a patient is picked and the history has
@@ -33,7 +31,7 @@ pub fn PmhCard(state: AppState) -> impl IntoView {
                         <div class="patient-card__head">
                             <p class="sidebar__label patient-card__label">
                                 <IconClipboard class="icon" />
-                                {tr(lang.get(), "pmh.title")}
+                                "ประวัติการเจ็บป่วย (PMH)"
                             </p>
                         </div>
                         {move || match pmh.as_ref() {
@@ -41,7 +39,7 @@ pub fn PmhCard(state: AppState) -> impl IntoView {
                                 <p class="pmh-card__text">{text.clone()}</p>
                             }.into_any(),
                             None => view! {
-                                <p class="pmh-card__empty">{tr(lang.get(), "pmh.empty")}</p>
+                                <p class="pmh-card__empty">"ไม่มีข้อมูล"</p>
                             }.into_any(),
                         }}
                     </div>

@@ -3,8 +3,6 @@
 use leptos::prelude::*;
 use med_recon_core::{PatientHistory, PatientSummary};
 
-use crate::i18n::Lang;
-
 /// Live HOSxP reachability, mirrored from the backend's
 /// `connection_health` command — drives the top-bar status dot.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -53,8 +51,6 @@ pub struct AppState {
     /// re-fetch effect keys off this so programmatic resets don't trigger a
     /// second fetch alongside the patient-search fetch.
     pub window_epoch: RwSignal<u32>,
-    /// Current UI language.
-    pub lang: RwSignal<Lang>,
 }
 
 impl AppState {
@@ -73,7 +69,6 @@ impl AppState {
             history_days_override: RwSignal::new(None),
             default_history_days: RwSignal::new(730),
             window_epoch: RwSignal::new(0),
-            lang: RwSignal::new(Lang::from_storage()),
         }
     }
 }

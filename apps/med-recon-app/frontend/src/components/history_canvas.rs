@@ -11,7 +11,6 @@ use crate::api;
 use crate::components::icons::{
     IconAlert, IconCheckCircle, IconChevron, IconClipboard, IconUser, IconXCircle,
 };
-use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
 use med_recon_core::{
     EncounterSource, MedicationItem, MedicationStatus, OpdScreenRecord, PatientHistory, Sig,
@@ -72,7 +71,7 @@ pub fn HistoryCanvas(state: AppState) -> impl IntoView {
             ></div>
             {move || {
                 if state.patient.get().is_none() {
-                    view! { <EmptyState state=state/> }.into_any()
+                    view! { <EmptyState/> }.into_any()
                 } else if let Some(err) = state.history_error.get() {
                     view! { <div class="banner-warning">{err}</div> }.into_any()
                 } else if let Some(history) = state.history.get() {
@@ -93,7 +92,7 @@ pub fn HistoryCanvas(state: AppState) -> impl IntoView {
                     }
                         .into_any()
                 } else {
-                    view! { <EmptyState state=state/> }.into_any()
+                    view! { <EmptyState/> }.into_any()
                 }
             }}
         </main>
@@ -102,21 +101,18 @@ pub fn HistoryCanvas(state: AppState) -> impl IntoView {
 
 /// Shown before a patient is selected.
 #[component]
-fn EmptyState(state: AppState) -> impl IntoView {
-    let lang = state.lang;
+fn EmptyState() -> impl IntoView {
     view! {
         <div class="canvas-empty">
             <IconUser class="canvas-empty__icon" />
-            <h2 class="canvas-empty__title">{move || tr(lang.get(), "canvas.empty_title")}</h2>
-            <p class="canvas-empty__sub">{move || tr(lang.get(), "canvas.empty_sub")}</p>
+            <h2 class="canvas-empty__title">"เลือกผู้ป่วยเพื่อดูประวัติยา"</h2>
+            <p class="canvas-empty__sub">"ค้นหาด้วยชื่อ-สกุล, HN หรือ CID ทางซ้าย แล้วเลือกผู้ป่วย"</p>
         </div>
     }
 }
 
 #[component]
 fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
-    let lang = state.lang;
-
     let active: Vec<MedicationItem> = history
         .medications
         .iter()
@@ -147,11 +143,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
         let default_days = state.default_history_days.get();
         let mut opts: Vec<(Option<u32>, String)> = vec![(
             None,
-            format!(
-                "{} ({})",
-                tr(lang.get(), "canvas.history_window_default"),
-                format_window_years(default_days),
-            ),
+            format!("ค่าเริ่มต้น ({})", format_window_years(default_days)),
         )];
         for &(d, lbl) in &[
             (730u32, "2 ปี"),
@@ -172,7 +164,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                         <div class="banner-warning">
                             <IconAlert class="banner-warning__icon" />
                             <span>
-                                <strong>{tr(lang.get(), "canvas.warnings")}</strong>
+                                <strong>"คำเตือนความครบถ้วนของข้อมูล"</strong>
                                 {warnings.iter().map(|w| view! { <div>{w.clone()}</div> }).collect_view()}
                             </span>
                         </div>
@@ -185,28 +177,29 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
             <section class="canvas-section">
                 <h3 class="timeline-header">
                     <IconAlert class="icon" />
-                    {move || tr_f(lang.get(), "canvas.allergies", &[("n", &allergy_count.to_string())])}
+                    {move || format!("แพ้ยา / อาการไม่พึงประสงค์ ({allergy_count})")}
                 </h3>
                 {move || {
                     if !has_allergies {
-                        view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_allergies")}</p> }.into_any()
+                        view! { <p class="canvas-empty__sub">"ไม่พบประวัติแพ้ยาในระบบ"</p> }.into_any()
                     } else {
                         history.allergies.iter().map(|a| {
                             let agent = a.agent.clone();
                             let symptom = a.symptom.clone();
                             let mut meta_parts: Vec<String> = Vec::new();
                             if let Some(d) = a.report_date {
-                                meta_parts.push(tr_f(
-                                    lang.get(),
-                                    "allergy.reported_on",
-                                    &[("date", &format!("{:02}/{:02}/{}", d.day(), d.month(), d.year()))],
+                                meta_parts.push(format!(
+                                    "รายงานเมื่อ {:02}/{:02}/{}",
+                                    d.day(),
+                                    d.month(),
+                                    d.year()
                                 ));
                             }
                             if let Some(r) = a.reporter.as_deref().filter(|r| !r.trim().is_empty()) {
-                                meta_parts.push(tr_f(lang.get(), "allergy.reported_by", &[("reporter", r)]));
+                                meta_parts.push(format!("โดย {r}"));
                             }
                             if let Some(n) = a.note.as_deref().filter(|n| !n.trim().is_empty()) {
-                                meta_parts.push(tr_f(lang.get(), "allergy.note", &[("note", n)]));
+                                meta_parts.push(format!("หมายเหตุ: {n}"));
                             }
                             let meta = meta_parts.join(" · ");
                             view! {
@@ -234,11 +227,11 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                 <div class="timeline-header-row">
                     <h3 class="timeline-header" style="margin:0">
                         <IconCheckCircle class="icon" />
-                        {move || tr_f(lang.get(), "canvas.active", &[("n", &active_count.to_string())])}
+                        {move || format!("ยาที่ผู้ป่วยเคยได้รับ ({active_count})")}
                     </h3>
                     <div class="segmented">
                         <span class="segmented__label">
-                            {move || tr(lang.get(), "canvas.history_window")}
+                            "ค้นหาประวัติในรอบ"
                         </span>
                         {move || {
                             window_options.get().into_iter().map(|(days_opt, label)| {
@@ -279,9 +272,9 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                 </div>
                 {move || {
                     if !has_active {
-                        view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_medications")}</p> }.into_any()
+                        view! { <p class="canvas-empty__sub">"ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด"</p> }.into_any()
                     } else {
-                        med_table(&active, lang).into_any()
+                        med_table(&active).into_any()
                     }
                 }}
             </section>
@@ -293,20 +286,16 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     aria-expanded=move || if lapsed_open.get() { "true" } else { "false" }
                 >
                     <IconXCircle class="icon" />
-                    {move || tr_f(lang.get(), "canvas.lapsed", &[("n", &lapsed_count.to_string())])}
+                    {move || format!("ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ) ({lapsed_count})")}
                     <IconChevron class="timeline-header__chevron" />
                 </button>
                 {move || {
                     if !has_lapsed {
-                        view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_medications")}</p> }.into_any()
+                        view! { <p class="canvas-empty__sub">"ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด"</p> }.into_any()
                     } else if lapsed_open.get() {
-                        med_table(&lapsed, lang).into_any()
+                        med_table(&lapsed).into_any()
                     } else {
-                        view! { <p class="canvas-empty__sub">{tr_f(
-                            lang.get(),
-                            "canvas.lapsed_collapsed",
-                            &[("n", &lapsed_count.to_string())],
-                        )}</p> }.into_any()
+                        view! { <p class="canvas-empty__sub">{format!("คลิกเพื่อดู {lapsed_count} รายการที่คาดว่าหยุดใช้แล้ว")}</p> }.into_any()
                     }
                 }}
             </section>
@@ -318,20 +307,16 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     aria-expanded=move || if screen_open.get() { "true" } else { "false" }
                 >
                     <IconClipboard class="icon" />
-                    {move || tr_f(lang.get(), "canvas.screen", &[("n", &screen_count.to_string())])}
+                    {move || format!("การตรวจ / อาการสำคัญ (CC/PE) ({screen_count})")}
                     <IconChevron class="timeline-header__chevron" />
                 </button>
                 {move || {
                     if !has_screen {
-                        view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_screen")}</p> }.into_any()
+                        view! { <p class="canvas-empty__sub">"ไม่พบข้อมูลการตรวจ (CC/PE)"</p> }.into_any()
                     } else if screen_open.get() {
-                        screen_table(&screen_records, lang).into_any()
+                        screen_table(&screen_records).into_any()
                     } else {
-                        view! { <p class="canvas-empty__sub">{tr_f(
-                            lang.get(),
-                            "canvas.screen_collapsed",
-                            &[("n", &screen_count.to_string())],
-                        )}</p> }.into_any()
+                        view! { <p class="canvas-empty__sub">{format!("คลิกเพื่อดู {screen_count} รายการการตรวจ")}</p> }.into_any()
                     }
                 }}
             </section>
@@ -344,17 +329,17 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
 /// ลำดับ / วันที่จ่าย / ชื่อยา + ความแรง / วิธีใช้ / จำนวนที่จ่าย (ครั้งล่าสุด) /
 /// วันนัด (`oapp.nextdate` ของ visit ที่จ่ายครั้งล่าสุด, "—" ถ้าไม่มี)
 /// Used identically for both the active and lapsed sections.
-fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> impl IntoView {
+fn med_table(items: &[MedicationItem]) -> impl IntoView {
     view! {
         <table class="med-table">
             <thead>
                 <tr>
-                    <th class="med-table__no">{tr(lang.get(), "med.col_no")}</th>
-                    <th class="med-table__date">{tr(lang.get(), "med.col_date")}</th>
-                    <th>{tr(lang.get(), "med.col_drug")}</th>
-                    <th>{tr(lang.get(), "med.col_sig")}</th>
-                    <th class="med-table__qty">{tr(lang.get(), "med.col_qty")}</th>
-                    <th class="med-table__appt">{tr(lang.get(), "med.col_appt")}</th>
+                    <th class="med-table__no">"ลำดับ"</th>
+                    <th class="med-table__date">"วันที่จ่าย"</th>
+                    <th>"ชื่อยา + ความแรง"</th>
+                    <th>"วิธีใช้"</th>
+                    <th class="med-table__qty">"จำนวนที่จ่าย"</th>
+                    <th class="med-table__appt">"วันนัด"</th>
                 </tr>
             </thead>
             <tbody>
@@ -393,20 +378,14 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
                         let repeat = (m.visit_count >= 2).then(|| {
                             (
                                 m.visit_count,
-                                tr_f(
-                                    lang.get_untracked(),
-                                    "med.repeat_times",
-                                    &[("n", &m.visit_count.to_string())],
-                                ),
+                                format!("จ่าย {} ครั้ง", m.visit_count),
                             )
                         });
                         // Provenance pill — only when the most recent dispense
                         // was IPD: OPD is the default and stays silent so the
                         // table stays clean.
                         let badge = match m.last_source {
-                            EncounterSource::Ipd => {
-                                Some(tr(lang.get_untracked(), "visit.ipd").to_string())
-                            }
+                            EncounterSource::Ipd => Some("IPD".to_string()),
                             EncounterSource::Opd => None,
                         };
                         let sig = m.sig.as_ref().map(format_sig).unwrap_or_default();
@@ -450,15 +429,15 @@ fn med_table(items: &[MedicationItem], lang: RwSignal<crate::i18n::Lang>) -> imp
 
 /// Render screening records (CC/PE) as a table styled like `med_table`:
 /// ลำดับ / วันที่ / CC / PE, newest visit first, "—" for blanks.
-fn screen_table(items: &[OpdScreenRecord], lang: RwSignal<crate::i18n::Lang>) -> impl IntoView {
+fn screen_table(items: &[OpdScreenRecord]) -> impl IntoView {
     view! {
         <table class="med-table med-table--screen">
             <thead>
                 <tr>
-                    <th class="med-table__no">{tr(lang.get(), "med.col_no")}</th>
-                    <th>{tr(lang.get(), "visit.date")}</th>
-                    <th>{tr(lang.get(), "med.col_cc")}</th>
-                    <th>{tr(lang.get(), "med.col_pe")}</th>
+                    <th class="med-table__no">"ลำดับ"</th>
+                    <th>"วันที่"</th>
+                    <th>"CC (อาการสำคัญ)"</th>
+                    <th>"PE (ผลตรวจร่างกาย)"</th>
                 </tr>
             </thead>
             <tbody>

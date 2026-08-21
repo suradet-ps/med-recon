@@ -10,12 +10,10 @@ use leptos::task::spawn_local;
 
 use crate::api;
 use crate::components::icons::{IconCamera, IconPrinter, IconUser, IconX};
-use crate::i18n::{tr, tr_f};
 use crate::state::AppState;
 
 #[component]
 pub fn PatientCard(state: AppState) -> impl IntoView {
-    let lang = state.lang;
     let exporting = RwSignal::new(false);
     let export_msg = RwSignal::new(None::<(bool, String)>);
     let capturing = RwSignal::new(false);
@@ -38,7 +36,7 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
         exporting.set(true);
         export_msg.set(None);
         spawn_local(async move {
-            let labels = api::report_labels(lang.get_untracked());
+            let labels = api::report_labels();
             let result = api::export_report(&patient.hn, &labels).await;
             // Guard against a stale completion: the user may have picked a
             // different patient while the save dialog was open.
@@ -46,14 +44,7 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                 return;
             }
             match result {
-                Ok(path) => export_msg.set(Some((
-                    true,
-                    tr_f(
-                        lang.get_untracked(),
-                        "canvas.export_done",
-                        &[("path", &path)],
-                    ),
-                ))),
+                Ok(path) => export_msg.set(Some((true, format!("บันทึกรายงานแล้ว: {path}")))),
                 Err(e) => export_msg.set(Some((false, e.message))),
             }
             exporting.set(false);
@@ -80,14 +71,7 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                 return;
             }
             match result {
-                Ok(path) => capture_msg.set(Some((
-                    true,
-                    tr_f(
-                        lang.get_untracked(),
-                        "canvas.screenshot_done",
-                        &[("path", &path)],
-                    ),
-                ))),
+                Ok(path) => capture_msg.set(Some((true, format!("บันทึกภาพแล้ว: {path}")))),
                 Err(e) => capture_msg.set(Some((false, e.message))),
             }
             capturing.set(false);
@@ -120,13 +104,13 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                         <div class="patient-card__head">
                             <p class="sidebar__label patient-card__label">
                                 <IconUser class="icon" />
-                                {tr(lang.get(), "patient.title")}
+                                "ข้อมูลผู้ป่วย"
                             </p>
                             <button
                                 class="icon-button"
                                 on:click=on_clear
-                                aria-label=move || tr(lang.get(), "patient.clear")
-                                title=move || tr(lang.get(), "patient.clear")
+                                aria-label="ยกเลิกการเลือกผู้ป่วย"
+                                title="ยกเลิกการเลือกผู้ป่วย"
                             >
                                 <IconX class="icon" />
                             </button>
@@ -136,7 +120,7 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                                 <img
                                     class="patient-card__photo"
                                     src=src
-                                    alt=tr(lang.get(), "patient.photo_alt")
+                                    alt="รูปผู้ป่วย"
                                 />
                             }.into_any()).unwrap_or_else(|| view! {
                                 <div class="patient-card__photo patient-card__photo--placeholder">
@@ -147,14 +131,14 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                                 <h3 class="patient-card__name">{name}</h3>
                                 <p class="patient-card__meta">
                                     <span class="patient-card__meta-item">
-                                        <span class="patient-card__meta-label">{tr(lang.get(), "patient.hn")}</span>
+                                        <span class="patient-card__meta-label">"HN"</span>
                                         <span class="code">{hn}</span>
                                     </span>
                                     {move || cid.as_ref().map(|c| view! {
                                         <>
                                             <span class="sep">"·"</span>
                                             <span class="patient-card__meta-item">
-                                                <span class="patient-card__meta-label">{tr(lang.get(), "patient.cid")}</span>
+                                                <span class="patient-card__meta-label">"CID"</span>
                                                 <span class="code">{c.clone()}</span>
                                             </span>
                                         </>
@@ -163,7 +147,7 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                                 <p class="patient-card__meta">
                                     {move || birthday.as_ref().map(|b| view! {
                                         <span class="patient-card__meta-item">
-                                            <span class="patient-card__meta-label">{tr(lang.get(), "patient.birthday")}</span>
+                                            <span class="patient-card__meta-label">"วันเกิด"</span>
                                             <span>{b.clone()}</span>
                                         </span>
                                     })}
@@ -171,8 +155,8 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                                         <>
                                             <span class="sep">"·"</span>
                                             <span class="patient-card__meta-item">
-                                                <span class="patient-card__meta-label">{tr(lang.get(), "patient.age")}</span>
-                                                <span>{tr_f(lang.get(), "patient.age_value", &[("n", &a.to_string())])}</span>
+                                                <span class="patient-card__meta-label">"อายุ"</span>
+                                                <span>{format!("{a} ปี")}</span>
                                             </span>
                                         </>
                                     })}
@@ -186,7 +170,7 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                                 prop:disabled=move || exporting.get()
                             >
                                 <IconPrinter class="icon" />
-                                {move || if exporting.get() { tr(lang.get(), "canvas.exporting") } else { tr(lang.get(), "canvas.export") }}
+                                {move || if exporting.get() { "กำลังส่งออก…" } else { "พิมพ์ประวัติการได้รับยา" }}
                             </button>
                             <button
                                 class="button-secondary patient-card__capture"
@@ -194,7 +178,7 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                                 prop:disabled=move || capturing.get()
                             >
                                 <IconCamera class="icon" />
-                                {move || if capturing.get() { tr(lang.get(), "canvas.screenshotting") } else { tr(lang.get(), "canvas.screenshot") }}
+                                {move || if capturing.get() { "กำลังถ่ายภาพ…" } else { "ถ่ายภาพหน้าจอ" }}
                             </button>
                         </div>
                         {move || export_msg.get().map(|(ok, msg)| {

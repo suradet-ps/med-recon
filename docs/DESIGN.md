@@ -18,8 +18,7 @@ rationale behind the Best Possible Medication History (BPMH) engine.
 - **What it is not:** not a prescribing system, not an EHR, not a verified
   medication list. Dispensing-derived history is one BPMH source among
   several — the UI always says so.
-- **OSS baseline:** international open source (MIT/Apache-2.0), bilingual
-  UI (ไทย / English).
+- **OSS baseline:** international open source (MIT/Apache-2.0), Thai-only UI.
 
 ### Core constraints
 
@@ -155,7 +154,7 @@ HN/CID) from Google Fonts. Base 14 px, line-height 1.5.
 ### 3.3 Components
 
 - **Top bar** — 44 px, raised surface, hairline bottom border; logo +
-  title, status dot (7 px, green/red), language toggle, settings button.
+  title, status dot (7 px, green/red), settings button.
 - **Search input** — 38 px, mono-capable, focus ring = 2 px brand + 3 px
   soft halo; magnifier icon left, kind hint below.
 - **Result list** — hairline-bordered list, hover = muted surface, active
