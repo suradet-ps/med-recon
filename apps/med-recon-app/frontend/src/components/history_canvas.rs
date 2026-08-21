@@ -145,12 +145,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
             None,
             format!("ค่าเริ่มต้น ({})", format_window_years(default_days)),
         )];
-        for &(d, lbl) in &[
-            (730u32, "2 ปี"),
-            (1825, "5 ปี"),
-            (3650, "10 ปี"),
-            (5475, "15 ปี"),
-        ] {
+        for &(d, lbl) in &[(1825, "5 ปี"), (3650, "10 ปี"), (5475, "15 ปี")] {
             opts.push((Some(d), lbl.to_string()));
         }
         opts
