@@ -48,6 +48,17 @@ fn App() -> impl IntoView {
         }
     });
 
+    // Mirror the configured history window so the segmented control can
+    // label the "ค่าเริ่มต้น" segment with the real default.
+    let default_state = state;
+    spawn_local(async move {
+        if let Ok(settings) = crate::api::get_site_settings().await {
+            default_state
+                .default_history_days
+                .set(settings.history_days);
+        }
+    });
+
     // Poll the backend's live reachability — the status dot must reflect a
     // dead database within seconds, not "config exists".
     let poll_state = state;

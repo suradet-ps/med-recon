@@ -160,12 +160,15 @@ impl HosxpClient {
         &self,
         hn: &str,
         current_codes: &HashSet<String>,
+        history_days_override: Option<u32>,
     ) -> Result<PatientHistory> {
         let patient = self.load_patient(hn).await?;
 
-        let cutoff = self
-            .config
-            .history_cutoff(chrono::Local::now().date_naive());
+        let today = chrono::Local::now().date_naive();
+        let cutoff = match history_days_override {
+            Some(days) => today - chrono::Days::new(days as u64),
+            None => self.config.history_cutoff(today),
+        };
 
         let mut warnings = Vec::new();
 
@@ -249,7 +252,7 @@ impl HosxpClient {
         hn: &str,
         current_codes: &HashSet<String>,
     ) -> Result<(PatientSummary, Vec<MedicationItem>)> {
-        let history = self.load_history(hn, current_codes).await?;
+        let history = self.load_history(hn, current_codes, None).await?;
         Ok((history.patient, history.medications))
     }
 

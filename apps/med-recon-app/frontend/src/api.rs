@@ -194,8 +194,15 @@ pub async fn get_current_meds() -> Result<Vec<DrugInfo>, ApiError> {
 }
 
 /// Load the full medication + allergy history for a patient.
-pub async fn load_history(hn: &str) -> Result<PatientHistory, ApiError> {
-    call_string_arg("load_history", "hn", hn).await
+///
+/// When `history_days` is `Some(n)`, the backend uses `n` days instead of
+/// the configured default — this powers the per-query history window UI.
+pub async fn load_history(hn: &str, history_days: Option<u32>) -> Result<PatientHistory, ApiError> {
+    invoke_raw(
+        "load_history",
+        serde_json::json!({ "hn": hn, "historyDays": history_days }),
+    )
+    .await
 }
 
 /// Load the patient's photo (`patient_image` BLOB) as a `data:` URL;

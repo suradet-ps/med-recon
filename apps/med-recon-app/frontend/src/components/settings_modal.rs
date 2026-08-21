@@ -104,6 +104,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             Ok(settings) => {
                 site_name.set(settings.site_name);
                 history_days.set(settings.history_days);
+                state.default_history_days.set(settings.history_days);
             }
             Err(e) => settings_message.set(Some((false, e.message))),
         }
@@ -254,10 +255,13 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             let result = api::save_site_settings(&settings).await;
             if generation.get_untracked() == token {
                 match result {
-                    Ok(()) => settings_message.set(Some((
-                        true,
-                        tr(lang.get_untracked(), "settings.save_ok").to_string(),
-                    ))),
+                    Ok(()) => {
+                        state.default_history_days.set(settings.history_days);
+                        settings_message.set(Some((
+                            true,
+                            tr(lang.get_untracked(), "settings.save_ok").to_string(),
+                        )))
+                    }
                     Err(e) => settings_message.set(Some((false, e.message))),
                 }
                 settings_busy.set(false);

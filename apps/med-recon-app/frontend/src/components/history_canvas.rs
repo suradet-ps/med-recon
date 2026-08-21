@@ -5,7 +5,9 @@
 
 use chrono::{Datelike, NaiveDate};
 use leptos::prelude::*;
+use leptos::task::spawn_local;
 
+use crate::api;
 use crate::components::icons::{
     IconAlert, IconCheckCircle, IconChevron, IconClipboard, IconUser, IconXCircle,
 };
@@ -17,20 +19,81 @@ use med_recon_core::{
 
 #[component]
 pub fn HistoryCanvas(state: AppState) -> impl IntoView {
+    // Re-fetch history when the window override changes (debounced).
+    let last_timeout = RwSignal::new(None::<leptos::prelude::TimeoutHandle>);
+    Effect::new(move |prev: Option<()>| {
+        // Re-fetch only when the operator changes the window (window_epoch).
+        // A programmatic reset on patient search bumps nothing here, so the
+        // patient-search fetch stays the single in-flight request.
+        let _ = state.window_epoch.get();
+        if prev.is_some()
+            && let Some(patient) = state.patient.get_untracked()
+        {
+            let override_val = state.history_days_override.get_untracked();
+            let hn = patient.hn.clone();
+            // Keep the previously loaded history on screen (dimmed via
+            // history-stack--loading) instead of blanking to a spinner — the
+            // top load bar + active-segment spinner carry the loading state.
+            state.history_error.set(None);
+            state.history_loading.set(true);
+            if let Some(prev_handle) = last_timeout.get_untracked() {
+                prev_handle.clear();
+            }
+            last_timeout.set(Some(
+                set_timeout_with_handle(
+                    move || {
+                        let hn = hn.clone();
+                        spawn_local(async move {
+                            match api::load_history(&hn, override_val).await {
+                                Ok(h) => {
+                                    state.history.set(Some(h));
+                                    state.history_error.set(None);
+                                }
+                                Err(e) => {
+                                    state.history.set(None);
+                                    state.history_error.set(Some(e.message));
+                                }
+                            }
+                            state.history_loading.set(false);
+                        });
+                    },
+                    std::time::Duration::from_millis(300),
+                )
+                .expect("invariant: setTimeout is available"),
+            ));
+        }
+    });
+
     view! {
         <main class="main-canvas">
+            <div
+                class="canvas-loadbar"
+                class:canvas-loadbar--active=move || state.history_loading.get()
+            ></div>
             {move || {
                 if state.patient.get().is_none() {
                     view! { <EmptyState state=state/> }.into_any()
-                } else if state.history_loading.get() {
-                    view! { <div class="canvas-loading">"…"</div> }.into_any()
                 } else if let Some(err) = state.history_error.get() {
                     view! { <div class="banner-warning">{err}</div> }.into_any()
-                } else {
-                    match state.history.get() {
-                        Some(history) => view! { <HistoryView history=history state=state/> }.into_any(),
-                        None => view! { <EmptyState state=state/> }.into_any(),
+                } else if let Some(history) = state.history.get() {
+                    view! {
+                        <div
+                            class="history-stack"
+                            class:history-stack--loading=move || state.history_loading.get()
+                        >
+                            <HistoryView history=history state=state/>
+                        </div>
                     }
+                        .into_any()
+                } else if state.history_loading.get() {
+                    view! {
+                        <div class="canvas-loading">
+                            <span class="spinner" aria-label="loading"></span>
+                        </div>
+                    }
+                        .into_any()
+                } else {
+                    view! { <EmptyState state=state/> }.into_any()
                 }
             }}
         </main>
@@ -79,6 +142,27 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
     let allergy_count = history.allergies.len();
     let has_allergies = allergy_count > 0;
     let warnings = history.warnings.clone();
+
+    let window_options = Signal::derive(move || {
+        let default_days = state.default_history_days.get();
+        let mut opts: Vec<(Option<u32>, String)> = vec![(
+            None,
+            format!(
+                "{} ({})",
+                tr(lang.get(), "canvas.history_window_default"),
+                format_window_years(default_days),
+            ),
+        )];
+        for &(d, lbl) in &[
+            (730u32, "2 ปี"),
+            (1825, "5 ปี"),
+            (3650, "10 ปี"),
+            (5475, "15 ปี"),
+        ] {
+            opts.push((Some(d), lbl.to_string()));
+        }
+        opts
+    });
 
     view! {
         <>
@@ -147,10 +231,52 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
             </section>
 
             <section class="canvas-section">
-                <h3 class="timeline-header">
-                    <IconCheckCircle class="icon" />
-                    {move || tr_f(lang.get(), "canvas.active", &[("n", &active_count.to_string())])}
-                </h3>
+                <div class="timeline-header-row">
+                    <h3 class="timeline-header" style="margin:0">
+                        <IconCheckCircle class="icon" />
+                        {move || tr_f(lang.get(), "canvas.active", &[("n", &active_count.to_string())])}
+                    </h3>
+                    <div class="segmented">
+                        <span class="segmented__label">
+                            {move || tr(lang.get(), "canvas.history_window")}
+                        </span>
+                        {move || {
+                            window_options.get().into_iter().map(|(days_opt, label)| {
+                                let is_active = move || state.history_days_override.get() == days_opt;
+                                view! {
+                                    <button
+                                        class=move || {
+                                            if is_active() {
+                                                "segmented__btn segmented__btn--active"
+                                            } else {
+                                                "segmented__btn"
+                                            }
+                                        }
+                                        on:click=move |_| {
+                                            state.history_days_override.set(days_opt);
+                                            state.window_epoch.update(|e| *e += 1);
+                                        }
+                                    >
+                                        {label}
+                                        {move || {
+                                            if state.history_loading.get() && is_active() {
+                                                view! {
+                                                    <span
+                                                        class="segmented__spinner"
+                                                        aria-hidden="true"
+                                                    ></span>
+                                                }
+                                                    .into_any()
+                                            } else {
+                                                ().into_any()
+                                            }
+                                        }}
+                                    </button>
+                                }
+                            }).collect_view()
+                        }}
+                    </div>
+                </div>
                 {move || {
                     if !has_active {
                         view! { <p class="canvas-empty__sub">{tr(lang.get(), "canvas.no_medications")}</p> }.into_any()
@@ -384,4 +510,15 @@ fn format_qty(q: f64) -> String {
         s.pop();
     }
     s
+}
+
+/// Format a day count as a Thai year label, e.g. `730` → `"2 ปี"`,
+/// `5475` → `"15 ปี"`. Fractional years fall back to one decimal.
+fn format_window_years(days: u32) -> String {
+    let years = days as f64 / 365.0;
+    if years.fract() < 0.01 {
+        format!("{} ปี", years as u32)
+    } else {
+        format!("{:.1} ปี", years)
+    }
 }
