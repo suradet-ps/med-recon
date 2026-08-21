@@ -53,7 +53,9 @@ fn App() -> impl IntoView {
     let default_state = state;
     spawn_local(async move {
         if let Ok(settings) = crate::api::get_site_settings().await {
-            default_state.default_history_days.set(settings.history_days);
+            default_state
+                .default_history_days
+                .set(settings.history_days);
         }
     });
 

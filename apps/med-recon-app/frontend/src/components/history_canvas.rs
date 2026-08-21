@@ -31,7 +31,9 @@ pub fn HistoryCanvas(state: AppState) -> impl IntoView {
         {
             let override_val = state.history_days_override.get_untracked();
             let hn = patient.hn.clone();
-            state.history.set(None);
+            // Keep the previously loaded history on screen (dimmed via
+            // history-stack--loading) instead of blanking to a spinner — the
+            // top load bar + active-segment spinner carry the loading state.
             state.history_error.set(None);
             state.history_loading.set(true);
             if let Some(prev_handle) = last_timeout.get_untracked() {
@@ -64,18 +66,34 @@ pub fn HistoryCanvas(state: AppState) -> impl IntoView {
 
     view! {
         <main class="main-canvas">
+            <div
+                class="canvas-loadbar"
+                class:canvas-loadbar--active=move || state.history_loading.get()
+            ></div>
             {move || {
                 if state.patient.get().is_none() {
                     view! { <EmptyState state=state/> }.into_any()
-                } else if state.history_loading.get() {
-                    view! { <div class="canvas-loading">"…"</div> }.into_any()
                 } else if let Some(err) = state.history_error.get() {
                     view! { <div class="banner-warning">{err}</div> }.into_any()
-                } else {
-                    match state.history.get() {
-                        Some(history) => view! { <HistoryView history=history state=state/> }.into_any(),
-                        None => view! { <EmptyState state=state/> }.into_any(),
+                } else if let Some(history) = state.history.get() {
+                    view! {
+                        <div
+                            class="history-stack"
+                            class:history-stack--loading=move || state.history_loading.get()
+                        >
+                            <HistoryView history=history state=state/>
+                        </div>
                     }
+                        .into_any()
+                } else if state.history_loading.get() {
+                    view! {
+                        <div class="canvas-loading">
+                            <span class="spinner" aria-label="loading"></span>
+                        </div>
+                    }
+                        .into_any()
+                } else {
+                    view! { <EmptyState state=state/> }.into_any()
                 }
             }}
         </main>
@@ -135,7 +153,12 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                 format_window_years(default_days),
             ),
         )];
-        for &(d, lbl) in &[(730u32, "2 ปี"), (1825, "5 ปี"), (3650, "10 ปี"), (5475, "15 ปี")] {
+        for &(d, lbl) in &[
+            (730u32, "2 ปี"),
+            (1825, "5 ปี"),
+            (3650, "10 ปี"),
+            (5475, "15 ปี"),
+        ] {
             opts.push((Some(d), lbl.to_string()));
         }
         opts
@@ -220,7 +243,6 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                         {move || {
                             window_options.get().into_iter().map(|(days_opt, label)| {
                                 let is_active = move || state.history_days_override.get() == days_opt;
-                                let label = label;
                                 view! {
                                     <button
                                         class=move || {
@@ -236,6 +258,19 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                                         }
                                     >
                                         {label}
+                                        {move || {
+                                            if state.history_loading.get() && is_active() {
+                                                view! {
+                                                    <span
+                                                        class="segmented__spinner"
+                                                        aria-hidden="true"
+                                                    ></span>
+                                                }
+                                                    .into_any()
+                                            } else {
+                                                ().into_any()
+                                            }
+                                        }}
                                     </button>
                                 }
                             }).collect_view()
