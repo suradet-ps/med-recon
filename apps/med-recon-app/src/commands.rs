@@ -622,11 +622,12 @@ pub async fn search_patients(
 pub async fn load_history(
     state: State<'_, AppState>,
     hn: String,
+    history_days: Option<u32>,
 ) -> Result<PatientHistory, CommandError> {
     let client = client(&state, "โหลดประวัติ").await?;
     let current_codes = configured_med_codes(&state);
     let history = client
-        .load_history(&hn, &current_codes)
+        .load_history(&hn, &current_codes, history_days)
         .await
         .map_err(|e| map_repo_error(e, "โหลดประวัติ"))?;
     tracing::debug!(hn = %med_recon_core::redact_hn(&hn), "patient history loaded");
@@ -680,7 +681,7 @@ pub async fn export_report(
     let client = client(&state, "พิมพ์ประวัติการได้รับยา").await?;
     let current_codes = configured_med_codes(&state);
     let history = client
-        .load_history(&hn, &current_codes)
+        .load_history(&hn, &current_codes, None)
         .await
         .map_err(|e| map_repo_error(e, "พิมพ์ประวัติการได้รับยา"))?;
 
