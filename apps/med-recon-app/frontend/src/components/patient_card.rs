@@ -205,7 +205,8 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
 /// Whole-years age as of today, computed from a birthday.
 ///
 /// Uses the browser's local date (`js_sys::Date`) — `std::time::SystemTime`
-/// panics under `wasm32`.
+/// panics under `wasm32`. The date arithmetic lives in [`age_years_on`] so it
+/// stays testable on the native target.
 fn age_years(birthday: NaiveDate) -> i32 {
     let today = js_sys::Date::new_0();
     let year = today.get_full_year() as i32;
@@ -215,9 +216,43 @@ fn age_years(birthday: NaiveDate) -> i32 {
         Some(d) => d,
         None => return 0,
     };
+    age_years_on(birthday, today)
+}
+
+/// Whole-years age as of a given date (pure; testable on native).
+fn age_years_on(birthday: NaiveDate, today: NaiveDate) -> i32 {
     let mut age = today.year() - birthday.year();
-    if (month, day) < (birthday.month(), birthday.day()) {
+    if (today.month(), today.day()) < (birthday.month(), birthday.day()) {
         age -= 1;
     }
     age
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn date(y: i32, m: u32, d: u32) -> NaiveDate {
+        NaiveDate::from_ymd_opt(y, m, d).unwrap()
+    }
+
+    #[test]
+    fn age_birthday_already_passed_this_year() {
+        assert_eq!(age_years_on(date(2000, 6, 15), date(2026, 8, 22)), 26);
+    }
+
+    #[test]
+    fn age_birthday_later_this_year() {
+        assert_eq!(age_years_on(date(2000, 12, 31), date(2026, 8, 22)), 25);
+    }
+
+    #[test]
+    fn age_exact_birthday_today() {
+        assert_eq!(age_years_on(date(2000, 8, 22), date(2026, 8, 22)), 26);
+    }
+
+    #[test]
+    fn age_leap_day_birthday() {
+        assert_eq!(age_years_on(date(2000, 2, 29), date(2026, 3, 1)), 26);
+    }
 }

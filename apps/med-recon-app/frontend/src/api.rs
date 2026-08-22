@@ -298,3 +298,74 @@ pub fn report_labels() -> ReportLabels {
         footer_phi: "ข้อมูลนี้เป็นข้อมูลสุขภาพส่วนบุคคล (PHI) ต้องจัดเก็บและส่งต่อตามระเบียบปฏิบัติด้านการคุ้มครองข้อมูลส่วนบุคคล",
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use med_recon_bridge::BridgeError;
+
+    #[test]
+    fn report_labels_are_complete_thai() {
+        let l = report_labels();
+        assert_eq!(l.html_lang, "th");
+        assert!(l.heading.contains("Med Recon"));
+        assert!(l.title.contains("{name}") && l.title.contains("{hn}"));
+        assert!(l.disclaimer.contains("BPMH"));
+        assert!(l.footer_phi.contains("PHI"));
+        let all: [&str; 25] = [
+            l.heading,
+            l.generated,
+            l.site_default,
+            l.title,
+            l.disclaimer,
+            l.section_patient,
+            l.section_allergy,
+            l.section_active,
+            l.section_lapsed,
+            l.section_visits,
+            l.col_date,
+            l.col_type,
+            l.col_dept,
+            l.col_visit,
+            l.last_dispensed,
+            l.dispenses,
+            l.total,
+            l.supply,
+            l.freq_per_day,
+            l.reported_on,
+            l.by,
+            l.note,
+            l.warnings_title,
+            l.footer_phi,
+            l.html_lang,
+        ];
+        for v in all {
+            assert!(!v.is_empty(), "report label must not be empty: {v:?}");
+        }
+    }
+
+    #[test]
+    fn from_bridge_parses_typed_command_error() {
+        let typed = ApiError {
+            kind: ApiErrorKind::Connection,
+            message: "เชื่อมต่อไม่สำเร็จ".into(),
+        };
+        let text = serde_json::to_string(&typed).unwrap();
+        let err = ApiError::from_bridge(BridgeError::Command(text));
+        assert_eq!(err, typed);
+    }
+
+    #[test]
+    fn from_bridge_falls_back_to_query_for_unparseable_payload() {
+        let err = ApiError::from_bridge(BridgeError::Command("not json".into()));
+        assert_eq!(err.kind, ApiErrorKind::Query);
+        assert_eq!(err.message, "backend command error: not json");
+    }
+
+    #[test]
+    fn from_bridge_falls_back_to_query_for_non_command_errors() {
+        let err = ApiError::from_bridge(BridgeError::NotWebView);
+        assert_eq!(err.kind, ApiErrorKind::Query);
+        assert!(err.message.contains("Tauri webview"));
+    }
+}

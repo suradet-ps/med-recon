@@ -496,3 +496,92 @@ fn format_window_years(days: u32) -> String {
         format!("{:.1} ปี", years)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn item(drug_name: &str, strength: Option<&str>, sig: Option<Sig>) -> MedicationItem {
+        let date = NaiveDate::from_ymd_opt(2026, 7, 1).unwrap();
+        MedicationItem {
+            icode: "P1".into(),
+            drug_name: drug_name.into(),
+            strength: strength.map(str::to_string),
+            units: None,
+            last_dispense: date,
+            first_dispense: date,
+            last_qty: 30.0,
+            total_qty: 30.0,
+            visit_count: 1,
+            sources: vec![EncounterSource::Opd],
+            last_source: EncounterSource::Opd,
+            days_supply: None,
+            sig,
+            appointment_date: None,
+            status: MedicationStatus::Active,
+            days_since_last_dispense: 0,
+        }
+    }
+
+    #[test]
+    fn format_qty_trims_trailing_zeros() {
+        assert_eq!(format_qty(3.500), "3.5");
+        assert_eq!(format_qty(3.0), "3");
+        assert_eq!(format_qty(0.0), "0");
+        assert_eq!(format_qty(1.25), "1.25");
+        assert_eq!(format_qty(2.100), "2.1");
+    }
+
+    #[test]
+    fn format_window_years_labels_integer_years() {
+        assert_eq!(format_window_years(730), "2 ปี");
+        assert_eq!(format_window_years(1825), "5 ปี");
+        assert_eq!(format_window_years(3650), "10 ปี");
+        assert_eq!(format_window_years(5475), "15 ปี");
+    }
+
+    #[test]
+    fn format_window_years_labels_fractional_years() {
+        assert_eq!(format_window_years(90), "0.2 ปี");
+        assert_eq!(format_window_years(183), "0.5 ปี");
+    }
+
+    #[test]
+    fn drug_label_appends_strength_only() {
+        assert_eq!(
+            drug_label(&item("Paracetamol", Some("500 mg"), None)),
+            "Paracetamol · 500 mg"
+        );
+        assert_eq!(drug_label(&item("Metformin", None, None)), "Metformin");
+    }
+
+    #[test]
+    fn format_sig_combines_dose_frequency_note() {
+        let sig = Sig {
+            dose_per_admin: Some(1.0),
+            frequency_per_day: Some(3.0),
+            note: Some("หลังอาหาร".into()),
+        };
+        assert_eq!(format_sig(&sig), "1 × 3/วัน หลังอาหาร");
+    }
+
+    #[test]
+    fn format_sig_falls_back_to_note_only() {
+        let sig = Sig {
+            dose_per_admin: None,
+            frequency_per_day: None,
+            note: Some("หลังอาหารเช้า".into()),
+        };
+        assert_eq!(format_sig(&sig), "หลังอาหารเช้า");
+    }
+
+    #[test]
+    fn format_sig_empty_when_no_fields() {
+        let sig = Sig {
+            dose_per_admin: None,
+            frequency_per_day: None,
+            note: None,
+        };
+        assert_eq!(format_sig(&sig), "");
+    }
+}

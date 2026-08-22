@@ -666,3 +666,34 @@ fn drug_label(d: &DrugInfo) -> String {
     }
     label
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn info(name: &str, strength: Option<&str>, units: Option<&str>) -> DrugInfo {
+        DrugInfo {
+            icode: "P1".into(),
+            name: name.into(),
+            strength: strength.map(str::to_string),
+            units: units.map(str::to_string),
+        }
+    }
+
+    #[test]
+    fn drug_label_joins_name_strength_units() {
+        assert_eq!(
+            drug_label(&info("Paracetamol", Some("500 mg"), Some("เม็ด"))),
+            "Paracetamol · 500 mg เม็ด"
+        );
+        assert_eq!(
+            drug_label(&info("Metformin", Some("500 mg"), None)),
+            "Metformin · 500 mg"
+        );
+        assert_eq!(
+            drug_label(&info("Metformin", None, Some("เม็ด"))),
+            "Metformin เม็ด"
+        );
+        assert_eq!(drug_label(&info("Metformin", None, None)), "Metformin");
+    }
+}
