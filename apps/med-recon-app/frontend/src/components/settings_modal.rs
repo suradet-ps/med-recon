@@ -247,6 +247,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                 match result {
                     Ok(()) => {
                         state.default_history_days.set(settings.history_days);
+                        state.site_name.set(settings.site_name);
                         settings_message.set(Some((true, "บันทึกการตั้งค่าและเชื่อมต่อแล้ว".to_string())))
                     }
                     Err(e) => settings_message.set(Some((false, e.message))),

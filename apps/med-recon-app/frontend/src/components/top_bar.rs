@@ -9,6 +9,15 @@ use crate::state::{AppState, ConnectionHealth};
 pub fn TopBar(state: AppState) -> impl IntoView {
     let on_settings = move |_| state.settings_open.set(true);
 
+    let site_name = move || {
+        let name = state.site_name.get();
+        if name.is_empty() {
+            "Med Recon".to_string()
+        } else {
+            format!("Med Recon {name}")
+        }
+    };
+
     let status_text = move || match state.health.get() {
         ConnectionHealth::Connected => "เชื่อมต่อแล้ว".to_string(),
         ConnectionHealth::Disconnected => "ไม่สามารถเชื่อมต่อได้".to_string(),
@@ -19,7 +28,7 @@ pub fn TopBar(state: AppState) -> impl IntoView {
         <header class="top-bar">
             <div class="top-bar__left">
                 <IconLogo class="top-bar__logo" />
-                <h1 class="top-bar__title">"Med Recon โรงพยาบาลสระโบสถ์"</h1>
+                <h1 class="top-bar__title">{site_name}</h1>
             </div>
             <div class="top-bar__right">
                 <span class="top-bar__status">

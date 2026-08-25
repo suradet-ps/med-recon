@@ -46,6 +46,9 @@ pub struct AppState {
     /// Drives the "ค่าเริ่มต้น" segment label so the operator always sees
     /// what the default window resolves to.
     pub default_history_days: RwSignal<u32>,
+    /// Site name (สถานบริการ), mirrored from site settings and shown in the
+    /// top-bar brand line in place of a hardcoded label.
+    pub site_name: RwSignal<String>,
     /// Bumped only when the operator changes the window via the segmented
     /// control — not when a new patient resets the override. The history
     /// re-fetch effect keys off this so programmatic resets don't trigger a
@@ -68,6 +71,7 @@ impl AppState {
             history_error: RwSignal::new(None),
             history_days_override: RwSignal::new(None),
             default_history_days: RwSignal::new(730),
+            site_name: RwSignal::new(String::new()),
             window_epoch: RwSignal::new(0),
         }
     }

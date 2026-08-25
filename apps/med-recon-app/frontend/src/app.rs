@@ -49,13 +49,15 @@ fn App() -> impl IntoView {
     });
 
     // Mirror the configured history window so the segmented control can
-    // label the "ค่าเริ่มต้น" segment with the real default.
+    // label the "ค่าเริ่มต้น" segment with the real default, and the site
+    // name for the top-bar brand line.
     let default_state = state;
     spawn_local(async move {
         if let Ok(settings) = crate::api::get_site_settings().await {
             default_state
                 .default_history_days
                 .set(settings.history_days);
+            default_state.site_name.set(settings.site_name);
         }
     });
 
