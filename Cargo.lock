@@ -1340,9 +1340,9 @@ checksum = "4ef6b89e5b37196644d8796de5268852ff179b44e96276cf4290264843743bb7"
 
 [[package]]
 name = "encryptman"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1360b2dbc21d0b053b48c319eab0fb7773da02393201c3fcb9b4219b1629f9d"
+checksum = "f733c08d7e1a8900f61b29b2e4fe71e47a3d45f0e0f4b3242d4d30fddeb9b34c"
 dependencies = [
  "aes-gcm",
  "base64 0.23.1",
@@ -5574,7 +5574,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",
