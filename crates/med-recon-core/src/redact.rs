@@ -30,7 +30,7 @@ pub fn redact_cid(cid: &str) -> String {
     }
 }
 
-/// Redact a patient display name entirely — names are never logged.
+/// Redact a patient display name entirely - names are never logged.
 pub const REDACTED_NAME: &str = "***";
 
 #[cfg(test)]

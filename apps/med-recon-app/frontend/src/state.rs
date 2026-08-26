@@ -4,11 +4,11 @@ use leptos::prelude::*;
 use med_recon_core::{PatientHistory, PatientSummary};
 
 /// Live HOSxP reachability, mirrored from the backend's
-/// `connection_health` command — drives the top-bar status dot.
+/// `connection_health` command - drives the top-bar status dot.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ConnectionHealth {
-    /// No stored settings — the settings dialog is the flow.
+    /// No stored settings - the settings dialog is the flow.
     Unconfigured,
     /// A ping succeeded recently.
     Connected,
@@ -24,9 +24,9 @@ pub struct AppState {
     pub configured: RwSignal<bool>,
     /// Whether the connection settings dialog is open.
     pub settings_open: RwSignal<bool>,
-    /// Polled live reachability — top-bar dot source.
+    /// Polled live reachability - top-bar dot source.
     pub health: RwSignal<ConnectionHealth>,
-    /// Search input text — shared so the patient card can reset it.
+    /// Search input text - shared so the patient card can reset it.
     pub search_query: RwSignal<String>,
     /// Selected patient; `None` until one is picked from search results.
     pub patient: RwSignal<Option<PatientSummary>>,
@@ -50,7 +50,7 @@ pub struct AppState {
     /// top-bar brand line in place of a hardcoded label.
     pub site_name: RwSignal<String>,
     /// Bumped only when the operator changes the window via the segmented
-    /// control — not when a new patient resets the override. The history
+    /// control - not when a new patient resets the override. The history
     /// re-fetch effect keys off this so programmatic resets don't trigger a
     /// second fetch alongside the patient-search fetch.
     pub window_epoch: RwSignal<u32>,

@@ -1,11 +1,11 @@
-//! HOSxP configuration store — two independent JSON files under the
+//! HOSxP configuration store - two independent JSON files under the
 //! platform config directory:
 //!
-//! * `connection.json` — host/port/database/user/password, stored
+//! * `connection.json` - host/port/database/user/password, stored
 //!   **encrypted** (AES-256-GCM + HKDF via `encryptman`, master key in the
 //!   OS keychain via `encryptman-keyring`). Credentials never touch disk
 //!   in plaintext; the keychain gives per-user key isolation.
-//! * `settings.json` — non-secret site settings: `site_name`,
+//! * `settings.json` - non-secret site settings: `site_name`,
 //!   `history_days`, and the operator-configured current-medication list
 //!   (`current_med_codes`). Plain readable JSON so operators can back up
 //!   or edit it directly.
@@ -34,7 +34,7 @@ const LEGACY_FILE: &str = "site-config.json";
 /// Backup name for the migrated legacy file.
 const LEGACY_BACKUP_FILE: &str = "site-config.json.bak";
 
-/// HOSxP connection settings — the encrypted half of the store.
+/// HOSxP connection settings - the encrypted half of the store.
 ///
 /// `PartialEq` is intentionally not derived: the password is a
 /// [`SecretString`] and must not be compared/logged incidentally.
@@ -52,7 +52,7 @@ pub struct ConnectionConfig {
     pub password: SecretString,
 }
 
-/// Plaintext payload — the shape written inside the encrypted blob.
+/// Plaintext payload - the shape written inside the encrypted blob.
 #[derive(Debug, Serialize, Deserialize)]
 struct ConnectionConfigRaw {
     host: String,
@@ -62,7 +62,7 @@ struct ConnectionConfigRaw {
     password: String,
 }
 
-/// Non-secret site settings — the plain JSON half of the store.
+/// Non-secret site settings - the plain JSON half of the store.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct SiteSettings {
@@ -472,7 +472,7 @@ mod tests {
         }
     }
 
-    /// Tests touch a real temporary directory — serialized only.
+    /// Tests touch a real temporary directory - serialized only.
     static DIR_LOCK: Mutex<()> = Mutex::new(());
 
     fn sample_connection() -> ConnectionConfig {
@@ -684,7 +684,7 @@ mod tests {
         store.save_connection(&sample_connection()).unwrap();
         store.save_settings(&sample_settings()).unwrap();
 
-        // A stale legacy file appears later — must be archived, never
+        // A stale legacy file appears later - must be archived, never
         // decrypted or allowed to overwrite current data.
         let legacy = dir.path().join(LEGACY_FILE);
         fs::write(&legacy, "garbage").unwrap();

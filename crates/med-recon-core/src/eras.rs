@@ -13,7 +13,7 @@
 //! The site era is **not configured**: each date value read from HOSxP is
 //! normalized individually by its year. Years ≥ 2500 (BE 2500 = CE 1957)
 //! are Buddhist-era and converted to Christian era; anything else is
-//! already Christian-era. This tolerates sites storing either era — even
+//! already Christian-era. This tolerates sites storing either era - even
 //! mixed within one database.
 
 use chrono::{Datelike, NaiveDate};

@@ -16,19 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and the `use_medusage_sig` config flag (sig reading is always on,
   degrading to a warning when the tables are missing); dropped
   `opd_allergy.severy_id`.
-- **Date era auto-detection** — removed the era setting. Every date value
+- **Date era auto-detection** - removed the era setting. Every date value
   read from HOSxP is normalized to ค.ศ. individually (stored year ≥ 2500
   ⇒ พ.ศ.), tolerating BE/CE/mixed sites without configuration.
-- **BPMH verdict is operator-configured** — the settings screen curates a
+- **BPMH verdict is operator-configured** - the settings screen curates a
   current-medication list (search `drugitems`); only listed drugs are
   labelled "ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่" regardless of dispense recency. Days
   supply remains display-only.
-- **Settings split into two JSON files** — `connection.json` (encrypted
+- **Settings split into two JSON files** - `connection.json` (encrypted
   credentials) and `settings.json` (plain, non-secret: site name, history
   window, current-medication list). Legacy single-file configs are
   migrated automatically on first open.
 
-## [0.1.0] — 2026-08-16
+## [0.1.0] - 2026-08-16
 
 Initial release.
 

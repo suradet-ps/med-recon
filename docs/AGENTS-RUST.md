@@ -4,7 +4,7 @@ Universal baseline rules for AI coding agents on Rust projects.
 Merge project-specific instructions **below** the `## Project Overrides` section.
 
 > These rules are **mandatory**. Do not skip, reorder, or silently ignore any item.
-> When a project-specific rule conflicts with a baseline rule, the project-specific rule wins — but the conflict must be noted in a comment.
+> When a project-specific rule conflicts with a baseline rule, the project-specific rule wins - but the conflict must be noted in a comment.
 
 ---
 
@@ -12,7 +12,7 @@ Merge project-specific instructions **below** the `## Project Overrides` section
 
 1. **Read before writing.** Understand the existing code, conventions, and `Cargo.toml` before making any change.
 2. **Smallest correct change wins.** If two solutions solve the problem equally well, prefer the shorter one.
-3. **Leave the codebase cleaner than you found it** — but only within the scope of the current task.
+3. **Leave the codebase cleaner than you found it** - but only within the scope of the current task.
 4. **Every claim must be verifiable.** "It should work" is not acceptable. Run the checks. Show the output.
 5. **Fail loudly and early.** A compile error now is cheaper than a silent bug in production.
 
@@ -22,7 +22,7 @@ Merge project-specific instructions **below** the `## Project Overrides` section
 
 ### 1.1 Think Before Acting
 - Start with the **smallest plausible interpretation** of the request.
-- If uncertain, ask **one clarifying question** — never assume the larger interpretation.
+- If uncertain, ask **one clarifying question** - never assume the larger interpretation.
 - Surface tradeoffs. Push back when a simpler approach exists.
 - Name what is unclear and stop. Do not hide confusion behind an elaborate plan.
 
@@ -30,7 +30,7 @@ Merge project-specific instructions **below** the `## Project Overrides` section
 - Do the minimum that solves the problem. Nothing speculative or "just in case."
 - If a task fits in 1–3 commands, do it directly without over-planning.
 - No features, abstractions, or error handling beyond what was explicitly requested.
-- If planning an options table with more than three rows, pause — you may have misread the request.
+- If planning an options table with more than three rows, pause - you may have misread the request.
 
 ### 1.3 Surgical Changes
 - Touch **only** what the request requires. Do not improve adjacent code, comments, or formatting.
@@ -42,7 +42,7 @@ Merge project-specific instructions **below** the `## Project Overrides` section
 - Transform vague requests into **verifiable goals** before starting.
 - Define what "done" looks like. Loop until verified.
 - For multi-step work, state a brief plan with a verification step after each stage.
-- Strong success criteria let the agent work independently. Weak criteria require constant clarification — clarify first.
+- Strong success criteria let the agent work independently. Weak criteria require constant clarification - clarify first.
 
 ---
 
@@ -110,7 +110,7 @@ tokio = { version = "1", features = ["full"] }        # async runtime
 - Always propagate errors with `?`. Never swallow them silently.
 - Never use `unwrap()` or `expect()` in non-test code without a documented invariant.
   - If an invariant truly cannot be violated, use `expect("invariant: <explain why this is safe>")`.
-- Map external errors to domain errors at crate boundaries — do not leak implementation details.
+- Map external errors to domain errors at crate boundaries - do not leak implementation details.
 
 ```rust
 // ✅ Correct: structured library error
@@ -153,14 +153,14 @@ pub struct OrderId(u64);
 - `unreachable!` is acceptable only when a match arm is **provably** unreachable by construction; document why.
 - Replace `todo!()` with a compile-time error if the feature is not yet implemented:
   ```rust
-  compile_error!("feature X is not yet implemented — see issue #42");
+  compile_error!("feature X is not yet implemented - see issue #42");
   ```
 
 ### 5.6 Performance Awareness
 - Prefer iterators and iterator adaptors over manual index loops.
 - Avoid allocating in hot paths. Use `SmallVec`, `ArrayVec`, or stack buffers where appropriate.
 - Profile before optimizing. Do not introduce complexity for hypothetical gains.
-- Use `#[inline]` sparingly — only when profiling confirms a benefit.
+- Use `#[inline]` sparingly - only when profiling confirms a benefit.
 
 ---
 
@@ -196,7 +196,7 @@ src/
 - Never block inside an async context: replace `std::thread::sleep` with `tokio::time::sleep`, `std::fs` with `tokio::fs`, etc.
 - Use `tokio::spawn` for background tasks. Always `.await` or store the `JoinHandle`.
 - Set timeouts on all I/O: `tokio::time::timeout(duration, future)`.
-- Structure concurrency with `tokio::select!`, `FuturesUnordered`, or `JoinSet` — never busy-loop.
+- Structure concurrency with `tokio::select!`, `FuturesUnordered`, or `JoinSet` - never busy-loop.
 - Propagate cancellation: check for cancellation at every `.await` point in long-running tasks.
 
 ---
@@ -234,7 +234,7 @@ mod tests {
 - Use `#[tokio::test(flavor = "multi_thread")]` only when concurrency is part of what is being tested.
 
 ### 8.4 Test Hygiene
-- No `unwrap()` in tests — use `?` with `-> Result<(), Box<dyn Error>>` return type, or `assert!(result.is_ok())`.
+- No `unwrap()` in tests - use `?` with `-> Result<(), Box<dyn Error>>` return type, or `assert!(result.is_ok())`.
 - Clean up test side effects (temp files, DB state) using RAII guards or `tempfile` crate.
 - Tests must not depend on external services unless explicitly marked `#[ignore]` with a comment.
 
@@ -248,7 +248,7 @@ mod tests {
   - Return value and error cases.
   - A `# Examples` section with a runnable `\`\`\`rust` block for non-trivial APIs.
 - Use `//!` module-level docs in every module explaining its purpose and responsibility.
-- Keep docs accurate — outdated docs are worse than no docs.
+- Keep docs accurate - outdated docs are worse than no docs.
 - Run `cargo doc --no-deps --open` periodically to verify rendered output.
 
 ```rust
@@ -276,7 +276,7 @@ pub fn parse_config(raw: &str) -> Result<Config, ParseError> { ... }
 - Use `PathBuf::canonicalize()` and verify paths stay within expected roots to prevent traversal.
 - Prefer `secrecy::Secret<T>` for sensitive values to prevent accidental debug-printing.
 - Audit `Cargo.lock` with `cargo audit` before each release. Treat high-severity advisories as blockers.
-- Avoid `unsafe` for parsing untrusted data — always use safe, validated parsers.
+- Avoid `unsafe` for parsing untrusted data - always use safe, validated parsers.
 
 ---
 
@@ -305,17 +305,17 @@ For releases, additionally:
 
 When applying these standards to an existing codebase, follow this sequence:
 
-1. **Audit** — Run `cargo clippy -- -W clippy::all` and `cargo fmt --check`. List all violations. Do not modify code yet.
+1. **Audit** - Run `cargo clippy -- -W clippy::all` and `cargo fmt --check`. List all violations. Do not modify code yet.
 2. **Prioritize by tier:**
    - **Tier 1 (Safety & Correctness):** `unwrap` without invariant docs, missing error handling, `unsafe` without `// SAFETY:` comments, panics in production paths.
    - **Tier 2 (Idiomatic Patterns):** module visibility, trait usage, error type structure, clone-in-loop, blocking in async.
    - **Tier 3 (Style & Docs):** formatting, missing `///` docs, test coverage gaps.
-3. **Surgical execution** — Refactor file-by-file or module-by-module. After each change:
+3. **Surgical execution** - Refactor file-by-file or module-by-module. After each change:
    ```bash
    cargo check && cargo test && cargo clippy -- -D warnings
    ```
-4. **Verify completeness** — Re-run the full CI checklist from §11.
-5. **Document** — Update inline docs and `CHANGELOG.md` to reflect structural changes.
+4. **Verify completeness** - Re-run the full CI checklist from §11.
+5. **Document** - Update inline docs and `CHANGELOG.md` to reflect structural changes.
 
 ---
 

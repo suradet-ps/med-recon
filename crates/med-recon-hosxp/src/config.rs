@@ -15,7 +15,7 @@ pub struct HosxpConfig {
     pub port: u16,
     /// HOSxP database name.
     pub database: String,
-    /// Database user — recommended: a read-only role.
+    /// Database user - recommended: a read-only role.
     pub user: String,
     /// Database password, kept in a secret wrapper.
     pub password: SecretString,

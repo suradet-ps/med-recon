@@ -11,7 +11,7 @@ feature-depth = 1
 ignore = [
   # Marvin Attack timing sidechannel on rsa (transitive dep of sqlx-mysql
   # for caching_sha2_password auth). Med Recon always connects over TLS
-  # (rustls) on the local hospital LAN — advisory itself says local use on
+  # (rustls) on the local hospital LAN - advisory itself says local use on
   # a non-compromised computer is fine. No patched release exists.
   { id = "RUSTSEC-2023-0071", reason = "sqlx-mysql RSA auth exchange; TLS-only connections, local hospital LAN" },
   # GTK3 bindings unmaintained (transitive deps of tauri on Linux)

@@ -60,7 +60,7 @@ mod imp {
             .await
             .map_err(|e| {
                 // The rejection value is the backend's serialized error (a typed
-                // `CommandError` JSON object) — hand it back as raw JSON text so
+                // `CommandError` JSON object) - hand it back as raw JSON text so
                 // the caller can deserialize it.
                 let json = js_sys::JSON::stringify(&e)
                     .ok()

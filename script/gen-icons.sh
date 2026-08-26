@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# gen-icons.sh — regenerate all Tauri app icons from icon-master.svg.
+# gen-icons.sh - regenerate all Tauri app icons from icon-master.svg.
 #
 # `cargo tauri icon` accepts a squared SVG with transparency directly and
 # renders every platform size itself (macOS .icns, Windows .ico, iOS,

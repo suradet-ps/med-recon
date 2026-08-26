@@ -8,14 +8,14 @@ pub enum QueryKind {
     Cid,
     /// Hospital HN.
     Hn,
-    /// Anything else — treated as a name search.
+    /// Anything else - treated as a name search.
     Name,
 }
 
 /// Classifies a patient-search input.
 ///
 /// Rules: exactly 13 digits → CID; 5–10 digits only → HN; anything else →
-/// name. The HN length rule is a documented default — confirm the exact HN
+/// name. The HN length rule is a documented default - confirm the exact HN
 /// pattern of the target hospital before relying on it.
 pub fn detect_query_kind(input: &str) -> QueryKind {
     let trimmed = input.trim();

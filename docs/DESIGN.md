@@ -1,4 +1,4 @@
-# Med Recon — Design System & Product Design
+# Med Recon - Design System & Product Design
 
 Med Recon is a **read-only medication history lookup desktop application** for
 allergy assessment and medication reconciliation. This document defines the
@@ -17,18 +17,18 @@ rationale behind the Best Possible Medication History (BPMH) engine.
   all derived read-only from HOSxP (MySQL/MariaDB).
 - **What it is not:** not a prescribing system, not an EHR, not a verified
   medication list. Dispensing-derived history is one BPMH source among
-  several — the UI always says so.
+  several - the UI always says so.
 - **OSS baseline:** international open source (MIT/Apache-2.0), Thai-only UI.
 
 ### Core constraints
 
-1. **Read-only against HOSxP** — enforced by the read-only guard and a
+1. **Read-only against HOSxP** - enforced by the read-only guard and a
    read-only DB role.
-2. **PHI handling** — HN/CID redacted in logs; names never logged; HTML
+2. **PHI handling** - HN/CID redacted in logs; names never logged; HTML
    reports carry a PHI handling notice.
-3. **BPMH framing** — never present dispensing history as complete or
+3. **BPMH framing** - never present dispensing history as complete or
    verified; show source-type and data-recency indicators.
-4. **Schema drift tolerance** — HOSxP table/column names vary by site;
+4. **Schema drift tolerance** - HOSxP table/column names vary by site;
    queries degrade through fallback tiers and surface warnings instead of
    failing.
 
@@ -43,12 +43,12 @@ own file (see 4.6):
 
 1. App starts with no connection config → the **settings dialog opens
    automatically**.
-2. **HOSxP connection section** — host, port, database, user, password.
+2. **HOSxP connection section** - host, port, database, user, password.
    **Test** runs against the typed values before anything is saved
    (latency shown). **Save** connects first, then persists the config
    **encrypted** (`connection.json`, AES-256-GCM; master key in the OS
    keychain).
-3. **Site settings section** — site name (shown on exported reports),
+3. **Site settings section** - site name (shown on exported reports),
    history window, and the current-medication list (ตั้งค่ายา). Saved as
    plain JSON (`settings.json`); usable before a connection exists.
 4. Success updates the status dot; the dialog stays open so the operator
@@ -67,17 +67,17 @@ own file (see 4.6):
 
 Top to bottom:
 
-1. **Patient bar** — name, HN, CID, birthday + the export button.
-2. **Data-completeness warnings** — amber banner when a HOSxP table was
+1. **Patient bar** - name, HN, CID, birthday + the export button.
+2. **Data-completeness warnings** - amber banner when a HOSxP table was
    missing and a section was skipped (e.g. no `drugusage`/`sp_use` lookup →
    sig data unavailable).
-3. **BPMH note** — persistent shield banner: dispensing-derived data is one
+3. **BPMH note** - persistent shield banner: dispensing-derived data is one
    source among several.
-4. **ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ (likely active)** — green verdict bands, one per
+4. **ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ (likely active)** - green verdict bands, one per
    deduplicated drug.
-5. **ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่าหยุดใช้แล้ว (likely lapsed)** — neutral bands.
-6. **แพ้ยา / อาการไม่พึงประสงค์** — red bands.
-7. **ประวัติการเข้ารับบริการ** — visit timeline (date, OPD/IPD badge,
+5. **ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่าหยุดใช้แล้ว (likely lapsed)** - neutral bands.
+6. **แพ้ยา / อาการไม่พึงประสงค์** - red bands.
+7. **ประวัติการเข้ารับบริการ** - visit timeline (date, OPD/IPD badge,
    department, visit id).
 
 ### 2.4 Export
@@ -101,7 +101,7 @@ Two-panel desktop layout adapted from the AllerX design language, with a
 
 | Token | Value | Role |
 |---|---|---|
-| `--brand` | `#00754A` | Primary green — filled buttons, active accents |
+| `--brand` | `#00754A` | Primary green - filled buttons, active accents |
 | `--brand-dark` | `#005C38` | Hover/down state of primary buttons |
 | `--brand-soft` | `#DCF2EA` | Patient bar, selection tint |
 | `--status-connected` | `#43A047` | Top-bar health dot |
@@ -153,26 +153,26 @@ HN/CID) from Google Fonts. Base 14 px, line-height 1.5.
 
 ### 3.3 Components
 
-- **Top bar** — 44 px, raised surface, hairline bottom border; logo +
+- **Top bar** - 44 px, raised surface, hairline bottom border; logo +
   title, status dot (7 px, green/red), settings button.
-- **Search input** — 38 px, mono-capable, focus ring = 2 px brand + 3 px
+- **Search input** - 38 px, mono-capable, focus ring = 2 px brand + 3 px
   soft halo; magnifier icon left, kind hint below.
-- **Result list** — hairline-bordered list, hover = muted surface, active
+- **Result list** - hairline-bordered list, hover = muted surface, active
   = brand-soft.
-- **Patient bar** — brand-soft fill + found-border, name (600), mono HN/CID.
-- **Buttons** — primary (brand fill, white), secondary (raised, hairline
+- **Patient bar** - brand-soft fill + found-border, name (600), mono HN/CID.
+- **Buttons** - primary (brand fill, white), secondary (raised, hairline
   border); inline variants; `translateY(1px)` on active; disabled = 0.4
   opacity.
-- **Verdict bands** — the signature component: icon + headline + detail,
+- **Verdict bands** - the signature component: icon + headline + detail,
   tinted per state (found/notfound/lapsed/pending); compact variant for
   per-drug rows.
-- **Timeline** — hairline list rows: mono date, OPD/IPD badge, dept, visit
+- **Timeline** - hairline list rows: mono date, OPD/IPD badge, dept, visit
   id.
-- **Badges/chips** — 10 px, 600 weight, pill radius, muted surface.
-- **Settings modal** — centered, max-width 460 px, blur backdrop, elev-3
+- **Badges/chips** - 10 px, 600 weight, pill radius, muted surface.
+- **Settings modal** - centered, max-width 460 px, blur backdrop, elev-3
   shadow; form fields with 12 px labels, 36 px inputs, focus ring; success
   (green) / error (red) message panels.
-- **Warning banner** — amber tint, alert icon, used for completeness
+- **Warning banner** - amber tint, alert icon, used for completeness
   warnings and degraded-connection messages.
 
 ---
@@ -188,7 +188,7 @@ HN/CID) from Google Fonts. Base 14 px, line-height 1.5.
 ### 4.2 Dispensing events
 
 - OPD and IPD dispensing both live in `opitemrece` (vn-keyed OPD,
-  an-keyed IPD) — confirmed at the target site: no `iptitemrece`.
+  an-keyed IPD) - confirmed at the target site: no `iptitemrece`.
 - Sig data comes from the `drugusage`/`sp_use` lookup tables joined via
   `opitemrece.drugusage`/`opitemrece.sp_use`.
 - `qty` is DECIMAL in HOSxP; sqlx cannot decode DECIMAL as `f64`, so the
@@ -202,16 +202,16 @@ Input: raw `Dispense` events (OPD + IPD) + the operator-configured
 **current-medication list** (`current_med_codes`, from the settings screen).
 Output: `MedicationItem`s.
 
-1. **Dedup by `icode`** — all visits for the same drug merge into one item.
-2. **Derived days supply** — `qty / (dose_per_admin × frequency_per_day)`,
-   rounded up; `None` when the sig is missing. Display-only — it no longer
+1. **Dedup by `icode`** - all visits for the same drug merge into one item.
+2. **Derived days supply** - `qty / (dose_per_admin × frequency_per_day)`,
+   rounded up; `None` when the sig is missing. Display-only - it no longer
    drives the active/lapsed verdict.
-3. **Active/lapsed verdict — operator-configured, not inferred.** A drug
+3. **Active/lapsed verdict - operator-configured, not inferred.** A drug
    whose `icode` is on the current-medication list is `active` no matter
    when it was last dispensed; every other dispensed drug is `lapsed`
    (stopped). The list is curated in settings (search `drugitems`), stored
    encrypted with the site config. An empty list marks everything lapsed.
-4. **Sort** — most recent dispense first.
+4. **Sort** - most recent dispense first.
 
 ### 4.4 Dates (Buddhist era, auto-detected)
 
@@ -248,7 +248,7 @@ and operator preferences are versioned/backed up independently:
 
 Rules:
 
-- **Credentials never appear in plaintext** — not in `connection.json`,
+- **Credentials never appear in plaintext** - not in `connection.json`,
   logs, or error messages. A missing `connection.json` maps to
   "ยังไม่ได้ตั้งค่า" (NotConfigured) in the UI.
 - **Settings file defaults**: absent `settings.json` loads as
@@ -273,7 +273,7 @@ medication reconciliation:
 2. Cross-checks allergies against newly prescribed agents (indication
    linking via `ovstdiag`/`iptdiag` ICD-10 is future work).
 3. Notes discrepancies (drug added/stopped/changed) and confirms the final
-   list with the patient — the app provides the evidence, never the
+   list with the patient - the app provides the evidence, never the
    verdict.
 
 ---

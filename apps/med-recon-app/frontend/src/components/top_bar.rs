@@ -1,4 +1,4 @@
-//! Top bar — 44px header: brand, live connection status, settings button.
+//! Top bar - 44px header: brand, live connection status, settings button.
 
 use leptos::prelude::*;
 

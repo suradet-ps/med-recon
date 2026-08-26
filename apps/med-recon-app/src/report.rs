@@ -6,12 +6,12 @@
 //! several and must not be presented as a complete or verified list.
 //!
 //! Every user-visible string comes from [`ReportLabels`], resolved by the
-//! frontend as fixed Thai — this module hard-codes no display text.
+//! frontend as fixed Thai - this module hard-codes no display text.
 
 use chrono::Datelike;
 use med_recon_core::{MedicationItem, MedicationStatus, PatientHistory};
 
-/// User-visible strings for the report — fixed Thai, resolved by the
+/// User-visible strings for the report - fixed Thai, resolved by the
 /// frontend (the UI is Thai-only).
 #[derive(Debug, Clone, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -32,7 +32,7 @@ pub struct ReportLabels {
     pub section_patient: String,
     /// Allergy section heading template with `{n}`.
     pub section_allergy: String,
-    /// Active-medications section heading template with `{n}` — same token
+    /// Active-medications section heading template with `{n}` - same token
     /// as the UI canvas so the wording stays identical everywhere.
     pub section_active: String,
     /// Lapsed-medications section heading template with `{n}`.
@@ -46,7 +46,7 @@ pub struct ReportLabels {
     pub col_visit: String,
     /// Medication meta line labels.
     pub last_dispensed: String,
-    /// Template with `{n}` — e.g. `dispense {n} ครั้ง`.
+    /// Template with `{n}` - e.g. `dispense {n} ครั้ง`.
     pub dispenses: String,
     pub total: String,
     /// Days-supply chip template with `{n}`.
@@ -115,7 +115,7 @@ pub fn build_report(history: &PatientHistory, site_name: &str, labels: &ReportLa
             let detail = if parts.is_empty() {
                 String::new()
             } else {
-                format!("<span class=\"muted\"> — {}</span>", parts.join(" · "))
+                format!("<span class=\"muted\"> - {}</span>", parts.join(" · "))
             };
             format!(
                 "<li class=\"allergy\"><strong>{}</strong>{detail}</li>",
@@ -127,7 +127,7 @@ pub fn build_report(history: &PatientHistory, site_name: &str, labels: &ReportLa
 
     let meds_html = |items: &[&MedicationItem]| -> String {
         if items.is_empty() {
-            return "<p class=\"muted\">—</p>".to_string();
+            return "<p class=\"muted\">-</p>".to_string();
         }
         items
             .iter()
@@ -283,7 +283,7 @@ pub fn build_report(history: &PatientHistory, site_name: &str, labels: &ReportLa
   <main>
     <section>
       <h2>{section_patient}</h2>
-      <p style="margin:0">{name} — HN <strong>{hn}</strong>{cid}</p>
+      <p style="margin:0">{name} - HN <strong>{hn}</strong>{cid}</p>
     </section>
     {warnings_html}
     <section>
@@ -329,7 +329,7 @@ pub fn build_report(history: &PatientHistory, site_name: &str, labels: &ReportLa
         cid = patient
             .cid
             .as_deref()
-            .map(|c| format!(" — CID {}", escape_html(c)))
+            .map(|c| format!(" - CID {}", escape_html(c)))
             .unwrap_or_default(),
         warnings_html = warnings_html,
         section_allergy = escape_html(&fill(
@@ -337,7 +337,7 @@ pub fn build_report(history: &PatientHistory, site_name: &str, labels: &ReportLa
             &[("n", &history.allergies.len().to_string())],
         )),
         allergies = if allergies.is_empty() {
-            "<p class=\"muted\">—</p>".to_string()
+            "<p class=\"muted\">-</p>".to_string()
         } else {
             allergies
         },
@@ -360,7 +360,7 @@ pub fn build_report(history: &PatientHistory, site_name: &str, labels: &ReportLa
         col_dept = escape_html(&labels.col_dept),
         col_visit = escape_html(&labels.col_visit),
         visits = if visits.is_empty() {
-            "<tr><td colspan=\"4\" class=\"muted\">—</td></tr>".to_string()
+            "<tr><td colspan=\"4\" class=\"muted\">-</td></tr>".to_string()
         } else {
             visits
         },
@@ -394,11 +394,11 @@ mod tests {
     use super::*;
     use med_recon_core::{AllergyRecord, Dispense, EncounterSource, PatientSummary, VisitSummary};
 
-    /// Thai labels for tests — mirrors the frontend's fixed report labels.
+    /// Thai labels for tests - mirrors the frontend's fixed report labels.
     fn th_labels() -> ReportLabels {
         ReportLabels {
             html_lang: "th".into(),
-            heading: "ประวัติยาและการใช้ยา — Med Recon".into(),
+            heading: "ประวัติยาและการใช้ยา - Med Recon".into(),
             generated: "สร้างเมื่อ {date}".into(),
             site_default: "สถานบริการ".into(),
             title: "ประวัติยา {name} ({hn})".into(),

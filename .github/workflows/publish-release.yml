@@ -94,7 +94,7 @@ jobs:
                    tar -xzf "$ARCHIVE" -C "$HOME/.cargo/bin"
                  fi \
               && break
-            echo "trunk download failed (attempt $attempt/4) — retrying in 10s"
+            echo "trunk download failed (attempt $attempt/4) - retrying in 10s"
             sleep 10
           done
           if [ "$RUNNER_OS" = "Windows" ]; then

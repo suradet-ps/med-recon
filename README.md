@@ -10,7 +10,7 @@ Med Recon is a **read-only** desktop application that answers inter-hospital
 inquiries about a patient's medication history. Search by **name, HN, or CID**
 to see:
 
-- the **Best Possible Medication History (BPMH)** aggregated across visits —
+- the **Best Possible Medication History (BPMH)** aggregated across visits -
   deduplicated by drug, with derived days-supply and an **active / lapsed**
   inference per item
 - **allergy / adverse drug reaction** records
@@ -39,7 +39,7 @@ Tauri 2 (shell) ── Leptos 0.8 CSR (WASM UI)
   non-secret site settings (site name, history window, current-medication
   list) live in a separate plain `settings.json`.
 - **PHI discipline.** HN/CID are redacted in logs; names are never logged.
-  The UI always shows the BPMH disclaimer — dispensing-derived data is one
+  The UI always shows the BPMH disclaimer - dispensing-derived data is one
   source among several, not a verified medication list.
 - **Read-only by construction.** See `crates/med-recon-hosxp/src/readonly.rs`.
 
@@ -58,7 +58,7 @@ The UI is Thai-only (ภาษาไทย).
 
 - Rust **1.85+** (edition 2024) with the `wasm32-unknown-unknown` target
   (added automatically via `rust-toolchain.toml`)
-- [Trunk](https://trunkrs.dev) — `cargo install trunk` (frontend builds to WASM)
+- [Trunk](https://trunkrs.dev) - `cargo install trunk` (frontend builds to WASM)
 - Tauri 2 system dependencies for your platform
   (see [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/))
 - A HOSxP MySQL/MariaDB database (a read-only account is recommended)
@@ -94,25 +94,25 @@ cargo test -p med-recon-core -p med-recon-hosxp -p med-recon-config -p med-recon
 > built by `cargo test` on the host. It is verified by the CI's `wasm-frontend`
 > and `wasm-tests` jobs (Trunk build + `wasm32` clippy/test).
 
-- `AGENTS.md` — project conventions + the confirmed HOSxP schema reference
-- `docs/AGENTS-RUST.md` — Rust style/lint rules
-- `docs/DESIGN.md` — product scope, UX flows, design system, and BPMH data-model rationale
-- `crates/med-recon-core` — BPMH aggregation, days-supply, active/lapsed inference
-- `crates/med-recon-hosxp` — SQL statements (all `SELECT` only) and row mapping
+- `AGENTS.md` - project conventions + the confirmed HOSxP schema reference
+- `docs/AGENTS-RUST.md` - Rust style/lint rules
+- `docs/DESIGN.md` - product scope, UX flows, design system, and BPMH data-model rationale
+- `crates/med-recon-core` - BPMH aggregation, days-supply, active/lapsed inference
+- `crates/med-recon-hosxp` - SQL statements (all `SELECT` only) and row mapping
 
 ## Site-specific configuration
 
 HOSxP sites differ. Before relying on any of these, verify against your live
 schema (see the open items in `AGENTS.md`):
 
-- **Date era** — auto-detected per value (stored year ≥ 2500 ⇒ พ.ศ., converted
+- **Date era** - auto-detected per value (stored year ≥ 2500 ⇒ พ.ศ., converted
   to ค.ศ.); no setting needed, mixed-era sites are handled.
-- **Sig (directions-for-use) lookup** — read from the `drugusage`/`sp_use`
+- **Sig (directions-for-use) lookup** - read from the `drugusage`/`sp_use`
   lookup tables via `opitemrece`; missing tables degrade to a warning.
-- **Current medications (ยาที่ใช้อยู่)** — the BPMH active/lapsed verdict is
+- **Current medications (ยาที่ใช้อยู่)** - the BPMH active/lapsed verdict is
   operator-configured: curate a `drugitems` list in Settings; only listed
   drugs show as active, regardless of dispense recency.
-- **`tmt_tp_code` / `tmt_gp_code`** — TMT mapping may be empty on some sites;
+- **`tmt_tp_code` / `tmt_gp_code`** - TMT mapping may be empty on some sites;
   cross-hospital drug matching should not assume it is populated.
 
 ## Contributing
@@ -125,7 +125,7 @@ Contributions are welcome under the MIT OR Apache-2.0 license.
   `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test`.
 - The Leptos frontend (`apps/med-recon-app/frontend`) is a wasm32 crate built with
   Trunk; it is verified on CI, not via `cargo test --workspace` on the host.
-- All HOSxP access is **read-only** — never add `INSERT`/`UPDATE`/`DELETE`/DDL.
+- All HOSxP access is **read-only** - never add `INSERT`/`UPDATE`/`DELETE`/DDL.
 
 ## License
 

@@ -87,7 +87,7 @@ jobs:
               && tar -xzf trunk.tar.gz \
               && sudo mv trunk /usr/local/bin/ \
               && break
-            echo "trunk download failed (attempt $attempt/4) — retrying in 10s"
+            echo "trunk download failed (attempt $attempt/4) - retrying in 10s"
             sleep 10
           done
           test -x /usr/local/bin/trunk
@@ -96,11 +96,11 @@ jobs:
         working-directory: apps/med-recon-app
         run: |
           # trunk downloads the matching wasm-bindgen CLI from GitHub
-          # releases, which occasionally flakes mid-connection — retry the
+          # releases, which occasionally flakes mid-connection - retry the
           # whole build (cached artifacts make retries cheap).
           for attempt in 1 2 3 4; do
             trunk build frontend/index.html --release && exit 0
-            echo "trunk build failed (attempt $attempt/4) — retrying in 10s"
+            echo "trunk build failed (attempt $attempt/4) - retrying in 10s"
             sleep 10
           done
           exit 1
@@ -125,7 +125,7 @@ jobs:
 
       - name: Install wasm-bindgen-cli (matches Cargo.lock)
         # The test runner comes from crates.io (more reliable than the
-        # GitHub release downloads trunk/wasm-pack use — those flake, see
+        # GitHub release downloads trunk/wasm-pack use - those flake, see
         # the retry loops above). Version must match Cargo.lock exactly.
         run: cargo install wasm-bindgen-cli --version 0.2.127 --locked
 

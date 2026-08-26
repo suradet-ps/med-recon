@@ -1,7 +1,7 @@
 //! Lucide-style SVG icon components.
 //!
 //! Stroke-based icons (24×24 viewBox, `currentColor`, 2px stroke, round
-//! caps) — render crisply at any size and inherit their color from the
+//! caps) - render crisply at any size and inherit their color from the
 //! surrounding text. Icons are decorative: `aria-hidden` and never carry
 //! text alternatives; nearby text always explains the state.
 
@@ -32,21 +32,21 @@ macro_rules! icon {
 }
 
 icon!(
-    /// Magnifying glass — search actions.
+    /// Magnifying glass - search actions.
     IconSearch,
     <circle cx="11" cy="11" r="8" />
     <path d="m21 21-4.3-4.3" />
 );
 
 icon!(
-    /// Gear — settings.
+    /// Gear - settings.
     IconSettings,
     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
     <circle cx="12" cy="12" r="3" />
 );
 
 icon!(
-    /// Plug — test connection.
+    /// Plug - test connection.
     IconPlug,
     <path d="M12 22v-5" />
     <path d="M9 8V2" />
@@ -63,14 +63,14 @@ icon!(
 );
 
 icon!(
-    /// X — close.
+    /// X - close.
     IconX,
     <path d="M18 6 6 18" />
     <path d="m6 6 12 12" />
 );
 
 icon!(
-    /// Printer — export report.
+    /// Printer - export report.
     IconPrinter,
     <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
     <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" />
@@ -78,14 +78,14 @@ icon!(
 );
 
 icon!(
-    /// Camera — capture a screenshot of the current screen.
+    /// Camera - capture a screenshot of the current screen.
     IconCamera,
     <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
     <circle cx="12" cy="13" r="3" />
 );
 
 icon!(
-    /// Alert triangle — warnings.
+    /// Alert triangle - warnings.
     IconAlert,
     <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
     <path d="M12 9v4" />
@@ -93,21 +93,21 @@ icon!(
 );
 
 icon!(
-    /// User — patient.
+    /// User - patient.
     IconUser,
     <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
     <circle cx="12" cy="7" r="4" />
 );
 
 icon!(
-    /// Check-circle — positive state (active medication).
+    /// Check-circle - positive state (active medication).
     IconCheckCircle,
     <circle cx="12" cy="12" r="10" />
     <path d="m9 12 2 2 4-4" />
 );
 
 icon!(
-    /// X-circle — negative state (lapsed / allergy).
+    /// X-circle - negative state (lapsed / allergy).
     IconXCircle,
     <circle cx="12" cy="12" r="10" />
     <path d="m15 9-6 6" />
@@ -115,13 +115,13 @@ icon!(
 );
 
 icon!(
-    /// Chevron — collapsible section toggle.
+    /// Chevron - collapsible section toggle.
     IconChevron,
     <path d="m9 18 6-6-6-6" />
 );
 
 icon!(
-    /// Clipboard — screening (CC/PE) records.
+    /// Clipboard - screening (CC/PE) records.
     IconClipboard,
     <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
@@ -131,7 +131,7 @@ icon!(
     <path d="M8 16h.01" />
 );
 
-/// Brand mark — a faithful miniature of `icon-master.svg`: warm-yellow
+/// Brand mark - a faithful miniature of `icon-master.svg`: warm-yellow
 /// disc, angled white blister board with four light-green pockets, and the
 /// reconciliation badge (white disc + medium-green cross) overlapping the
 /// bottom-right pocket. Colors follow the app's design tokens via CSS

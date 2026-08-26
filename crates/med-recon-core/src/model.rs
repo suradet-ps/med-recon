@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 /// PHI: handle with care. Never log this struct; use [`crate::redact`] first.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PatientSummary {
-    /// Hospital number — the cross-visit join key.
+    /// Hospital number - the cross-visit join key.
     pub hn: String,
     /// National ID, if present in the source system.
     pub cid: Option<String>,
@@ -85,7 +85,7 @@ pub struct Dispense {
     /// Sig / directions for use, if available.
     pub sig: Option<Sig>,
     /// Next appointment date for this visit (`oapp.nextdate`), if any.
-    /// OPD visits only — IPD rows carry an admission number and have no
+    /// OPD visits only - IPD rows carry an admission number and have no
     /// direct `oapp` row.
     pub appointment: Option<NaiveDate>,
 }
@@ -105,7 +105,7 @@ pub enum MedicationStatus {
 /// All dispensing events sharing an `icode` are merged into a single item.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MedicationItem {
-    /// Drug master code — the dedup key.
+    /// Drug master code - the dedup key.
     pub icode: String,
     /// Display name of the drug.
     pub drug_name: String,
@@ -126,7 +126,7 @@ pub struct MedicationItem {
     pub visit_count: u32,
     /// Sources this drug was seen in.
     pub sources: Vec<EncounterSource>,
-    /// Source of the most recent dispense event — the row-level anchor:
+    /// Source of the most recent dispense event - the row-level anchor:
     /// date/qty/sig all come from the latest event, so the provenance badge
     /// follows the same event.
     pub last_source: EncounterSource,
@@ -146,7 +146,7 @@ pub struct MedicationItem {
 /// One allergy / adverse drug reaction record.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AllergyRecord {
-    /// Agent — free-text or drug code, depending on site configuration.
+    /// Agent - free-text or drug code, depending on site configuration.
     pub agent: String,
     /// Reported symptom(s).
     pub symptom: Option<String>,
@@ -171,7 +171,7 @@ pub struct VisitSummary {
     pub department: Option<String>,
 }
 
-/// OPD screening record (`opdscreen`) — chief complaint and physical exam
+/// OPD screening record (`opdscreen`) - chief complaint and physical exam
 /// text, keyed by the visit id (`vn`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OpdScreenRecord {
@@ -199,7 +199,7 @@ pub struct PatientHistory {
     /// OPD screening records (CC/PE), most recent first.
     pub screen_records: Vec<OpdScreenRecord>,
     /// Past medical history (`opdscreen.pmh`), free text. When several
-    /// records exist, the latest `vstdate` wins — cumulative history, so it
+    /// records exist, the latest `vstdate` wins - cumulative history, so it
     /// is **not** bounded by the history window.
     pub pmh: Option<String>,
     /// Data-completeness warnings (e.g. a HOSxP table missing on this site,

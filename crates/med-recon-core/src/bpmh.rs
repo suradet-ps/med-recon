@@ -8,7 +8,7 @@
 //! is curated by the pharmacist/site staff (set in the app's settings), not
 //! inferred from dispensing recency.
 //!
-//! This is one source among several in a real BPMH workflow — the UI must
+//! This is one source among several in a real BPMH workflow - the UI must
 //! never present the output as a complete or verified medication list.
 
 use std::collections::{BTreeMap, HashSet};
@@ -195,7 +195,7 @@ mod tests {
                 10.0,
                 "vn3",
                 EncounterSource::Opd,
-                date(2020, 1, 1), // long ago — still active if configured
+                date(2020, 1, 1), // long ago - still active if configured
             ),
         ];
         let items = aggregate_medications(&dispenses, date(2026, 4, 1), &codes(&["A1", "C3"]));

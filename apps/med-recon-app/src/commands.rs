@@ -1,8 +1,8 @@
 //! Tauri command adapters.
 //!
 //! Errors cross the IPC as a typed [`CommandError`] (kind + Thai message)
-//! so the frontend can decide presentation from the kind — e.g. raise the
-//! connection banner — instead of matching on message text. Crates stay
+//! so the frontend can decide presentation from the kind - e.g. raise the
+//! connection banner - instead of matching on message text. Crates stay
 //! English and typed; this layer is the only place where errors are
 //! translated for the UI.
 
@@ -46,7 +46,7 @@ impl med_recon_config::SecretVault for EphemeralVault {
     }
 }
 
-/// Failure class of a command — the frontend switches on this for
+/// Failure class of a command - the frontend switches on this for
 /// presentation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -55,14 +55,14 @@ pub enum CommandErrorKind {
     NotConfigured,
     /// HOSxP could not be reached.
     Connection,
-    /// The read-only guard rejected a statement — an internal error.
+    /// The read-only guard rejected a statement - an internal error.
     Guard,
     /// The statement failed server-side.
     Query,
 }
 
 /// User-facing command error: a machine-readable kind plus the Thai message
-/// shown verbatim (PII-free — parameter values never appear).
+/// shown verbatim (PII-free - parameter values never appear).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CommandError {
@@ -180,7 +180,7 @@ fn configured_med_codes(state: &AppState) -> HashSet<String> {
         .unwrap_or_default()
 }
 
-/// Drug master entry as returned to the settings UI (never PHI — drug
+/// Drug master entry as returned to the settings UI (never PHI - drug
 /// metadata only).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -241,12 +241,12 @@ pub async fn get_current_meds(state: State<'_, AppState>) -> Result<Vec<DrugInfo
     Ok(results.into_iter().map(DrugInfo::from).collect())
 }
 
-/// Live HOSxP reachability, polled by the frontend — drives the top-bar
+/// Live HOSxP reachability, polled by the frontend - drives the top-bar
 /// status dot.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ConnectionHealth {
-    /// No stored settings — the settings dialog is the flow.
+    /// No stored settings - the settings dialog is the flow.
     Unconfigured,
     /// A ping succeeded recently.
     Connected,
@@ -278,7 +278,7 @@ async fn connect_client(
         Ok(Err(e)) => Err(map_repo_error(e, action)),
         Err(_) => Err(CommandError::new(
             CommandErrorKind::Connection,
-            format!("{action}หมดเวลา — ตรวจสอบ Host/Port และเครือข่าย"),
+            format!("{action}หมดเวลา - ตรวจสอบ Host/Port และเครือข่าย"),
         )),
     }
 }
@@ -307,7 +307,7 @@ fn stored_connection(state: &AppState) -> Result<ConnectionConfig, CommandError>
 /// Resolve a usable HOSxP client, connecting from the saved config if
 /// needed. `action` labels the user-facing error.
 ///
-/// The cache lock is only held for the short cache lookup/store — the slow
+/// The cache lock is only held for the short cache lookup/store - the slow
 /// work (keychain decrypt, TCP connect) happens with no lock held, so a
 /// slow/failed connect can never block other commands that need the lock.
 async fn client(state: &AppState, action: &'static str) -> Result<HosxpClient, CommandError> {
@@ -443,7 +443,7 @@ pub async fn save_connection(
     let client = connect_client(hosxp_config, "บันทึกการตั้งค่า").await?;
 
     // Encrypting for disk touches the OS keychain, which can stall on a
-    // permission dialog with unsigned dev binaries — cap it as well.
+    // permission dialog with unsigned dev binaries - cap it as well.
     let saved = tokio::time::timeout(COMMAND_TIMEOUT, async {
         state.store.save_connection(&connection)
     })
@@ -461,7 +461,7 @@ pub async fn save_connection(
         Err(_) => {
             return Err(CommandError::new(
                 CommandErrorKind::Query,
-                "บันทึกการตั้งค่าไม่สำเร็จ — การเข้าถึง Keychain ใช้เวลานานเกินไป",
+                "บันทึกการตั้งค่าไม่สำเร็จ - การเข้าถึง Keychain ใช้เวลานานเกินไป",
             ));
         }
     }
@@ -483,7 +483,7 @@ pub async fn save_connection(
 }
 
 /// Non-secret summary of the saved connection (the password is never
-/// returned — it cannot be restored into the form).
+/// returned - it cannot be restored into the form).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConnectionInfo {
@@ -497,7 +497,7 @@ pub struct ConnectionInfo {
     pub user: String,
 }
 
-/// The saved HOSxP connection, without the password — used to pre-fill the
+/// The saved HOSxP connection, without the password - used to pre-fill the
 /// settings form so re-saving does not require retyping everything.
 #[tauri::command]
 pub async fn get_connection(state: State<'_, AppState>) -> Result<ConnectionInfo, CommandError> {
@@ -511,7 +511,7 @@ pub async fn get_connection(state: State<'_, AppState>) -> Result<ConnectionInfo
 }
 
 /// The non-secret site settings (site name, history window, current
-/// medication list) — independent of the connection config.
+/// medication list) - independent of the connection config.
 #[tauri::command]
 pub async fn get_site_settings(state: State<'_, AppState>) -> Result<SiteSettings, CommandError> {
     state.store.load_settings().map_err(|e| {
@@ -573,7 +573,7 @@ pub async fn test_connection(
         Err(_) => {
             return Err(CommandError::new(
                 CommandErrorKind::Connection,
-                "ทดสอบการเชื่อมต่อหมดเวลา — ตรวจสอบ Host/Port และเครือข่าย",
+                "ทดสอบการเชื่อมต่อหมดเวลา - ตรวจสอบ Host/Port และเครือข่าย",
             ));
         }
     }
@@ -716,13 +716,13 @@ pub async fn export_report(
 /// `devicePixelRatio × SCREENSHOT_SUPERSAMPLE`, clamped to 4× the CSS
 /// resolution, so the output stays sharp even when viewed at zoom. The
 /// surface bitmap is finite-resolution, so beyond `devicePixelRatio` this
-/// mostly enlarges the file rather than adding detail — raise the factor
+/// mostly enlarges the file rather than adding detail - raise the factor
 /// only if the extra pixel dimensions are actually needed.
 #[cfg(target_os = "windows")]
 const SCREENSHOT_SUPERSAMPLE: f64 = 2.0;
 
 /// Capture the current webview content as a PNG and save it through a
-/// native dialog — the "screenshot" sibling of [`export_report`].
+/// native dialog - the "screenshot" sibling of [`export_report`].
 ///
 /// Windows re-rasterizes the page via the DevTools Protocol
 /// (`Page.captureScreenshot` with `scale = devicePixelRatio`) instead of

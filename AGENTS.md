@@ -10,14 +10,14 @@ and allergy history.
 For product scope, UX flows, data model rationale, and reconciliation logic,
 see **docs/DESIGN.md**. This file covers agent-facing conventions: stack, build
 commands, coding rules, and the HOSxP schema reference needed to write
-correct queries. Do not duplicate docs/DESIGN.md content here — link to it.
+correct queries. Do not duplicate docs/DESIGN.md content here - link to it.
 
 ## Tech Stack
 
 - **Shell:** Tauri 2
 - **Frontend:** Leptos 0.8, CSR (client-side rendered, compiled to WASM)
 - **Database access:** MySQL/MariaDB client (HOSxP), read-only connection only
-- **Credential/config encryption:** `encryptman` (AES-256-GCM + HKDF) — all
+- **Credential/config encryption:** `encryptman` (AES-256-GCM + HKDF) - all
   stored DB connection strings and credentials must go through
   `encryptman` (master key via `encryptman-keyring`). Never store
   plaintext credentials on disk, in logs, or in error messages. Config is
@@ -37,10 +37,10 @@ correct queries. Do not duplicate docs/DESIGN.md content here — link to it.
   PHI. Do not log raw PHI. Redact HN/CID in logs and crash reports.
 - **Best Possible Medication History (BPMH) framing.** Dispensing-derived
   history from HOSxP is one source among several (see docs/DESIGN.md). The UI
-  must never present it as a complete or verified medication list —
+  must never present it as a complete or verified medication list -
   always show data-recency and source-type indicators.
 - **Buddhist Era dates.** HOSxP date columns may be stored in either
-  พ.ศ. or ค.ศ. depending on the site — or even mixed. There is **no
+  พ.ศ. or ค.ศ. depending on the site - or even mixed. There is **no
   era setting**: every date value read from HOSxP is normalized to ค.ศ.
   individually, using the year (≥ 2500 ⇒ พ.ศ.) to detect its era
   (`med_recon_core::normalize_date`).
@@ -49,13 +49,13 @@ correct queries. Do not duplicate docs/DESIGN.md content here — link to it.
 
 Use this as the source of truth for table/column names when writing
 queries. If a query needs a table/column not listed here, verify against
-the live schema before writing code — do not guess HOSxP field names.
+the live schema before writing code - do not guess HOSxP field names.
 
 ### Patient Identity
 | Table | Key fields | Notes |
 |---|---|---|
 | `patient` | `hn` (PK), `cid`, `pname`, `fname`, `lname`, `birthday` | `hn` is the cross-visit join key. Check `hn_change_log` for HN merge/mapping history before treating `hn` as immutable. |
-| `patient_image` | `hn` (PK), `image` (BLOB) | Patient photo, JPEG/PNG binary. Confirmed at the target site. Decorative identity data: if the table/column is missing (MySQL 1146/1054) the UI degrades silently to a placeholder avatar — never a load failure. |
+| `patient_image` | `hn` (PK), `image` (BLOB) | Patient photo, JPEG/PNG binary. Confirmed at the target site. Decorative identity data: if the table/column is missing (MySQL 1146/1054) the UI degrades silently to a placeholder avatar - never a load failure. |
 
 ### Visits / Encounters
 | Table | Key fields | Notes |
@@ -73,7 +73,7 @@ the live schema before writing code — do not guess HOSxP field names.
 
 **Days supply is not a stored column.** Must be derived as
 `qty / (dose × frequency per day)`, or sourced from `sp_use` for
-continuous/injectable regimens. It is display-only metadata — the
+continuous/injectable regimens. It is display-only metadata - the
 active/lapsed BPMH verdict is **operator-configured**: the settings
 screen curates a current-medication list (`drugitems` icodes, stored
 encrypted with the site config) and only drugs on it are shown as
@@ -82,12 +82,12 @@ encrypted with the site config) and only drugs on it are shown as
 ### Drug Master
 | Table | Key fields | Notes |
 |---|---|---|
-| `drugitems` | `icode` (PK), `name`,`strength`,`units`, `therapeutic`, `drugaccount` | `snomed_code`, `tmt_tp_code`, `tmt_gp_code` may carry TMT mapping, depending on HOSxP version and whether the site submits 16-แฟ้ม standard data. Do not assume these are populated — check per-site before relying on TMT for cross-hospital matching. |
+| `drugitems` | `icode` (PK), `name`,`strength`,`units`, `therapeutic`, `drugaccount` | `snomed_code`, `tmt_tp_code`, `tmt_gp_code` may carry TMT mapping, depending on HOSxP version and whether the site submits 16-แฟ้ม standard data. Do not assume these are populated - check per-site before relying on TMT for cross-hospital matching. |
 
 ### Allergy / ADR
 | Table | Key fields | Notes |
 |---|---|---|
-| `opd_allergy` | `hn`, `agent`, `symptom`, `reporter`, `report_date`, `note` | `agent` may be free-text or `icode`-linked depending on site configuration — do not assume structured data; plan for text cleaning/normalization. Confirmed at the target site: `report_date` (date) and `note` (text) columns exist; `allergy_group_id` is **not loaded** (site-dependent meaning, not displayed). No `severy_id` column. |
+| `opd_allergy` | `hn`, `agent`, `symptom`, `reporter`, `report_date`, `note` | `agent` may be free-text or `icode`-linked depending on site configuration - do not assume structured data; plan for text cleaning/normalization. Confirmed at the target site: `report_date` (date) and `note` (text) columns exist; `allergy_group_id` is **not loaded** (site-dependent meaning, not displayed). No `severy_id` column. |
 
 ### Diagnosis (out of MVP scope, for future indication-linking)
 | Table | Key fields | Notes |
@@ -98,7 +98,7 @@ encrypted with the site config) and only drugs on it are shown as
 ## Development Workflow
 
 - Confirm schema assumptions against a live read-only connection before
-  writing a query that touches a new table — this document reflects the
+  writing a query that touches a new table - this document reflects the
   schema as gathered on the date of writing and may drift by site/version.
 - All new query modules go through `encryptman`-backed connection config;
   never hardcode connection strings.

@@ -1,4 +1,4 @@
-//! Main canvas — the complete medication history for the selected patient:
+//! Main canvas - the complete medication history for the selected patient:
 //! data-completeness warnings, allergy bands, BPMH active / lapsed
 //! sections, and the CC/PE screening table. The patient identity lives in
 //! the sidebar card, so this panel keeps its full vertical space for data.
@@ -31,7 +31,7 @@ pub fn HistoryCanvas(state: AppState) -> impl IntoView {
             let override_val = state.history_days_override.get_untracked();
             let hn = patient.hn.clone();
             // Keep the previously loaded history on screen (dimmed via
-            // history-stack--loading) instead of blanking to a spinner — the
+            // history-stack--loading) instead of blanking to a spinner - the
             // top load bar + active-segment spinner carry the loading state.
             state.history_error.set(None);
             state.history_loading.set(true);
@@ -322,7 +322,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
 
 /// Render a medication list as a table:
 /// ลำดับ / วันที่จ่าย / ชื่อยา + ความแรง / วิธีใช้ / จำนวนที่จ่าย (ครั้งล่าสุด) /
-/// วันนัด (`oapp.nextdate` ของ visit ที่จ่ายครั้งล่าสุด, "—" ถ้าไม่มี)
+/// วันนัด (`oapp.nextdate` ของ visit ที่จ่ายครั้งล่าสุด, "-" ถ้าไม่มี)
 /// Used identically for both the active and lapsed sections.
 fn med_table(items: &[MedicationItem]) -> impl IntoView {
     view! {
@@ -365,7 +365,7 @@ fn med_table(items: &[MedicationItem]) -> impl IntoView {
                         let no = (i + 1).to_string();
                         let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), m.last_dispense.month(), m.last_dispense.year());
                         let drug = drug_label(m);
-                        // Repeat-dispensing count — how many visits this
+                        // Repeat-dispensing count - how many visits this
                         // drug was dispensed on. Frequent + recent dispensing
                         // is the BPMH signal for an ongoing medication, so the
                         // count sits right after the drug name. Single
@@ -376,7 +376,7 @@ fn med_table(items: &[MedicationItem]) -> impl IntoView {
                                 format!("จ่าย {} ครั้ง", m.visit_count),
                             )
                         });
-                        // Provenance pill — only when the most recent dispense
+                        // Provenance pill - only when the most recent dispense
                         // was IPD: OPD is the default and stays silent so the
                         // table stays clean.
                         let badge = match m.last_source {
@@ -404,14 +404,14 @@ fn med_table(items: &[MedicationItem]) -> impl IntoView {
                                     {badge.map(|b| view! { <span class="badge">{b}</span> })}
                                 </td>
                                 <td class="med-table__sig">
-                                    {if sig.is_empty() { "—".to_string() } else { sig }}
+                                    {if sig.is_empty() { "-".to_string() } else { sig }}
                                 </td>
                                 <td class="med-table__qty">
                                     {qty}
                                     {if units.is_empty() { String::new() } else { format!(" {units}") }}
                                 </td>
                                 <td class="med-table__appt">
-                                    {if appt.is_empty() { "—".to_string() } else { appt }}
+                                    {if appt.is_empty() { "-".to_string() } else { appt }}
                                 </td>
                             </tr>
                         }
@@ -423,7 +423,7 @@ fn med_table(items: &[MedicationItem]) -> impl IntoView {
 }
 
 /// Render screening records (CC/PE) as a table styled like `med_table`:
-/// ลำดับ / วันที่ / CC / PE, newest visit first, "—" for blanks.
+/// ลำดับ / วันที่ / CC / PE, newest visit first, "-" for blanks.
 fn screen_table(items: &[OpdScreenRecord]) -> impl IntoView {
     view! {
         <table class="med-table med-table--screen">
@@ -443,8 +443,8 @@ fn screen_table(items: &[OpdScreenRecord]) -> impl IntoView {
                         <tr class="med-table__row">
                             <td class="med-table__no">{no}</td>
                             <td class="med-table__date">{date}</td>
-                            <td class="med-table__sig">{r.cc.clone().unwrap_or_else(|| "—".into())}</td>
-                            <td class="med-table__sig">{r.pe.clone().unwrap_or_else(|| "—".into())}</td>
+                            <td class="med-table__sig">{r.cc.clone().unwrap_or_else(|| "-".into())}</td>
+                            <td class="med-table__sig">{r.pe.clone().unwrap_or_else(|| "-".into())}</td>
                         </tr>
                     }
                 }).collect_view()}

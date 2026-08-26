@@ -3,7 +3,7 @@
 //! Implements the persistence boundary for Med Recon against a HOSxP database:
 //! patient identity search, OPD/IPD dispensing history, allergy records, and
 //! visit history. **Every statement is validated as read-only before
-//! execution** — the code refuses to run anything other than `SELECT`,
+//! execution** - the code refuses to run anything other than `SELECT`,
 //! `SHOW`, `DESCRIBE`, or `EXPLAIN`, regardless of the configured DB user.
 //!
 //! Schema note: table/column names follow the HOSxP schema reference in

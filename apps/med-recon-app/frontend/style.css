@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Med Recon — Two-Panel Desktop Layout (AllerX-style, green medical brand)
+   Med Recon - Two-Panel Desktop Layout (AllerX-style, green medical brand)
    Sidebar (search) + Main Canvas (complete medication history).
    ========================================================================== */
 
@@ -8,16 +8,16 @@
    ========================================================================== */
 
 :root {
-  /* Brand — green family */
+  /* Brand - green family */
   --brand: #00754A;
   --brand-dark: #005C38;
   --brand-soft: #DCF2EA;
 
-  /* Status — connection dot */
+  /* Status - connection dot */
   --status-connected: #43A047;
   --status-disconnected: #C62828;
 
-  /* Verdict — medication state bands */
+  /* Verdict - medication state bands */
   --verdict-found: #E8F5E9;
   --verdict-found-text: #1B5E20;
   --verdict-found-border: #A5D6A7;
@@ -31,7 +31,7 @@
   --verdict-lapsed-text: #3D4042;
   --verdict-lapsed-border: #D6D6D6;
 
-  /* Surface — warm neutral */
+  /* Surface - warm neutral */
   --canvas: #FAFAFA;
   --canvas-raised: #FFFFFF;
   --surface-muted: #F5F5F5;
@@ -76,7 +76,7 @@
 }
 
 /* ==========================================================================
-   Local Fonts — Sarabun (bundled, no CDN dependency)
+   Local Fonts - Sarabun (bundled, no CDN dependency)
    ========================================================================== */
 
 @font-face {
@@ -189,7 +189,7 @@ code, .mono, .code {
 }
 
 /* ==========================================================================
-   Scrollbar — slim, unobtrusive
+   Scrollbar - slim, unobtrusive
    ========================================================================== */
 
 .sidebar::-webkit-scrollbar,
@@ -241,7 +241,7 @@ code, .mono, .code {
 }
 
 /* ==========================================================================
-   Top Bar — 44px header
+   Top Bar - 44px header
    ========================================================================== */
 
 .top-bar {
@@ -385,7 +385,7 @@ code, .mono, .code {
   user-select: none;
 }
 
-/* The tagline embeds the proper-case product name "HOSxP" —
+/* The tagline embeds the proper-case product name "HOSxP" -
    text-transform: uppercase would render it "HOSXP". */
 .sidebar__label--tagline {
   text-transform: none;
@@ -508,7 +508,7 @@ code, .mono, .code {
 }
 
 /* ==========================================================================
-   Patient Card (sidebar — photo, identity, print action)
+   Patient Card (sidebar - photo, identity, print action)
    ========================================================================== */
 
 .sidebar__section--patient {
@@ -578,7 +578,7 @@ code, .mono, .code {
   height: 72px;
   border-radius: 50%;
   object-fit: cover;
-  /* ID-photo faces sit in the upper half — bias the crop upward so the
+  /* ID-photo faces sit in the upper half - bias the crop upward so the
      face stays visible and the shoulders/background get cut instead. */
   object-position: center 25%;
   flex-shrink: 0;
@@ -600,7 +600,7 @@ code, .mono, .code {
   height: 30px;
 }
 
-/* PMH card (sidebar, below the profile card) — free-text past medical
+/* PMH card (sidebar, below the profile card) - free-text past medical
    history, kept multi-line and readable. */
 .pmh-card__text {
   margin: 0;
@@ -1251,7 +1251,7 @@ code, .mono, .code {
 
 .med-table {
   width: 100%;
-  /* Fixed layout + pinned short columns (see below) — every medication
+  /* Fixed layout + pinned short columns (see below) - every medication
      table renders with identical column proportions, no matter which
      section (active / lapsed) or how the row contents differ. */
   table-layout: fixed;
@@ -1286,7 +1286,7 @@ code, .mono, .code {
   background: #FBF9F2;
 }
 
-/* Most recent visit group — the first date group in the (newest-first)
+/* Most recent visit group - the first date group in the (newest-first)
    table. Green tint + left brand accent bar so the latest visit reads as
    the most prominent row block, above the alternating banding. */
 .med-table__row--latest {
@@ -1315,14 +1315,14 @@ code, .mono, .code {
   overflow-wrap: break-word;
 }
 
-/* OPD/IPD provenance pill inside the drug cell — reuse the generic .badge,
+/* OPD/IPD provenance pill inside the drug cell - reuse the generic .badge,
    only spacing differs. OPD-only rows render no pill at all. */
 .med-table__drug .badge {
   margin-left: 6px;
   vertical-align: 1px;
 }
 
-/* Repeat-dispensing count "(N)" after the drug name — frequent dispensing
+/* Repeat-dispensing count "(N)" after the drug name - frequent dispensing
    (plus recency, shown by the latest-visit highlight) is the BPMH signal
    for an ongoing medication. The full "จ่าย N ครั้ง" text sits in the
    title tooltip; the cell keeps just the number. */
@@ -1350,7 +1350,7 @@ code, .mono, .code {
   color: var(--slate);
 }
 
-/* Screening table (CC/PE) — ลำดับ/วันที่ are short and pinned; CC/PE share
+/* Screening table (CC/PE) - ลำดับ/วันที่ are short and pinned; CC/PE share
    the remaining width equally. Long text must wrap inside cells. */
 .med-table--screen {
   table-layout: fixed;

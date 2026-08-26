@@ -1,4 +1,4 @@
-//! Patient search — debounced sidebar input with auto-detected input kind
+//! Patient search - debounced sidebar input with auto-detected input kind
 //! (CID / HN / name) and a result list.
 
 use leptos::prelude::*;
@@ -62,7 +62,7 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
         match kind {
             QueryKind::Cid => "ค้นหาด้วยเลขบัตรประชาชน 13 หลัก",
             QueryKind::Hn => "ค้นหาด้วย HN ของโรงพยาบาล",
-            QueryKind::Name => "ค้นหาด้วยชื่อ — พิมพ์อย่างน้อย 2 ตัวอักษร",
+            QueryKind::Name => "ค้นหาด้วยชื่อ - พิมพ์อย่างน้อย 2 ตัวอักษร",
         }
     };
 
@@ -104,7 +104,7 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
             }
             state.history_loading.set(false);
         });
-        // Photo is decorative — a failure just keeps the placeholder avatar.
+        // Photo is decorative - a failure just keeps the placeholder avatar.
         spawn_local(async move {
             if let Ok(Some(photo)) = api::load_patient_image(&hn_photo).await {
                 state.patient_photo.set(Some(photo));

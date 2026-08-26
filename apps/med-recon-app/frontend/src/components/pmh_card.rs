@@ -1,9 +1,9 @@
-//! Sidebar PMH card — the patient's past medical history
+//! Sidebar PMH card - the patient's past medical history
 //! (`opdscreen.pmh`), rendered as a compact card below the profile card.
 //!
 //! The value is the latest record for the patient (newest `vstdate` wins,
 //! backend-side); it is cumulative history and not bounded by the history
-//! window. Free text, possibly multi-line — shown verbatim.
+//! window. Free text, possibly multi-line - shown verbatim.
 
 use leptos::prelude::*;
 
@@ -15,7 +15,7 @@ pub fn PmhCard(state: AppState) -> impl IntoView {
     view! {
         {move || {
             // Only appear once a patient is picked and the history has
-            // actually loaded — hiding while the load is in flight avoids a
+            // actually loaded - hiding while the load is in flight avoids a
             // misleading flash of "ไม่มีข้อมูล" before the data arrives.
             if state.patient.get().is_none() || state.history_loading.get() {
                 return None;

@@ -1,4 +1,4 @@
-//! Sidebar patient card — the selected patient's photo, identity, and the
+//! Sidebar patient card - the selected patient's photo, identity, and the
 //! "print medication history" action.
 //!
 //! Rendered below the search section after a patient is picked, so the
@@ -19,7 +19,7 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
     let capturing = RwSignal::new(false);
     let capture_msg = RwSignal::new(None::<(bool, String)>);
 
-    // The status messages belong to one patient — reset them whenever the
+    // The status messages belong to one patient - reset them whenever the
     // selection changes so a stale "บันทึกรายงานแล้ว" never lingers.
     Effect::new(move |_| {
         state.patient.get();
@@ -204,7 +204,7 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
 
 /// Whole-years age as of today, computed from a birthday.
 ///
-/// Uses the browser's local date (`js_sys::Date`) — `std::time::SystemTime`
+/// Uses the browser's local date (`js_sys::Date`) - `std::time::SystemTime`
 /// panics under `wasm32`. The date arithmetic lives in [`age_years_on`] so it
 /// stays testable on the native target.
 fn age_years(birthday: NaiveDate) -> i32 {

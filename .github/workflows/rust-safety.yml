@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   # Honest naming (ROADMAP Phase 4, Gap G13): this runs the standard
-  # `-D warnings` lint set, not clippy::pedantic — the name said "Pedantic"
+  # `-D warnings` lint set, not clippy::pedantic - the name said "Pedantic"
   # while the command did not.
   clippy-workspace:
     runs-on: ubuntu-24.04
@@ -59,7 +59,7 @@ jobs:
         with:
           workspaces: ". -> target"
 
-      # med-recon-config/med-recon-core tests use tempfile (real mkdir) — allow
+      # med-recon-config/med-recon-core tests use tempfile (real mkdir) - allow
       # filesystem ops under Miri while still checking for UB.
       - name: Run Miri
         env:

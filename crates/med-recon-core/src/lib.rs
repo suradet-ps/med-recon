@@ -1,4 +1,4 @@
-//! Pure domain layer for Med Recon — no I/O, no database knowledge.
+//! Pure domain layer for Med Recon - no I/O, no database knowledge.
 //!
 //! Contains the Best Possible Medication History (BPMH) model and the
 //! aggregation/inference engine that turns raw dispensing events from HOSxP

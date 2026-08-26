@@ -1,7 +1,7 @@
 //! SQL statements and pure query-building helpers for HOSxP.
 //!
 //! All statements are `SELECT`-only, use positional `?` parameters (binary
-//! protocol — no string interpolation of user input), and follow the schema
+//! protocol - no string interpolation of user input), and follow the schema
 //! reference in AGENTS.md. Every public statement constant is exercised by
 //! the read-only guard before execution in `client.rs`.
 
@@ -28,7 +28,7 @@ FROM patient
 WHERE hn = ?
 LIMIT ?"#;
 
-/// Name search — prefix match first so existing indexes on
+/// Name search - prefix match first so existing indexes on
 /// `fname`/`lname` are used; falls back to [`PATIENT_SEARCH_NAME_CONTAINS`]
 /// when empty.
 ///
@@ -41,7 +41,7 @@ WHERE fname LIKE ?
    OR CONCAT_WS(' ', pname, fname, lname) LIKE ?
 LIMIT ?"#;
 
-/// Name search fallback — contains match used only when the prefix match
+/// Name search fallback - contains match used only when the prefix match
 /// found nothing.
 ///
 /// Parameters: `(pattern, pattern, pattern, limit)`.
@@ -66,7 +66,7 @@ LIMIT 1"#;
 ///
 /// Photos are supplementary identity data: if the table or column is
 /// missing on this site (MySQL 1146/1054) the client degrades silently to
-/// `None` and the UI shows a placeholder avatar — never a load failure.
+/// `None` and the UI shows a placeholder avatar - never a load failure.
 ///
 /// Parameters: `(hn)`.
 pub const PATIENT_IMAGE_SQL: &str = r#"
@@ -93,7 +93,7 @@ WHERE o.hn = ?
   AND (o.an IS NULL OR TRIM(o.an) = '')
 ORDER BY o.vstdate"#;
 
-/// OPD dispensing history without the `strength`/`units` columns — same
+/// OPD dispensing history without the `strength`/`units` columns - same
 /// result shape with `NULL` in their place (MySQL 1054 degradation).
 pub const OPD_DISPENSE_SQL_FALLBACK: &str = r#"
 SELECT o.vn AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
@@ -106,7 +106,7 @@ WHERE o.hn = ?
   AND (o.an IS NULL OR TRIM(o.an) = '')
 ORDER BY o.vstdate"#;
 
-/// IPD dispensing — `opitemrece` rows carrying an admission number instead
+/// IPD dispensing - `opitemrece` rows carrying an admission number instead
 /// of a visit number. All dispensing is stored in `opitemrece`; the OPD/IPD
 /// split is `vn` = OPD vs `an` = IPD.
 ///
@@ -134,7 +134,7 @@ WHERE o.hn = ?
   AND o.an IS NOT NULL AND TRIM(o.an) <> ''
 ORDER BY o.vstdate"#;
 
-/// Sig (directions for use) — `opitemrece.drugusage` / `opitemrece.sp_use`
+/// Sig (directions for use) - `opitemrece.drugusage` / `opitemrece.sp_use`
 /// hold codes resolved through the `drugusage` and `sp_use` lookup tables
 /// (`name1`/`name2`/`name3` each). LEFT JOIN so rows without a code still
 /// come back with empty sig text. Covers both OPD (`vn`) and IPD (`an`)
@@ -151,7 +151,7 @@ LEFT JOIN sp_use s ON s.sp_use = o.sp_use
 WHERE o.hn = ?
   AND o.vstdate >= ?"#;
 
-/// OPD screening records (`opdscreen`) — chief complaint and physical exam
+/// OPD screening records (`opdscreen`) - chief complaint and physical exam
 /// text. Columns confirmed against the target site's live schema.
 ///
 /// Parameters: `(hn, cutoff)`.
@@ -165,7 +165,7 @@ ORDER BY vstdate DESC"#;
 /// Latest past medical history (`opdscreen.pmh`) for one patient.
 ///
 /// PMH is cumulative history, so unlike the other sections there is **no
-/// cutoff** — the most recent record wins regardless of the history window.
+/// cutoff** - the most recent record wins regardless of the history window.
 /// The `pmh` column is site-dependent; if it is missing (MySQL 1054) the
 /// section degrades to empty with a user-visible warning.
 ///
@@ -182,7 +182,7 @@ LIMIT 1"#;
 /// Allergy / ADR records.
 ///
 /// Columns confirmed against the live schema: `report_date` (date),
-/// `note` (text), `reporter` (varchar). `allergy_group_id` is not loaded —
+/// `note` (text), `reporter` (varchar). `allergy_group_id` is not loaded -
 /// its meaning is site-dependent and it is not displayed.
 ///
 /// Parameters: `(hn)`.
@@ -194,7 +194,7 @@ ORDER BY agent"#;
 
 /// Drug master search for the current-medication settings.
 ///
-/// Parameters: `(pattern, pattern, limit)` — case-insensitive LIKE against
+/// Parameters: `(pattern, pattern, limit)` - case-insensitive LIKE against
 /// `icode` and `name`, sorted by name.
 pub const DRUG_SEARCH_SQL: &str = r#"
 SELECT icode, name, strength, units
@@ -238,7 +238,7 @@ ORDER BY regdate"#;
 /// Next-appointment dates from `oapp`, keyed by OPD visit (`vn`).
 ///
 /// A visit may hold several `oapp` rows; the latest planned follow-up
-/// (`nextdate`) wins. `nextdate` may be พ.ศ. — era-normalized per value in
+/// (`nextdate`) wins. `nextdate` may be พ.ศ. - era-normalized per value in
 /// the client.
 ///
 /// Parameters: `(hn, cutoff)`.
@@ -283,7 +283,7 @@ pub fn prefix_pattern(query: &str) -> String {
 /// * `"3/7"` → 3 times per week, approximated as `3/7` per day
 /// * anything else → `None`
 ///
-/// Heuristic, site-dependent — verify against live data before relying on it.
+/// Heuristic, site-dependent - verify against live data before relying on it.
 pub fn parse_frequency(raw: &str, qty_per_dose: Option<f64>) -> Option<(Option<f64>, f64)> {
     let cleaned = raw.trim().to_lowercase();
     if cleaned.is_empty() {

@@ -1,8 +1,8 @@
-//! Settings dialog — two independent sections:
+//! Settings dialog - two independent sections:
 //!
-//! 1. **HOSxP connection** — host/port/database/user/password. Stored
+//! 1. **HOSxP connection** - host/port/database/user/password. Stored
 //!    encrypted (`connection.json`, AES-256-GCM + OS keychain master key).
-//! 2. **Site settings** — site name, history window, and the current
+//! 2. **Site settings** - site name, history window, and the current
 //!    medication list. Stored as plain JSON (`settings.json`).
 //!
 //! Test runs against the typed connection values; verification happens
@@ -55,7 +55,7 @@ fn arm_operation_timeout(
                 busy.set(false);
                 message.set(Some((
                     false,
-                    "การดำเนินการใช้เวลานานเกินไป (เกิน 25 วินาที) — ตรวจสอบ Host/Port/เครือข่าย แล้วลองใหม่"
+                    "การดำเนินการใช้เวลานานเกินไป (เกิน 25 วินาที) - ตรวจสอบ Host/Port/เครือข่าย แล้วลองใหม่"
                         .to_string(),
                 )));
             }
@@ -107,7 +107,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
         }
     });
 
-    /// Zeroizes an operator-typed field before dropping it — plain
+    /// Zeroizes an operator-typed field before dropping it - plain
     /// `String::new()` only frees the buffer, leaving the plaintext bytes
     /// behind for a memory scan.
     fn wipe_field(signal: &RwSignal<String>) {
@@ -495,7 +495,7 @@ pub use crate::state::ConnectionHealth;
 ///
 /// Searches `drugitems` via the backend and edits a locally held selection
 /// (the shared `selected` signal). Persistence happens through the parent
-/// section's save button — this panel only loads and edits.
+/// section's save button - this panel only loads and edits.
 #[component]
 fn CurrentMedsPanel(selected: RwSignal<Vec<DrugInfo>>) -> impl IntoView {
     let query = RwSignal::new(String::new());
@@ -627,7 +627,7 @@ fn CurrentMedsPanel(selected: RwSignal<Vec<DrugInfo>>) -> impl IntoView {
                 {move || {
                     let list = selected.get();
                     if list.is_empty() {
-                        view! { <p class="modal__note">"ยังไม่ได้ตั้งค่ายา — ยาทั้งหมดจะถือว่าหยุดใช้แล้ว"</p> }.into_any()
+                        view! { <p class="modal__note">"ยังไม่ได้ตั้งค่ายา - ยาทั้งหมดจะถือว่าหยุดใช้แล้ว"</p> }.into_any()
                     } else {
                         list.iter().map(|d| {
                             let drug = d.clone();

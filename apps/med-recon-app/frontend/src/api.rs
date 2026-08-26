@@ -1,7 +1,7 @@
-//! Frontend API layer — the only place the webview talks to the Tauri
+//! Frontend API layer - the only place the webview talks to the Tauri
 //! backend.
 //!
-//! No hosts, no credentials, no SQL live here — every call is a thin
+//! No hosts, no credentials, no SQL live here - every call is a thin
 //! `invoke` to a Rust command, which owns all connection concerns.
 //!
 //! Errors cross the IPC as a typed [`ApiError`] (kind + Thai message):
@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::state::ConnectionHealth;
 
-/// Failure class of a backend command — mirrors the Rust
+/// Failure class of a backend command - mirrors the Rust
 /// `CommandErrorKind` (camelCase over the wire).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -22,7 +22,7 @@ pub enum ApiErrorKind {
     NotConfigured,
     /// HOSxP could not be reached.
     Connection,
-    /// The read-only guard rejected a statement — an internal error.
+    /// The read-only guard rejected a statement - an internal error.
     Guard,
     /// The statement failed server-side.
     Query,
@@ -67,7 +67,7 @@ pub struct ConnectionInput {
     pub password: String,
 }
 
-/// Non-secret summary of the saved connection (password never returned) —
+/// Non-secret summary of the saved connection (password never returned) -
 /// used to pre-fill the settings form.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -78,7 +78,7 @@ pub struct ConnectionInfo {
     pub user: String,
 }
 
-/// Non-secret site settings — stored as plain JSON on disk.
+/// Non-secret site settings - stored as plain JSON on disk.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SiteSettings {
@@ -122,7 +122,7 @@ where
     invoke_raw(cmd, serde_json::json!({})).await
 }
 
-/// Calls a Tauri command with a single string argument — the arg name must
+/// Calls a Tauri command with a single string argument - the arg name must
 /// equal the command's Rust parameter name.
 async fn call_string_arg<T>(cmd: &str, arg_name: &str, value: &str) -> Result<T, ApiError>
 where
@@ -154,7 +154,7 @@ pub async fn save_connection(config: &ConnectionInput) -> Result<(), ApiError> {
     call_struct_arg("save_connection", "config", config).await
 }
 
-/// The saved HOSxP connection (without the password) — pre-fills the form.
+/// The saved HOSxP connection (without the password) - pre-fills the form.
 pub async fn get_connection() -> Result<ConnectionInfo, ApiError> {
     call_empty("get_connection").await
 }
@@ -196,7 +196,7 @@ pub async fn get_current_meds() -> Result<Vec<DrugInfo>, ApiError> {
 /// Load the full medication + allergy history for a patient.
 ///
 /// When `history_days` is `Some(n)`, the backend uses `n` days instead of
-/// the configured default — this powers the per-query history window UI.
+/// the configured default - this powers the per-query history window UI.
 pub async fn load_history(hn: &str, history_days: Option<u32>) -> Result<PatientHistory, ApiError> {
     invoke_raw(
         "load_history",
@@ -213,7 +213,7 @@ pub async fn load_patient_image(hn: &str) -> Result<Option<String>, ApiError> {
 
 /// Export a printable HTML report; returns the saved path.
 ///
-/// `labels` carries every user-visible report string — Thai-only, resolved
+/// `labels` carries every user-visible report string - Thai-only, resolved
 /// once by [`report_labels`]. The backend never hard-codes text.
 pub async fn export_report(hn: &str, labels: &ReportLabels) -> Result<String, ApiError> {
     invoke_raw(
@@ -225,7 +225,7 @@ pub async fn export_report(hn: &str, labels: &ReportLabels) -> Result<String, Ap
 
 /// Capture the current webview content as a PNG (Windows WebView2 DevTools
 /// Protocol re-rasterization); returns the saved path. `base_name` is the
-/// suggested file name stem — the backend appends a timestamp and `.png`.
+/// suggested file name stem - the backend appends a timestamp and `.png`.
 /// `scale` is the display's `devicePixelRatio`, so the shot matches the
 /// screen's physical resolution instead of the DPI-scaled logical one.
 pub async fn capture_screenshot(base_name: &str, scale: f64) -> Result<String, ApiError> {
@@ -236,7 +236,7 @@ pub async fn capture_screenshot(base_name: &str, scale: f64) -> Result<String, A
     .await
 }
 
-/// Every user-visible string in the exported report, fixed Thai — the UI
+/// Every user-visible string in the exported report, fixed Thai - the UI
 /// is Thai-only. Mirrors the backend `ReportLabels` shape.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -272,7 +272,7 @@ pub struct ReportLabels {
 pub fn report_labels() -> ReportLabels {
     ReportLabels {
         html_lang: "th",
-        heading: "ประวัติยาและการใช้ยา — Med Recon",
+        heading: "ประวัติยาและการใช้ยา - Med Recon",
         generated: "สร้างเมื่อ {date}",
         site_default: "สถานบริการ",
         title: "ประวัติยา {name} ({hn})",

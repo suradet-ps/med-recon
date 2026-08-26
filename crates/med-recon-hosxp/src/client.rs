@@ -226,7 +226,7 @@ impl HosxpClient {
     /// Load the patient photo (`patient_image.image`, JPEG/PNG BLOB), if
     /// one is on file.
     ///
-    /// The photo is decorative identity data — when the table or column is
+    /// The photo is decorative identity data - when the table or column is
     /// missing on this site (MySQL 1146/1054) it returns `None` silently
     /// instead of warning, and the UI shows a placeholder avatar.
     pub async fn load_patient_image(&self, hn: &str) -> Result<Option<Vec<u8>>> {
@@ -426,7 +426,7 @@ impl HosxpClient {
     }
 
     /// Load the latest past medical history (`opdscreen.pmh`) for one
-    /// patient — the most recent record wins. If the table or the `pmh`
+    /// patient - the most recent record wins. If the table or the `pmh`
     /// column is missing on this site (MySQL 1146/1054) it degrades to
     /// `None` with a user-visible warning.
     async fn load_pmh(&self, hn: &str, warnings: &mut Vec<String>) -> Result<Option<String>> {
@@ -476,7 +476,7 @@ impl HosxpClient {
     /// by `vn`. The latest planned follow-up wins per visit.
     ///
     /// If the `oapp` table is missing on this site (MySQL 1146) the section
-    /// degrades to empty with a user-visible warning — appointment display
+    /// degrades to empty with a user-visible warning - appointment display
     /// is supplementary, not load-critical.
     async fn load_appointments(
         &self,
@@ -567,7 +567,7 @@ impl HosxpClient {
 
     /// Runs the first statement that succeeds, in order.
     ///
-    /// Statements failing with a schema-variation error (MySQL 1146/1054 —
+    /// Statements failing with a schema-variation error (MySQL 1146/1054 -
     /// documented per-instance differences) are skipped for the next tier,
     /// so a richer query can degrade to a safe baseline. Any other failure
     /// propagates immediately. If every candidate hits a schema variation,
@@ -636,7 +636,7 @@ fn is_schema_variation(e: &Error) -> bool {
 /// Record a user-visible warning that a HOSxP table is missing on this
 /// site, so the affected history section is skipped instead of failing.
 fn warn_missing(warnings: &mut Vec<String>, table: &str, section: &str) {
-    let message = format!("ไม่พบตาราง {table} ในฐานข้อมูล HOSxP ของสถานบริการนี้ — ระบบข้ามข้อมูล{section}");
+    let message = format!("ไม่พบตาราง {table} ในฐานข้อมูล HOSxP ของสถานบริการนี้ - ระบบข้ามข้อมูล{section}");
     tracing::warn!(table, "HOSxP table missing, section skipped");
     warnings.push(message);
 }
@@ -750,7 +750,7 @@ struct IpdVisitRow {
     ward: Option<String>,
 }
 
-/// A drug master row (`drugitems`) — non-PHI drug metadata used by the
+/// A drug master row (`drugitems`) - non-PHI drug metadata used by the
 /// current-medication settings.
 #[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

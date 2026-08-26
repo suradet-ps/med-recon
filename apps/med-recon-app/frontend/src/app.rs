@@ -61,7 +61,7 @@ fn App() -> impl IntoView {
         }
     });
 
-    // Poll the backend's live reachability — the status dot must reflect a
+    // Poll the backend's live reachability - the status dot must reflect a
     // dead database within seconds, not "config exists".
     let poll_state = state;
     spawn_local(async move {
@@ -70,7 +70,7 @@ fn App() -> impl IntoView {
                 Ok(health) => poll_state.health.set(health),
                 Err(_) => poll_state.health.set(ConnectionHealth::Disconnected),
             }
-            // Sleep via a JS setTimeout promise — plain `set_timeout` is
+            // Sleep via a JS setTimeout promise - plain `set_timeout` is
             // fire-and-forget and cannot be awaited.
             let delay = js_sys::Promise::new(&mut |resolve, _reject| {
                 let f: &js_sys::Function = resolve.unchecked_ref();
