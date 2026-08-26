@@ -34,13 +34,6 @@ pub struct ReportLabels {
     pub section_active: String,
     /// Lapsed-medications section heading template with `{n}`.
     pub section_lapsed: String,
-    /// Visit history section heading template with `{n}`.
-    pub section_visits: String,
-    /// Visit table column headers.
-    pub col_date: String,
-    pub col_type: String,
-    pub col_dept: String,
-    pub col_visit: String,
     /// Medication meta line labels.
     pub last_dispensed: String,
     /// Template with `{n}` - e.g. `dispense {n} ครั้ง`.
@@ -86,12 +79,6 @@ pub struct ReportModel {
     pub allergies: Vec<AllergyEntry>,
     /// Medication sections (active, lapsed).
     pub sections: Vec<MedSection>,
-    /// Visit history section heading (label + count filled).
-    pub visits_title: String,
-    /// Visit table column headers.
-    pub visit_headers: Vec<String>,
-    /// Visit table rows: date, type, department, visit id.
-    pub visits: Vec<[String; 4]>,
     /// PHI handling notice.
     pub footer_phi: String,
     /// `Med Recon v{version}` line.
@@ -253,23 +240,6 @@ pub fn build_model(
         },
     ];
 
-    let visits = history
-        .visits
-        .iter()
-        .map(|v| {
-            let kind = match v.source {
-                med_recon_core::EncounterSource::Opd => "OPD",
-                med_recon_core::EncounterSource::Ipd => "IPD",
-            };
-            [
-                format_date(v.date),
-                kind.to_string(),
-                v.department.clone().unwrap_or_default(),
-                v.visit_id.clone(),
-            ]
-        })
-        .collect();
-
     let mut patient_meta = format!("HN {}", patient.hn);
     if let Some(cid) = patient.cid.as_deref() {
         patient_meta.push_str(" · CID ");
@@ -293,17 +263,6 @@ pub fn build_model(
         ),
         allergies,
         sections,
-        visits_title: fill(
-            &labels.section_visits,
-            &[("n", &history.visits.len().to_string())],
-        ),
-        visit_headers: vec![
-            labels.col_date.clone(),
-            labels.col_type.clone(),
-            labels.col_dept.clone(),
-            labels.col_visit.clone(),
-        ],
-        visits,
         footer_phi: labels.footer_phi.clone(),
         version_line: format!("Med Recon v{}", env!("CARGO_PKG_VERSION")),
         page_of: labels.page_of.clone(),
@@ -345,11 +304,6 @@ mod tests {
             section_allergy: "แพ้ยา / อาการไม่พึงประสงค์ ({n})".into(),
             section_active: "ยาที่ผู้ป่วยเคยได้รับ ({n})".into(),
             section_lapsed: "ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ) ({n})".into(),
-            section_visits: "ประวัติการเข้ารับบริการ ({n})".into(),
-            col_date: "วันที่".into(),
-            col_type: "ประเภท".into(),
-            col_dept: "แผนก/หอผู้ป่วย".into(),
-            col_visit: "รหัส visit".into(),
             last_dispensed: "ครั้งล่าสุด".into(),
             dispenses: "dispense {n} ครั้ง".into(),
             total: "รวม".into(),
@@ -463,9 +417,6 @@ mod tests {
         );
         assert_eq!(m.sections[1].title, "ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ) (1)");
         assert_eq!(m.sections[1].items[0].title, "Metformin");
-        assert_eq!(m.visits_title, "ประวัติการเข้ารับบริการ (1)");
-        assert_eq!(m.visits[0][0], "01/07/2026");
-        assert_eq!(m.visit_headers.len(), 4);
         assert_eq!(m.page_of, "หน้า {page} / {total}");
         assert!(m.version_line.starts_with("Med Recon v"));
     }

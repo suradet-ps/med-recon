@@ -15,9 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   family, OFL) are embedded in the file, Thai text is shaped with
   HarfBuzz (via `rustybuzz`) so vowels/tone marks compose correctly, and
   the fixed layout carries the BPMH disclaimer, patient card, allergy /
-  medication / visit sections, and a PHI footer with page numbers on
-  every page. No browser or system fonts are involved, so output is
-  byte-identical on every OS.
+  medication sections, and a PHI footer with page numbers on
+  every page. The visit timeline (ประวัติการเข้ารับบริการ) stays on
+  screen and is not exported. No browser or system fonts are involved, so
+  output is byte-identical on every OS.
 
 ## [0.2.0] - 2026-08-26
 

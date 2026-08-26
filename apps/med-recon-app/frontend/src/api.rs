@@ -249,11 +249,6 @@ pub struct ReportLabels {
     pub section_allergy: &'static str,
     pub section_active: &'static str,
     pub section_lapsed: &'static str,
-    pub section_visits: &'static str,
-    pub col_date: &'static str,
-    pub col_type: &'static str,
-    pub col_dept: &'static str,
-    pub col_visit: &'static str,
     pub last_dispensed: &'static str,
     pub dispenses: &'static str,
     pub total: &'static str,
@@ -278,11 +273,6 @@ pub fn report_labels() -> ReportLabels {
         section_allergy: "แพ้ยา / อาการไม่พึงประสงค์ ({n})",
         section_active: "ยาที่ผู้ป่วยเคยได้รับ ({n})",
         section_lapsed: "ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ) ({n})",
-        section_visits: "ประวัติการเข้ารับบริการ ({n})",
-        col_date: "วันที่",
-        col_type: "ประเภท",
-        col_dept: "แผนก / หอผู้ป่วย",
-        col_visit: "รหัส visit",
         last_dispensed: "ครั้งล่าสุด",
         dispenses: "dispense {n} ครั้ง",
         total: "รวม",
@@ -313,7 +303,7 @@ mod tests {
         );
         assert!(l.page_of.contains("{page}") && l.page_of.contains("{total}"));
         assert!(l.footer_phi.contains("PHI"));
-        let all: [&str; 23] = [
+        let all: [&str; 18] = [
             l.heading,
             l.generated,
             l.site_default,
@@ -322,11 +312,6 @@ mod tests {
             l.section_allergy,
             l.section_active,
             l.section_lapsed,
-            l.section_visits,
-            l.col_date,
-            l.col_type,
-            l.col_dept,
-            l.col_visit,
             l.last_dispensed,
             l.dispenses,
             l.total,

@@ -400,7 +400,6 @@ pub(crate) fn layout(model: &ReportModel, fonts: &Fonts) -> Vec<Vec<Cmd>> {
     for section in &model.sections {
         lo.med_section(section);
     }
-    lo.visits();
     lo.pages
 }
 
@@ -839,89 +838,6 @@ impl Layout<'_> {
         }
         self.cursor += 8.0;
     }
-
-    /// Visit history table with a repeated header row on page breaks.
-    fn visits(&mut self) {
-        self.section_heading(&self.model.visits_title);
-        let widths = [78.0, 42.0, CONTENT_W - 78.0 - 42.0 - 92.0, 92.0];
-        let header_h = 22.0;
-        let mut first = true;
-        for row in &self.model.visits {
-            let dept_lines = wrap(self.fonts, FontRole::Regular, 9.0, &row[2], widths[2]);
-            let row_h = (dept_lines.len() as f32 * line_step(9.0) + 6.0).max(18.0);
-            if self.cursor + row_h > PAGE_H - CONTENT_BOTTOM {
-                self.push_page();
-                self.draw_visit_header(&widths, header_h);
-                first = false;
-            }
-            let page = self.pages.last_mut().expect("invariant: page exists");
-            if !first {
-                page.push(Cmd::RoundedRect {
-                    x: MARGIN,
-                    y: pdf_y(self.cursor + 1.0),
-                    w: CONTENT_W,
-                    h: 1.0,
-                    r: 0.0,
-                    fill: BORDER,
-                    stroke: None,
-                });
-            }
-            let mut x = MARGIN;
-            for (i, cell) in row.iter().enumerate() {
-                if i == 2 {
-                    for (l, line) in dept_lines.iter().enumerate() {
-                        page.push(Cmd::Text {
-                            x,
-                            y: pdf_y(self.cursor + row_h - 6.0 + l as f32 * line_step(9.0)),
-                            size: 9.0,
-                            role: FontRole::Regular,
-                            color: TEXT,
-                            text: line.clone(),
-                        });
-                    }
-                } else {
-                    page.push(Cmd::Text {
-                        x,
-                        y: pdf_y(self.cursor + row_h - 6.0),
-                        size: 9.0,
-                        role: FontRole::Regular,
-                        color: TEXT,
-                        text: cell.clone(),
-                    });
-                }
-                x += widths[i];
-            }
-            self.cursor += row_h;
-            first = false;
-        }
-        self.cursor += 10.0;
-    }
-
-    fn draw_visit_header(&mut self, widths: &[f32; 4], header_h: f32) {
-        let page = self.pages.last_mut().expect("invariant: page exists");
-        page.push(Cmd::RoundedRect {
-            x: MARGIN,
-            y: pdf_y(self.cursor + header_h),
-            w: CONTENT_W,
-            h: header_h,
-            r: 4.0,
-            fill: CANVAS,
-            stroke: None,
-        });
-        let mut x = MARGIN;
-        for (i, header) in self.model.visit_headers.iter().enumerate() {
-            page.push(Cmd::Text {
-                x,
-                y: pdf_y(self.cursor + header_h - 6.5),
-                size: 9.0,
-                role: FontRole::Bold,
-                color: HOUSE,
-                text: header.clone(),
-            });
-            x += widths[i];
-        }
-        self.cursor += header_h;
-    }
 }
 
 /// Page-1 header band: dark house-green box with the report heading and
@@ -1307,19 +1223,6 @@ mod tests {
                     }],
                 },
             ],
-            visits_title: "ประวัติการเข้ารับบริการ (1)".into(),
-            visit_headers: vec![
-                "วันที่".into(),
-                "ประเภท".into(),
-                "แผนก / หอผู้ป่วย".into(),
-                "รหัส visit".into(),
-            ],
-            visits: vec![[
-                "01/07/2026".into(),
-                "OPD".into(),
-                "OPD".into(),
-                "vn1".into(),
-            ]],
             footer_phi: "ข้อมูลนี้เป็นข้อมูลสุขภาพส่วนบุคคล (PHI)".into(),
             version_line: "Med Recon v0.2.0".into(),
             page_of: "หน้า {page} / {total}".into(),
@@ -1461,7 +1364,6 @@ mod tests {
         assert!(texts[0].iter().any(|t| t.contains("Penicillin")));
         assert!(texts[0].iter().any(|t| t.contains("Paracetamol")));
         assert!(texts[0].iter().any(|t| t.contains("supply ≈ 30 วัน")));
-        assert!(texts[0].iter().any(|t| t == "01/07/2026"));
     }
 
     #[test]
@@ -1557,29 +1459,6 @@ mod tests {
         assert!(
             texts[1].iter().any(|t| t.contains("นายสมชาย ใจดี")),
             "continuation pages carry the patient name"
-        );
-    }
-
-    #[test]
-    fn layout_visits_table_repeats_header_on_new_page() {
-        let mut m = model();
-        m.visits = (0..50)
-            .map(|i| {
-                [
-                    "01/07/2026".to_string(),
-                    "OPD".into(),
-                    "แผนกอายุรกรรม".into(),
-                    format!("vn{i}"),
-                ]
-            })
-            .collect();
-        m.visits_title = "ประวัติการเข้ารับบริการ (50)".into();
-        let pages = layout(&m, &fonts());
-        assert!(pages.len() >= 2);
-        let texts = texts(&pages);
-        assert!(
-            texts[1].iter().any(|t| t == "วันที่"),
-            "table header repeats on page 2"
         );
     }
 

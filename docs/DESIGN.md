@@ -87,7 +87,9 @@ Sarabun fonts embedded, HarfBuzz-shaped Thai text, fixed A4 layout with
 margins, header band, section cards, and a PHI footer with page numbers)
 and saves it through the native save dialog. Same BPMH disclaimer as the
 UI; the PDF is self-contained (fonts embedded, no system dependencies),
-so it prints identically from any PDF viewer.
+so it prints identically from any PDF viewer. The report covers the
+patient identity, allergies, and the active/lapsed medication sections
+only - the visit timeline stays on screen and is not exported.
 
 ### 2.5 Settings (revisiting)
 
