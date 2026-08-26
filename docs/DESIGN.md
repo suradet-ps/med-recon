@@ -24,8 +24,8 @@ rationale behind the Best Possible Medication History (BPMH) engine.
 
 1. **Read-only against HOSxP** - enforced by the read-only guard and a
    read-only DB role.
-2. **PHI handling** - HN/CID redacted in logs; names never logged; HTML
-   reports carry a PHI handling notice.
+2. **PHI handling** - HN/CID redacted in logs; names never logged; PDF
+   reports carry a PHI handling notice on every page.
 3. **BPMH framing** - never present dispensing history as complete or
    verified; show source-type and data-recency indicators.
 4. **Schema drift tolerance** - HOSxP table/column names vary by site;
@@ -82,8 +82,14 @@ Top to bottom:
 
 ### 2.4 Export
 
-"พิมพ์ประวัติการได้รับยา" saves a self-contained HTML report (same BPMH disclaimer +
-PHI notice) through the native save dialog.
+"พิมพ์ประวัติการได้รับยา" generates an **A4 PDF report** (pure Rust:
+Sarabun fonts embedded, HarfBuzz-shaped Thai text, fixed A4 layout with
+margins, header band, section cards, and a PHI footer with page numbers)
+and saves it through the native save dialog. Same BPMH disclaimer as the
+UI; the PDF is self-contained (fonts embedded, no system dependencies),
+so it prints identically from any PDF viewer. The report covers the
+patient identity, allergies, and the active/lapsed medication sections
+only - the visit timeline stays on screen and is not exported.
 
 ### 2.5 Settings (revisiting)
 

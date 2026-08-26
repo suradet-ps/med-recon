@@ -1,6 +1,7 @@
 //! Med Recon desktop shell (Tauri 2 backend).
 
 pub mod commands;
+pub mod pdf;
 pub mod report;
 pub mod state;
 
