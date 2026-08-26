@@ -307,7 +307,7 @@ pub fn build_report(history: &PatientHistory, site_name: &str, labels: &ReportLa
     </section>
   </main>
   <div class="footer">
-    Med Recon v0.1.0 · {footer_phi}
+    Med Recon v0.2.0 · {footer_phi}
   </div>
 </body>
 </html>"#,

@@ -5,10 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.0] - 2026-08-26
+
+### Added
+
+- **User manual (คู่มือการใช้งาน)** dialog - new คู่มือ button in the top
+  bar next to ตั้งค่า, covering first-run setup, patient search, reading
+  the history sections, report export, screenshot capture (Windows only),
+  and PHI/read-only cautions.
+- **History window selector** - segmented control on the active-medication
+  header to override the configured search window per patient; the
+  ค่าเริ่มต้น segment always shows the configured default.
+- **Native unit tests** for pure frontend UI helpers.
 
 ### Changed
 
+- **Site name shown in the top bar** - the configured สถานบริการ label
+  replaces the hardcoded brand text.
+- **Thai-only UI** - the Thai/English i18n system was removed; all UI text
+  is hardcoded Thai (settings hints trimmed accordingly).
 - **HOSxP schema alignment** (confirmed against the live site): IPD
   dispensing read from `opitemrece` (an-keyed) instead of `iptitemrece`;
   sig/directions-for-use read from the `drugusage`/`sp_use` lookup tables
@@ -27,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   credentials) and `settings.json` (plain, non-secret: site name, history
   window, current-medication list). Legacy single-file configs are
   migrated automatically on first open.
+- **ASCII hyphenation** - em dashes replaced with ASCII hyphens across
+  the codebase (docs/CI hygiene, no runtime effect).
 
 ## [0.1.0] - 2026-08-16
 
