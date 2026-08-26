@@ -23,6 +23,9 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 rfd = { workspace = true }
+pdf-writer = { workspace = true }   # A4 PDF report generation
+rustybuzz = { workspace = true }    # Thai text shaping for the PDF (marks/vowels)
+ttf-parser = { workspace = true }   # font metrics + glyph coverage for PDF layout
 base64 = { workspace = true }        # patient photo BLOB → data URL over IPC
 secrecy = { workspace = true }          # password wrapper in SiteConfigInput conversion
 encryptman = "0.3.0"                    # ephemeral vault fallback (headless)
