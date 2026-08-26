@@ -211,7 +211,7 @@ pub async fn load_patient_image(hn: &str) -> Result<Option<String>, ApiError> {
     call_string_arg("load_patient_image", "hn", hn).await
 }
 
-/// Export a printable HTML report; returns the saved path.
+/// Export an A4 PDF medication history report; returns the saved path.
 ///
 /// `labels` carries every user-visible report string - Thai-only, resolved
 /// once by [`report_labels`]. The backend never hard-codes text.
@@ -236,16 +236,14 @@ pub async fn capture_screenshot(base_name: &str, scale: f64) -> Result<String, A
     .await
 }
 
-/// Every user-visible string in the exported report, fixed Thai - the UI
-/// is Thai-only. Mirrors the backend `ReportLabels` shape.
+/// Every user-visible string in the exported PDF report, fixed Thai - the
+/// UI is Thai-only. Mirrors the backend `ReportLabels` shape.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReportLabels {
-    pub html_lang: &'static str,
     pub heading: &'static str,
     pub generated: &'static str,
     pub site_default: &'static str,
-    pub title: &'static str,
     pub disclaimer: &'static str,
     pub section_patient: &'static str,
     pub section_allergy: &'static str,
@@ -265,18 +263,17 @@ pub struct ReportLabels {
     pub by: &'static str,
     pub note: &'static str,
     pub warnings_title: &'static str,
+    pub page_of: &'static str,
     pub footer_phi: &'static str,
 }
 
 /// The fixed Thai report labels.
 pub fn report_labels() -> ReportLabels {
     ReportLabels {
-        html_lang: "th",
         heading: "ประวัติยาและการใช้ยา - Med Recon",
         generated: "สร้างเมื่อ {date}",
         site_default: "สถานบริการ",
-        title: "ประวัติยา {name} ({hn})",
-        disclaimer: "⚠️ เอกสารนี้สร้างจากข้อมูลการจ่ายยา (dispensing) ใน HOSxP ซึ่งเป็นเพียงแหล่งข้อมูลหนึ่งในหลายแหล่ง สำหรับ Best Possible Medication History (BPMH) ยังไม่ถือว่าเป็นรายการยาที่สมบูรณ์หรือได้รับการยืนยัน ควรสอบทานร่วมกับผู้ป่วย/ญาติก่อนนำไปใช้ทางคลินิก",
+        disclaimer: "เอกสารนี้สร้างจากข้อมูลการจ่ายยา (dispensing) ใน HOSxP ซึ่งเป็นเพียงแหล่งข้อมูลหนึ่งในหลายแหล่ง สำหรับ Best Possible Medication History (BPMH) ยังไม่ถือว่าเป็นรายการยาที่สมบูรณ์หรือได้รับการยืนยัน ควรสอบทานร่วมกับผู้ป่วย/ญาติก่อนนำไปใช้ทางคลินิก",
         section_patient: "ข้อมูลผู้ป่วย",
         section_allergy: "แพ้ยา / อาการไม่พึงประสงค์ ({n})",
         section_active: "ยาที่ผู้ป่วยเคยได้รับ ({n})",
@@ -295,6 +292,7 @@ pub fn report_labels() -> ReportLabels {
         by: "โดย {name}",
         note: "หมายเหตุ: {note}",
         warnings_title: "คำเตือนความครบถ้วนของข้อมูล",
+        page_of: "หน้า {page} / {total}",
         footer_phi: "ข้อมูลนี้เป็นข้อมูลสุขภาพส่วนบุคคล (PHI) ต้องจัดเก็บและส่งต่อตามระเบียบปฏิบัติด้านการคุ้มครองข้อมูลส่วนบุคคล",
     }
 }
@@ -307,16 +305,18 @@ mod tests {
     #[test]
     fn report_labels_are_complete_thai() {
         let l = report_labels();
-        assert_eq!(l.html_lang, "th");
         assert!(l.heading.contains("Med Recon"));
-        assert!(l.title.contains("{name}") && l.title.contains("{hn}"));
         assert!(l.disclaimer.contains("BPMH"));
+        assert!(
+            !l.disclaimer.contains('⚠'),
+            "the PDF fonts cannot render the warning sign"
+        );
+        assert!(l.page_of.contains("{page}") && l.page_of.contains("{total}"));
         assert!(l.footer_phi.contains("PHI"));
-        let all: [&str; 25] = [
+        let all: [&str; 23] = [
             l.heading,
             l.generated,
             l.site_default,
-            l.title,
             l.disclaimer,
             l.section_patient,
             l.section_allergy,
@@ -337,7 +337,6 @@ mod tests {
             l.note,
             l.warnings_title,
             l.footer_phi,
-            l.html_lang,
         ];
         for v in all {
             assert!(!v.is_empty(), "report label must not be empty: {v:?}");

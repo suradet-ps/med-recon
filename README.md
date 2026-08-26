@@ -15,7 +15,7 @@ to see:
   inference per item
 - **allergy / adverse drug reaction** records
 - **visit history** (OPD + IPD)
-- a printable **HTML report** for the requesting hospital
+- an A4 **PDF report** export for the requesting hospital
 
 It connects to HOSxP (MySQL/MariaDB) **read-only**: every statement is validated
 against an allow-list of `SELECT`/`SHOW`/`DESCRIBE`/`EXPLAIN` keywords before
@@ -49,7 +49,7 @@ Tauri 2 (shell) ── Leptos 0.8 CSR (WASM UI)
 |---|---|
 | Setup | Two sections: HOSxP connection (host/port/db/user/password, test + save) and site settings (ชื่อสถานบริการ, history window, ตั้งค่ายา) |
 | Search | Name / HN / CID search with result list |
-| Patient | BPMH (active / lapsed), allergies, visits, HTML report export |
+| Patient | BPMH (active / lapsed), allergies, visits, PDF report export |
 | About | Project information |
 
 The UI is Thai-only (ภาษาไทย).

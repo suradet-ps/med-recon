@@ -44,7 +44,7 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
                 return;
             }
             match result {
-                Ok(path) => export_msg.set(Some((true, format!("บันทึกรายงานแล้ว: {path}")))),
+                Ok(path) => export_msg.set(Some((true, format!("บันทึกรายงาน PDF แล้ว: {path}")))),
                 Err(e) => export_msg.set(Some((false, e.message))),
             }
             exporting.set(false);

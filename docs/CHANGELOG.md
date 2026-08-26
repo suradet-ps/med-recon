@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- **Report export is now a PDF file** - "พิมพ์ประวัติการได้รับยา" saves an
+  A4 PDF (595.28 × 841.89 pt) instead of a printable HTML document. The
+  report is generated entirely in Rust: Sarabun fonts (the UI's font
+  family, OFL) are embedded in the file, Thai text is shaped with
+  HarfBuzz (via `rustybuzz`) so vowels/tone marks compose correctly, and
+  the fixed layout carries the BPMH disclaimer, patient card, allergy /
+  medication / visit sections, and a PHI footer with page numbers on
+  every page. No browser or system fonts are involved, so output is
+  byte-identical on every OS.
+
 ## [0.2.0] - 2026-08-26
 
 ### Added

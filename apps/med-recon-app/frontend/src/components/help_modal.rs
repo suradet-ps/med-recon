@@ -40,7 +40,7 @@ pub fn HelpModal(state: AppState) -> impl IntoView {
             <section class="modal modal--help" on:click=move |ev| ev.stop_propagation()>
                 <h2 class="modal__title">"คู่มือการใช้งาน"</h2>
                 <p class="modal__status">
-                    "วิธีใช้งาน Med Recon ตั้งแต่ตั้งค่าครั้งแรกจนถึงพิมพ์รายงาน"
+                    "วิธีใช้งาน Med Recon ตั้งแต่ตั้งค่าครั้งแรกจนถึงส่งออกรายงาน"
                 </p>
 
                 <section class="help-section">
@@ -102,11 +102,15 @@ pub fn HelpModal(state: AppState) -> impl IntoView {
                 </section>
 
                 <section class="help-section">
-                    <h3 class="help-section__title">"4. พิมพ์รายงาน"</h3>
+                    <h3 class="help-section__title">"4. ส่งออกรายงาน PDF"</h3>
                     <ol class="help-steps">
                         <li>
                             "กดปุ่ม พิมพ์ประวัติการได้รับยา ในแถบข้อมูลผู้ป่วย"
-                            "เพื่อบันทึกรายงาน"
+                            "เพื่อสร้างรายงาน PDF ขนาด A4"
+                        </li>
+                        <li>
+                            "เลือกรายการบันทึกไฟล์ แล้วเปิดหรือพิมพ์จากโปรแกรม"
+                            "อ่าน PDF ตามต้องการ"
                         </li>
                     </ol>
                 </section>

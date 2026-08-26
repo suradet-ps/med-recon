@@ -12,10 +12,10 @@
 //!   content flows across pages, each carrying the PHI footer.
 //!
 //! The pipeline has two stages:
-//! 1. [`layout`] - wraps text (cluster-aware, so Thai runs break only
+//! 1. `layout` - wraps text (cluster-aware, so Thai runs break only
 //!    between clusters) and packs the report model into per-page command
 //!    lists. Pure and fully unit-testable.
-//! 2. [`write_pdf`] - turns command lists into PDF bytes via `pdf-writer`
+//! 2. `write_pdf` - turns command lists into PDF bytes via `pdf-writer`
 //!    (Type0/CID fonts, width arrays, ToUnicode cmap for text extraction).
 
 use pdf_writer::types::{CidFontType, FontFlags, SystemInfo, UnicodeCmap};
