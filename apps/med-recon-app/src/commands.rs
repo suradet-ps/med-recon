@@ -671,7 +671,7 @@ pub async fn load_patient_image(
     Ok(image.map(|bytes| image_data_url(&bytes)))
 }
 
-/// Export a printable HTML medication history report for a patient.
+/// Export an A4 PDF medication history report for a patient.
 #[tauri::command]
 pub async fn export_report(
     state: State<'_, AppState>,
@@ -691,16 +691,16 @@ pub async fn export_report(
         .map(|s| s.site_name)
         .unwrap_or_default();
 
-    let html = crate::report::build_report(&history, &site_name, &labels);
+    let pdf = crate::report::build_report(&history, &site_name, &labels);
     let path = rfd::AsyncFileDialog::new()
         .set_title("Export medication history report")
-        .set_file_name(format!("med-recon-report-{hn}.html"))
+        .set_file_name(format!("med-recon-report-{hn}.pdf"))
         .save_file()
         .await
         .map(|handle| handle.path().to_path_buf())
         .ok_or_else(|| CommandError::new(CommandErrorKind::Query, "ยกเลิกการส่งออก"))?;
 
-    std::fs::write(&path, html).map_err(|e| {
+    std::fs::write(&path, pdf).map_err(|e| {
         dev_log(
             "export_report",
             &e,
