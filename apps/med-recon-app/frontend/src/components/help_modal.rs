@@ -112,7 +112,18 @@ pub fn HelpModal(state: AppState) -> impl IntoView {
                 </section>
 
                 <section class="help-section">
-                    <h3 class="help-section__title">"5. ข้อควรระวัง"</h3>
+                    <h3 class="help-section__title">"5. ถ่ายภาพหน้าจอ"</h3>
+                    <ol class="help-steps">
+                        <li>
+                            "กดปุ่ม ถ่ายภาพหน้าจอ ในแถบข้อมูลผู้ป่วย เพื่อถ่ายภาพ"
+                            "หน้าจอโปรแกรม แล้วบันทึกเป็นไฟล์รูปภาพ"
+                        </li>
+                        <li>"รองรับเฉพาะบนระบบปฏิบัติการ Windows เท่านั้น"</li>
+                    </ol>
+                </section>
+
+                <section class="help-section">
+                    <h3 class="help-section__title">"6. ข้อควรระวัง"</h3>
                     <ul class="help-steps help-steps--plain">
                         <li>
                             "ข้อมูลผู้ป่วยเป็นความลับ (PHI) ควรใช้งานบนเครื่อง"
