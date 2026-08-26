@@ -20,8 +20,9 @@
 
 use pdf_writer::types::{CidFontType, FontFlags, SystemInfo, UnicodeCmap};
 use pdf_writer::{Content, Finish, Name, Pdf, Rect, Ref, Str};
-use rustybuzz::{Direction, Face as HbFace, UnicodeBuffer, shape as hb_shape};
-use ttf_parser::Face as TtfFace;
+use read_fonts::TableProvider as _;
+use skrifa::MetadataProvider;
+use skrifa::prelude::{LocationRef, Size};
 
 use crate::report::{AllergyEntry, MedItem, MedSection, ReportModel};
 
@@ -92,13 +93,28 @@ pub(crate) enum FontRole {
     Bold,
 }
 
-/// The two embedded Sarabun faces. Each weight holds a `ttf-parser` face
-/// (metrics, glyph coverage) and a `rustybuzz` face (shaping).
+/// The two embedded Sarabun faces.
+///
+/// Each weight holds a `skrifa`/`read-fonts` face (metrics, glyph coverage,
+/// cmap) and a `harfrust` shaper (the maintained HarfBuzz port, which
+/// shapes from the same parsed tables). All fonts come from the maintained
+/// Google Fonts "oxidize" stack - `rustybuzz`/`ttf-parser` are unmaintained
+/// and their advisories block `cargo deny`.
 pub(crate) struct Fonts {
-    regular: TtfFace<'static>,
-    bold: TtfFace<'static>,
-    hb_regular: HbFace<'static>,
-    hb_bold: HbFace<'static>,
+    regular: skrifa::FontRef<'static>,
+    bold: skrifa::FontRef<'static>,
+    regular_shaper: harfrust::ShaperData,
+    bold_shaper: harfrust::ShaperData,
+    /// Units per em (identical for both weights).
+    upem: f32,
+    /// Ascender in font units (hhea).
+    ascent: f32,
+    /// Descender in font units (hhea).
+    descent: f32,
+    /// Line gap in font units (hhea).
+    leading: f32,
+    /// Global bounding box in font units (head).
+    bbox: (f32, f32, f32, f32),
 }
 
 impl Default for Fonts {
@@ -120,39 +136,59 @@ impl Fonts {
     }
 
     fn load(regular: &'static [u8], bold: &'static [u8]) -> Self {
+        let regular_font =
+            skrifa::FontRef::new(regular).expect("invariant: bundled Sarabun-Regular.ttf parses");
+        let bold_font =
+            skrifa::FontRef::new(bold).expect("invariant: bundled Sarabun-Bold.ttf parses");
+        let metrics =
+            |font: &skrifa::FontRef| font.metrics(Size::unscaled(), LocationRef::default());
+        let regular_metrics = metrics(&regular_font);
+        let bold_metrics = metrics(&bold_font);
+        let bbox = regular_metrics
+            .bounds
+            .map(|b| (b.x_min, b.y_min, b.x_max, b.y_max))
+            .unwrap_or((0.0, 0.0, 0.0, 0.0));
+        let regular_shaper = harfrust::ShaperData::new(&regular_font);
+        let bold_shaper = harfrust::ShaperData::new(&bold_font);
+        debug_assert_eq!(regular_metrics.units_per_em, bold_metrics.units_per_em);
         Self {
-            regular: TtfFace::parse(regular, 0)
-                .expect("invariant: bundled Sarabun-Regular.ttf parses"),
-            bold: TtfFace::parse(bold, 0).expect("invariant: bundled Sarabun-Bold.ttf parses"),
-            hb_regular: HbFace::from_slice(regular, 0)
-                .expect("invariant: bundled Sarabun-Regular.ttf parses"),
-            hb_bold: HbFace::from_slice(bold, 0)
-                .expect("invariant: bundled Sarabun-Bold.ttf parses"),
+            regular: regular_font,
+            bold: bold_font,
+            regular_shaper,
+            bold_shaper,
+            upem: regular_metrics.units_per_em as f32,
+            ascent: regular_metrics.ascent,
+            descent: regular_metrics.descent,
+            leading: regular_metrics.leading,
+            bbox,
         }
     }
 
-    fn face(&self, role: FontRole) -> &TtfFace<'static> {
+    fn face(&self, role: FontRole) -> &skrifa::FontRef<'static> {
         match role {
             FontRole::Regular => &self.regular,
             FontRole::Bold => &self.bold,
         }
     }
 
-    fn hb_face(&self, role: FontRole) -> &HbFace<'static> {
+    fn shaper(&self, role: FontRole) -> harfrust::Shaper<'_> {
         match role {
-            FontRole::Regular => &self.hb_regular,
-            FontRole::Bold => &self.hb_bold,
+            FontRole::Regular => self.regular_shaper.shaper(&self.regular).build(),
+            FontRole::Bold => self.bold_shaper.shaper(&self.bold).build(),
         }
     }
 
-    fn upem(&self, role: FontRole) -> f32 {
-        self.face(role).units_per_em() as f32
+    fn upem(&self) -> f32 {
+        self.upem
     }
 
     /// Whether `role` can render `ch` (used to strip characters the
     /// embedded fonts cannot draw, e.g. emoji in HOSxP free text).
     fn covers(&self, role: FontRole, ch: char) -> bool {
-        self.face(role).glyph_index(ch).is_some_and(|g| g.0 != 0)
+        self.face(role)
+            .charmap()
+            .map(ch)
+            .is_some_and(|g| g != skrifa::GlyphId::NOTDEF)
     }
 
     fn pdf_name(&self, role: FontRole) -> Name<'static> {
@@ -192,18 +228,21 @@ impl ShapedRun {
 }
 
 /// Shape `text` with HarfBuzz, scaling font units to points. Glyphs the
-/// font cannot represent (`gid 0`) are dropped.
+/// font cannot represent (`gid 0`) are dropped. Positions come back in
+/// font units (no scale in [`harfrust::ShapeOptions`]).
 fn shape(fonts: &Fonts, role: FontRole, size: f32, text: &str) -> ShapedRun {
-    let mut buffer = UnicodeBuffer::new();
+    let mut buffer = harfrust::UnicodeBuffer::new();
     buffer.push_str(text);
-    buffer.set_direction(Direction::LeftToRight);
+    buffer.set_direction(harfrust::Direction::LeftToRight);
     buffer.set_language(
         "th".parse()
             .expect("invariant: \"th\" is a valid language tag"),
     );
     buffer.guess_segment_properties();
-    let out = hb_shape(fonts.hb_face(role), &[], buffer);
-    let scale = size / fonts.upem(role);
+    let out = fonts
+        .shaper(role)
+        .shape(buffer, harfrust::ShapeOptions::new());
+    let scale = size / fonts.upem();
     let (glyphs, clusters) = out
         .glyph_infos()
         .iter()
@@ -1018,7 +1057,8 @@ fn embed_font(pdf: &mut Pdf, ids: FontIds, fonts: &Fonts, role: FontRole) {
     type0.finish();
 
     let face = fonts.face(role);
-    let upem = fonts.upem(role);
+    let upem = fonts.upem();
+    let font_metrics = face.metrics(Size::unscaled(), LocationRef::default());
     let mut cid = pdf.cid_font(ids.cid);
     cid.subtype(CidFontType::Type2);
     cid.base_font(name);
@@ -1030,33 +1070,33 @@ fn embed_font(pdf: &mut Pdf, ids: FontIds, fonts: &Fonts, role: FontRole) {
     cid.font_descriptor(ids.descriptor);
     cid.default_width(0.0);
     cid.cid_to_gid_map_predefined(Name(b"Identity"));
-    let glyph_count = face.number_of_glyphs();
+    let glyph_count = font_metrics.glyph_count as u32;
+    let hmtx = face
+        .hmtx()
+        .expect("invariant: bundled font has an hmtx table");
     {
         let mut widths = cid.widths();
         let iter = (0..glyph_count).map(|gid| {
-            face.glyph_hor_advance(ttf_parser::GlyphId(gid))
-                .unwrap_or(500) as f32
-                * 1000.0
-                / upem
+            hmtx.advance(skrifa::GlyphId::new(gid)).unwrap_or(500) as f32 * 1000.0 / upem
         });
         widths.consecutive(0, iter);
     }
     cid.finish();
 
-    let bbox = face.global_bounding_box();
+    let (bbox_x_min, bbox_y_min, bbox_x_max, bbox_y_max) = fonts.bbox;
     let mut desc = pdf.font_descriptor(ids.descriptor);
     desc.name(name);
     desc.flags(FontFlags::NON_SYMBOLIC);
     desc.bbox(Rect::new(
-        bbox.x_min as f32 * 1000.0 / upem,
-        bbox.y_min as f32 * 1000.0 / upem,
-        bbox.x_max as f32 * 1000.0 / upem,
-        bbox.y_max as f32 * 1000.0 / upem,
+        bbox_x_min * 1000.0 / upem,
+        bbox_y_min * 1000.0 / upem,
+        bbox_x_max * 1000.0 / upem,
+        bbox_y_max * 1000.0 / upem,
     ));
     desc.italic_angle(0.0);
-    desc.ascent(face.ascender() as f32 * 1000.0 / upem);
-    desc.descent(face.descender() as f32 * 1000.0 / upem);
-    desc.leading(face.line_gap() as f32 * 1000.0 / upem);
+    desc.ascent(fonts.ascent * 1000.0 / upem);
+    desc.descent(fonts.descent * 1000.0 / upem);
+    desc.leading(fonts.leading * 1000.0 / upem);
     desc.stem_v(80.0);
     desc.font_file2(ids.data);
     desc.finish();
@@ -1078,22 +1118,13 @@ fn embed_font(pdf: &mut Pdf, ids: FontIds, fonts: &Fonts, role: FontRole) {
             supplement: 0,
         },
     );
-    if let Some(table) = face.tables().cmap {
-        for subtable in table.subtables {
-            if !subtable.is_unicode() {
-                continue;
-            }
-            let mut seen = std::collections::HashSet::new();
-            subtable.codepoints(|cp| {
-                if let Some(gid) = subtable.glyph_index(cp)
-                    && gid.0 != 0
-                    && seen.insert(gid.0)
-                    && let Some(ch) = char::from_u32(cp)
-                {
-                    cmap.pair(gid.0, ch);
-                }
-            });
-            break;
+    let mut seen = std::collections::HashSet::new();
+    for (codepoint, gid) in face.charmap().mappings() {
+        if gid != skrifa::GlyphId::NOTDEF
+            && seen.insert(gid.to_u32())
+            && let Some(ch) = char::from_u32(codepoint)
+        {
+            cmap.pair(gid.to_u32() as u16, ch);
         }
     }
     pdf.stream(ids.to_unicode, &cmap.finish());
@@ -1246,9 +1277,16 @@ mod tests {
     #[test]
     fn font_assets_are_valid() {
         let f = fonts();
-        assert!(f.regular.number_of_glyphs() > 0);
-        assert!(f.bold.number_of_glyphs() > 0);
-        assert_eq!(f.regular.units_per_em(), f.bold.units_per_em());
+        let m = |role: FontRole| {
+            f.face(role)
+                .metrics(Size::unscaled(), LocationRef::default())
+        };
+        assert!(m(FontRole::Regular).glyph_count > 0);
+        assert!(m(FontRole::Bold).glyph_count > 0);
+        assert_eq!(
+            m(FontRole::Regular).units_per_em,
+            m(FontRole::Bold).units_per_em
+        );
     }
 
     #[test]
@@ -1273,10 +1311,10 @@ mod tests {
     #[test]
     fn font_metrics_are_sane() {
         let f = fonts();
-        let upem = f.regular.units_per_em() as f32;
-        assert!((0.85..=1.1).contains(&(f.regular.ascender() as f32 / upem)));
-        assert!(f.regular.descender() < 0);
-        assert!(f.regular.line_gap() >= 0);
+        let upem = f.upem;
+        assert!((0.85..=1.1).contains(&(f.ascent / upem)));
+        assert!(f.descent < 0.0);
+        assert!(f.leading >= 0.0);
     }
 
     #[test]

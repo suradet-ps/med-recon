@@ -38,8 +38,9 @@ tauri = { version = "2", features = [] }                    # desktop shell
 tauri-build = "2"                                           # tauri context generation
 rfd = "0.17"                                                # native save dialog for report export
 pdf-writer = "0.15"                                         # A4 PDF report writer (med-recon-app)
-rustybuzz = "0.20"                                          # HarfBuzz port - Thai text shaping for PDF
-ttf-parser = "0.25"                                         # font parsing/metrics for PDF text layout
+harfrust = "0.13"                                           # maintained HarfBuzz port - Thai shaping for PDF
+skrifa = "0.46"                                             # maintained font metrics/cmap reader for PDF layout
+read-fonts = "0.43"                                         # OpenType table access (head bbox) for PDF fonts
 base64 = "0.23"                                             # patient photo BLOB → data URL over IPC
 leptos = "0.8"                                              # reactive UI framework (frontend)
 leptos_router = "0.8"                                       # client-side routing
