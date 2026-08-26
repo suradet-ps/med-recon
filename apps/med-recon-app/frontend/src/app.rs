@@ -12,6 +12,7 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use wasm_bindgen::JsCast;
 
+use crate::components::help_modal::HelpModal;
 use crate::components::history_canvas::HistoryCanvas;
 use crate::components::patient_card::PatientCard;
 use crate::components::patient_search::PatientSearch;
@@ -99,6 +100,7 @@ fn App() -> impl IntoView {
                 <HistoryCanvas state=state />
             </div>
             <SettingsModal state=state />
+            <HelpModal state=state />
         </div>
     }
 }

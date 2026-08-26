@@ -24,6 +24,8 @@ pub struct AppState {
     pub configured: RwSignal<bool>,
     /// Whether the connection settings dialog is open.
     pub settings_open: RwSignal<bool>,
+    /// Whether the user manual (คู่มือการใช้งาน) dialog is open.
+    pub help_open: RwSignal<bool>,
     /// Polled live reachability - top-bar dot source.
     pub health: RwSignal<ConnectionHealth>,
     /// Search input text - shared so the patient card can reset it.
@@ -62,6 +64,7 @@ impl AppState {
         Self {
             configured: RwSignal::new(false),
             settings_open: RwSignal::new(false),
+            help_open: RwSignal::new(false),
             health: RwSignal::new(ConnectionHealth::Unconfigured),
             search_query: RwSignal::new(String::new()),
             patient: RwSignal::new(None),

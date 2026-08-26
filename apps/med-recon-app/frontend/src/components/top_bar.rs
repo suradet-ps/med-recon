@@ -2,12 +2,13 @@
 
 use leptos::prelude::*;
 
-use crate::components::icons::{IconLogo, IconSettings};
+use crate::components::icons::{IconHelp, IconLogo, IconSettings};
 use crate::state::{AppState, ConnectionHealth};
 
 #[component]
 pub fn TopBar(state: AppState) -> impl IntoView {
     let on_settings = move |_| state.settings_open.set(true);
+    let on_help = move |_| state.help_open.set(true);
 
     let site_name = move || {
         let name = state.site_name.get();
@@ -40,6 +41,10 @@ pub fn TopBar(state: AppState) -> impl IntoView {
                     ></span>
                     <span class="top-bar__status-text">{status_text}</span>
                 </span>
+                <button class="top-bar__button" on:click=on_help>
+                    <IconHelp class="icon" />
+                    "คู่มือ"
+                </button>
                 <button class="top-bar__button" on:click=on_settings>
                     <IconSettings class="icon" />
                     "ตั้งค่า"

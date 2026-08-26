@@ -1,5 +1,6 @@
 //! UI components.
 
+pub mod help_modal;
 pub mod history_canvas;
 pub mod icons;
 pub mod patient_card;
