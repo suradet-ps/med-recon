@@ -297,7 +297,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                     </div>
                 </div>
                 <div class="form-field">
-                    <label for="cfg-user">"User (แนะนำ: บัญชีอ่านอย่างเดียว)"</label>
+                    <label for="cfg-user">"User"</label>
                     <input
                         id="cfg-user"
                         class="form-input form-input--mono"
@@ -315,7 +315,6 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         prop:value=move || password.get()
                         on:input=move |ev| password.set(event_target_value(&ev))
                     />
-                    <p class="modal__note">"รหัสผ่านถูกเข้ารหัส ไม่สามารถโหลดกลับมาแสดงได้ — กรอกใหม่ทุกครั้งที่เปิดตั้งค่า"</p>
                 </div>
 
                 {move || {
@@ -348,7 +347,6 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                     </button>
                 </div>
 
-                <p class="modal__note">"ข้อมูลการเชื่อมต่อถูกเข้ารหัส AES-256-GCM เก็บ master key ใน Keychain ของระบบปฏิบัติการ"</p>
             </section>
         }
         .into_any()
@@ -389,7 +387,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                     />
                 </div>
 
-                <p class="modal__note">"เฉพาะยาที่ตั้งค่าไว้เท่านั้นจะแสดงในหัวข้อ ยาที่ผู้ป่วยเคยได้รับ — ยาที่ไม่ตั้งค่า (แม้เพิ่งได้รับ) จะถือว่าหยุดใช้แล้ว"</p>
+                <p class="modal__note">"เฉพาะยาที่ตั้งค่าไว้เท่านั้นจะแสดงในหัวข้อ ยาที่ผู้ป่วยเคยได้รับ - ยาที่ไม่ตั้งค่า (แม้เพิ่งได้รับ) จะถือว่าเป็นยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ)"</p>
                 <CurrentMedsPanel selected=selected_meds/>
 
                 {move || {
@@ -442,7 +440,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                 <p class="modal__status">
                     {move || {
                         if state.configured.get() {
-                            "เชื่อมต่อแล้ว — เข้ารหัสเก็บในเครื่อง"
+                            "เชื่อมต่อแล้ว"
                         } else {
                             "ยังไม่ได้ตั้งค่า"
                         }
