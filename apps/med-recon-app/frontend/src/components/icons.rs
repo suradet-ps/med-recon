@@ -131,6 +131,14 @@ icon!(
     <path d="M8 16h.01" />
 );
 
+icon!(
+    /// Help circle - user manual / usage guide.
+    IconHelp,
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+    <path d="M12 17h.01" />
+);
+
 /// Brand mark - a faithful miniature of `icon-master.svg`: warm-yellow
 /// disc, angled white blister board with four light-green pockets, and the
 /// reconciliation badge (white disc + medium-green cross) overlapping the
