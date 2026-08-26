@@ -50,6 +50,17 @@ fn line_step(size: f32) -> f32 {
     size * 1.45
 }
 
+/// Convert a layout y-coordinate to the PDF's bottom-up y.
+///
+/// `layout` works in natural reading order (origin at the page's top edge,
+/// increasing downward, like CSS); PDF content streams measure from the
+/// bottom-left corner upward, so every emitted command must be flipped.
+/// For boxes the flip must land on the box's *bottom* edge (the top-down
+/// `top + height`), otherwise the rectangle extends upward past the page.
+fn pdf_y(top_down: f32) -> f32 {
+    PAGE_H - top_down
+}
+
 // ---------------------------------------------------------------- colors
 
 // App design tokens (see style.css) as RGB 0-1.
@@ -448,7 +459,7 @@ impl Layout<'_> {
         let page = self.pages.last_mut().expect("invariant: page exists");
         page.push(Cmd::RoundedRect {
             x: MARGIN,
-            y: self.cursor,
+            y: pdf_y(self.cursor + height),
             w: CONTENT_W,
             h: height,
             r: 8.0,
@@ -458,7 +469,7 @@ impl Layout<'_> {
         for (i, line) in lines.iter().enumerate() {
             page.push(Cmd::Text {
                 x: MARGIN + 10.0,
-                y: self.cursor + 10.0 + i as f32 * line_step(size) + size,
+                y: pdf_y(self.cursor + 10.0 + i as f32 * line_step(size) + size),
                 size,
                 role: FontRole::Regular,
                 color: WHITE_SOFT,
@@ -477,7 +488,7 @@ impl Layout<'_> {
         let page = self.pages.last_mut().expect("invariant: page exists");
         page.push(Cmd::RoundedRect {
             x: MARGIN,
-            y: self.cursor,
+            y: pdf_y(self.cursor + height),
             w: CONTENT_W,
             h: height,
             r: 8.0,
@@ -486,7 +497,7 @@ impl Layout<'_> {
         });
         page.push(Cmd::Text {
             x: MARGIN + 14.0,
-            y: self.cursor + 12.0 + name_size,
+            y: pdf_y(self.cursor + 12.0 + name_size),
             size: name_size,
             role: FontRole::Bold,
             color: TEXT,
@@ -494,7 +505,7 @@ impl Layout<'_> {
         });
         page.push(Cmd::Text {
             x: MARGIN + 14.0,
-            y: self.cursor + 12.0 + line_step(name_size) + meta_size,
+            y: pdf_y(self.cursor + 12.0 + line_step(name_size) + meta_size),
             size: meta_size,
             role: FontRole::Regular,
             color: MUTED,
@@ -532,7 +543,7 @@ impl Layout<'_> {
         let page = self.pages.last_mut().expect("invariant: page exists");
         page.push(Cmd::RoundedRect {
             x: MARGIN,
-            y: self.cursor,
+            y: pdf_y(self.cursor + height),
             w: CONTENT_W,
             h: height,
             r: 8.0,
@@ -541,7 +552,7 @@ impl Layout<'_> {
         });
         page.push(Cmd::Text {
             x: MARGIN + 10.0,
-            y: self.cursor + 10.0 + title_size,
+            y: pdf_y(self.cursor + 10.0 + title_size),
             size: title_size,
             role: FontRole::Bold,
             color: AMBER,
@@ -558,7 +569,7 @@ impl Layout<'_> {
             ) {
                 page.push(Cmd::Text {
                     x: MARGIN + 10.0,
-                    y,
+                    y: pdf_y(y),
                     size: body_size,
                     role: FontRole::Regular,
                     color: AMBER,
@@ -604,7 +615,7 @@ impl Layout<'_> {
         let page = self.pages.last_mut().expect("invariant: page exists");
         page.push(Cmd::RoundedRect {
             x: MARGIN,
-            y: self.cursor,
+            y: pdf_y(self.cursor + height),
             w: CONTENT_W,
             h: height,
             r: 8.0,
@@ -613,7 +624,7 @@ impl Layout<'_> {
         });
         page.push(Cmd::Text {
             x: MARGIN + 8.0,
-            y: self.cursor + pad + agent_size,
+            y: pdf_y(self.cursor + pad + agent_size),
             size: agent_size,
             role: FontRole::Bold,
             color: RED,
@@ -630,7 +641,7 @@ impl Layout<'_> {
             ) {
                 page.push(Cmd::Text {
                     x: MARGIN + 8.0,
-                    y,
+                    y: pdf_y(y),
                     size: detail_size,
                     role: FontRole::Regular,
                     color: RED,
@@ -648,7 +659,7 @@ impl Layout<'_> {
         let page = self.pages.last_mut().expect("invariant: page exists");
         page.push(Cmd::RoundedRect {
             x: MARGIN,
-            y: self.cursor + 1.0,
+            y: pdf_y(self.cursor + 17.0),
             w: 3.5,
             h: 16.0,
             r: 1.75,
@@ -657,7 +668,7 @@ impl Layout<'_> {
         });
         page.push(Cmd::Text {
             x: MARGIN + 12.0,
-            y: self.cursor + 15.0,
+            y: pdf_y(self.cursor + 15.0),
             size: 13.0,
             role: FontRole::Bold,
             color: BRAND,
@@ -751,7 +762,7 @@ impl Layout<'_> {
         if !first {
             page.push(Cmd::RoundedRect {
                 x: MARGIN,
-                y: self.cursor,
+                y: pdf_y(self.cursor + 1.0),
                 w: CONTENT_W,
                 h: 1.0,
                 r: 0.0,
@@ -767,7 +778,7 @@ impl Layout<'_> {
         for (text, role) in &title_lines {
             page.push(Cmd::Text {
                 x: MARGIN,
-                y,
+                y: pdf_y(y),
                 size: title_size,
                 role: *role,
                 color: TEXT,
@@ -781,7 +792,7 @@ impl Layout<'_> {
             for (i, line) in meta_lines.iter().enumerate() {
                 page.push(Cmd::Text {
                     x: MARGIN,
-                    y: meta_baseline + i as f32 * line_step(meta_size),
+                    y: pdf_y(meta_baseline + i as f32 * line_step(meta_size)),
                     size: meta_size,
                     role: FontRole::Regular,
                     color: MUTED,
@@ -793,7 +804,7 @@ impl Layout<'_> {
                 let chip_y = self.cursor + (line_step(meta_size) - chip_h) / 2.0;
                 page.push(Cmd::RoundedRect {
                     x: MARGIN + CONTENT_W - chip_w,
-                    y: chip_y,
+                    y: pdf_y(chip_y + chip_h),
                     w: *chip_w,
                     h: chip_h,
                     r: chip_h / 2.0,
@@ -803,7 +814,7 @@ impl Layout<'_> {
                 let text_w = measure(self.fonts, FontRole::Bold, 8.0, chip_text);
                 page.push(Cmd::Text {
                     x: MARGIN + CONTENT_W - chip_w + (chip_w - text_w) / 2.0,
-                    y: chip_y + chip_h / 2.0 + 4.0,
+                    y: pdf_y(chip_y + chip_h / 2.0 + 4.0),
                     size: 8.0,
                     role: FontRole::Bold,
                     color: BRAND,
@@ -817,7 +828,7 @@ impl Layout<'_> {
             for line in &sig_lines {
                 page.push(Cmd::Text {
                     x: MARGIN,
-                    y: self.cursor + sig_size,
+                    y: pdf_y(self.cursor + sig_size),
                     size: sig_size,
                     role: FontRole::Regular,
                     color: BRAND,
@@ -833,7 +844,6 @@ impl Layout<'_> {
     fn visits(&mut self) {
         self.section_heading(&self.model.visits_title);
         let widths = [78.0, 42.0, CONTENT_W - 78.0 - 42.0 - 92.0, 92.0];
-        let row_top = |y: f32, h: f32| y + h - 4.5;
         let header_h = 22.0;
         let mut first = true;
         for row in &self.model.visits {
@@ -848,7 +858,7 @@ impl Layout<'_> {
             if !first {
                 page.push(Cmd::RoundedRect {
                     x: MARGIN,
-                    y: self.cursor,
+                    y: pdf_y(self.cursor + 1.0),
                     w: CONTENT_W,
                     h: 1.0,
                     r: 0.0,
@@ -862,7 +872,7 @@ impl Layout<'_> {
                     for (l, line) in dept_lines.iter().enumerate() {
                         page.push(Cmd::Text {
                             x,
-                            y: self.cursor + row_h - 6.0 + l as f32 * line_step(9.0),
+                            y: pdf_y(self.cursor + row_h - 6.0 + l as f32 * line_step(9.0)),
                             size: 9.0,
                             role: FontRole::Regular,
                             color: TEXT,
@@ -872,7 +882,7 @@ impl Layout<'_> {
                 } else {
                     page.push(Cmd::Text {
                         x,
-                        y: self.cursor + row_h - 6.0,
+                        y: pdf_y(self.cursor + row_h - 6.0),
                         size: 9.0,
                         role: FontRole::Regular,
                         color: TEXT,
@@ -883,7 +893,6 @@ impl Layout<'_> {
             }
             self.cursor += row_h;
             first = false;
-            let _ = row_top;
         }
         self.cursor += 10.0;
     }
@@ -892,7 +901,7 @@ impl Layout<'_> {
         let page = self.pages.last_mut().expect("invariant: page exists");
         page.push(Cmd::RoundedRect {
             x: MARGIN,
-            y: self.cursor,
+            y: pdf_y(self.cursor + header_h),
             w: CONTENT_W,
             h: header_h,
             r: 4.0,
@@ -903,7 +912,7 @@ impl Layout<'_> {
         for (i, header) in self.model.visit_headers.iter().enumerate() {
             page.push(Cmd::Text {
                 x,
-                y: self.cursor + header_h - 6.5,
+                y: pdf_y(self.cursor + header_h - 6.5),
                 size: 9.0,
                 role: FontRole::Bold,
                 color: HOUSE,
@@ -920,7 +929,7 @@ impl Layout<'_> {
 fn header_band(page: &mut Vec<Cmd>, model: &ReportModel, fonts: &Fonts) {
     page.push(Cmd::RoundedRect {
         x: MARGIN,
-        y: MARGIN_TOP,
+        y: pdf_y(MARGIN_TOP + 64.0),
         w: CONTENT_W,
         h: 64.0,
         r: 10.0,
@@ -929,7 +938,7 @@ fn header_band(page: &mut Vec<Cmd>, model: &ReportModel, fonts: &Fonts) {
     });
     page.push(Cmd::Text {
         x: MARGIN + 22.0,
-        y: MARGIN_TOP + 34.0,
+        y: pdf_y(MARGIN_TOP + 34.0),
         size: 17.0,
         role: FontRole::Bold,
         color: WHITE,
@@ -937,7 +946,7 @@ fn header_band(page: &mut Vec<Cmd>, model: &ReportModel, fonts: &Fonts) {
     });
     page.push(Cmd::Text {
         x: MARGIN + 22.0,
-        y: MARGIN_TOP + 54.0,
+        y: pdf_y(MARGIN_TOP + 54.0),
         size: 9.5,
         role: FontRole::Regular,
         color: WHITE_SOFT,
@@ -950,7 +959,7 @@ fn header_band(page: &mut Vec<Cmd>, model: &ReportModel, fonts: &Fonts) {
 fn slim_header(page: &mut Vec<Cmd>, model: &ReportModel, fonts: &Fonts) {
     page.push(Cmd::RoundedRect {
         x: MARGIN,
-        y: MARGIN_TOP,
+        y: pdf_y(MARGIN_TOP + 34.0),
         w: CONTENT_W,
         h: 34.0,
         r: 8.0,
@@ -959,7 +968,7 @@ fn slim_header(page: &mut Vec<Cmd>, model: &ReportModel, fonts: &Fonts) {
     });
     page.push(Cmd::Text {
         x: MARGIN + 16.0,
-        y: MARGIN_TOP + 20.0,
+        y: pdf_y(MARGIN_TOP + 20.0),
         size: 11.0,
         role: FontRole::Bold,
         color: WHITE,
@@ -968,7 +977,7 @@ fn slim_header(page: &mut Vec<Cmd>, model: &ReportModel, fonts: &Fonts) {
     let name_w = measure(fonts, FontRole::Regular, 9.0, &model.patient_name);
     page.push(Cmd::Text {
         x: MARGIN + CONTENT_W - 16.0 - name_w,
-        y: MARGIN_TOP + 20.0,
+        y: pdf_y(MARGIN_TOP + 20.0),
         size: 9.0,
         role: FontRole::Regular,
         color: WHITE_SOFT,
@@ -1453,6 +1462,62 @@ mod tests {
         assert!(texts[0].iter().any(|t| t.contains("Paracetamol")));
         assert!(texts[0].iter().any(|t| t.contains("supply ≈ 30 วัน")));
         assert!(texts[0].iter().any(|t| t == "01/07/2026"));
+    }
+
+    #[test]
+    fn layout_flips_coordinates_to_pdf_bottom_up() {
+        // PDF y grows upward from the page's bottom edge; the layout's
+        // "top-down" reading-order coordinates must be flipped, otherwise
+        // the whole page renders upside down (header at the bottom).
+        let pages = layout(&model(), &fonts());
+        let page = &pages[0];
+        let find_rect = |pred: &dyn Fn(&Cmd) -> bool| {
+            page.iter().find_map(|cmd| match cmd {
+                Cmd::RoundedRect { y, .. } if pred(cmd) => Some(*y),
+                _ => None,
+            })
+        };
+        let header_y = find_rect(
+            &|c| matches!(c, Cmd::RoundedRect { h, fill, .. } if *h == 64.0 && *fill == HOUSE),
+        )
+        .expect("header band present");
+        assert!(
+            (header_y - (PAGE_H - MARGIN_TOP - 64.0)).abs() < 0.01,
+            "header band must start at the top margin and extend DOWNWARD (bottom edge at {}), got {header_y}",
+            PAGE_H - MARGIN_TOP - 64.0
+        );
+        let footer_y = find_rect(
+            &|c| matches!(c, Cmd::RoundedRect { h, fill, .. } if *h == 0.75 && *fill == BORDER),
+        )
+        .expect("footer rule present");
+        assert!(
+            footer_y < 30.0,
+            "footer rule must hug the bottom edge, got {footer_y}"
+        );
+        let heading_y = page
+            .iter()
+            .find_map(|cmd| match cmd {
+                Cmd::Text { y, text, .. } if text == "ประวัติยาและการใช้ยา - Med Recon" => {
+                    Some(*y)
+                }
+                _ => None,
+            })
+            .expect("report heading present");
+        assert!(
+            (heading_y - (PAGE_H - 86.0)).abs() < 0.01,
+            "heading baseline must sit inside the top header band, got {heading_y}"
+        );
+        let page_num_y = page
+            .iter()
+            .find_map(|cmd| match cmd {
+                Cmd::Text { y, text, .. } if text == "หน้า {page} / {total}" => Some(*y),
+                _ => None,
+            })
+            .expect("page-number footer present");
+        assert!(
+            (page_num_y - 38.0).abs() < 0.01,
+            "page number must sit in the footer strip, got {page_num_y}"
+        );
     }
 
     #[test]
