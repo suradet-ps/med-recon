@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.3.0] - 2026-08-27
 
 ### Changed
 
@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   A4 PDF (595.28 × 841.89 pt) instead of a printable HTML document. The
   report is generated entirely in Rust: Sarabun fonts (the UI's font
   family, OFL) are embedded in the file, Thai text is shaped with
-  HarfBuzz (via `rustybuzz`) so vowels/tone marks compose correctly, and
+  HarfBuzz (via `harfrust`) so vowels/tone marks compose correctly, and
   the fixed layout carries the BPMH disclaimer, patient card, allergy /
   medication sections, and a PHI footer with page numbers on
   every page. The visit timeline (ประวัติการเข้ารับบริการ) stays on

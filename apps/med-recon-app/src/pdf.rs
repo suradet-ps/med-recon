@@ -1255,7 +1255,7 @@ mod tests {
                 },
             ],
             footer_phi: "ข้อมูลนี้เป็นข้อมูลสุขภาพส่วนบุคคล (PHI)".into(),
-            version_line: "Med Recon v0.2.0".into(),
+            version_line: "Med Recon v0.3.0".into(),
             page_of: "หน้า {page} / {total}".into(),
         }
     }
