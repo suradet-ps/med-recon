@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-08-27
+
+### Added
+
+- **Click-to-strike review aid on medication rows** - clicking a
+  medication row in either the active or lapsed (ยาตามอาการ) table
+  toggles a strike-through marking it "หยุดใช้แล้ว". The marks are a
+  session-local visual aid only - never persisted, and cleared on every
+  fresh history load (new patient or window change) so each review
+  starts clean. The CC/PE screening table is not affected.
+
 ## [0.3.0] - 2026-08-27
 
 ### Changed
