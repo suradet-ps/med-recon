@@ -64,10 +64,11 @@ Run these in order. Do not skip any step. Show output or declare clean.
 
 ```bash
 cargo fmt --check                          # formatting
-cargo check                                # type-check without building
-cargo clippy -- -D warnings               # no warnings allowed
-cargo test                                 # all tests must pass
-cargo doc --no-deps 2>&1 | grep warning   # no doc warnings
+cargo check --all-targets                  # type-check without building (incl. tests/benches)
+cargo clippy --all-targets -- -D warnings  # no warnings allowed
+cargo test --all-features                  # all tests must pass
+cargo doc --no-deps 2>&1 | grep warning    # no doc warnings
+cargo deny check                           # advisories/bans/licenses - only if deny.toml exists
 ```
 
 If any step fails, fix the issue **before** reporting completion. Never report completion with known failures.
@@ -290,7 +291,8 @@ cargo check --all-targets
 cargo clippy --all-targets -- -D warnings
 cargo test --all-features
 cargo doc --no-deps
-cargo audit          # requires cargo-audit
+cargo deny check        # advisories/bans/licenses (requires cargo-deny and deny.toml)
+cargo audit             # requires cargo-audit
 ```
 
 For releases, additionally:
@@ -340,3 +342,22 @@ When applying these standards to an existing codebase, follow this sequence:
 
 > Add project-specific rules here. Conflicting rules override the baseline above.
 > Format: `[OVERRIDE §<section>] <rule>`
+
+- `[OVERRIDE §3]` The frontend crate (`med-recon-frontend`) compiles to WASM; native
+  `cargo test` cannot execute its tests. Verify it with
+  `cargo check -p med-recon-frontend --target wasm32-unknown-unknown`; the full test run
+  needs `wasm-bindgen-test-runner` + chromedriver (see `.github/workflows/ci.yml`).
+- `[OVERRIDE §3]` `cargo deny check` is mandatory in this repo (a `deny.toml` exists).
+  A new advisory on a **direct** dependency must be resolved by migrating off the flagged
+  crate (or a patched version), not by adding an ignore - ignores are reserved for
+  unavoidable transitive dependencies (glib/gtk chains, sqlx RSA, etc.).
+- `[OVERRIDE §5.2]` The app crate (`med-recon-app`) does not use `anyhow`: command errors
+  are a typed `CommandError` (kind + Thai message) so the frontend can switch on the
+  failure class instead of matching message text.
+- `[OVERRIDE §8.2]` Parameterized tests are written inline with plain helpers; `rstest`
+  is not a project dependency - do not add it without asking.
+- `[OVERRIDE §11]` Release tags are lightweight (`git tag v<version> -m "..."`), not
+  signed - match the repo's existing tags (v0.1.0, v0.2.0, v0.3.0).
+- `[OVERRIDE §11]` Project-level rules (HOSxP schema, read-only guard, PHI handling,
+  Buddhist-era dates, BPMH framing) live in `AGENTS.md` - read it first, this file only
+  covers Rust style and workflow.
