@@ -1298,6 +1298,40 @@ code, .mono, .code {
   background: #E7F5EE;
 }
 
+/* ==========================================================================
+   Medication row strike-through ("หยุดใช้แล้ว" review aid)
+   Session-local only: toggled by clicking a medication row, cleared on
+   every fresh history load. `--strike` scopes the tap affordance to
+   medication tables so the CC/PE table's rows stay non-interactive.
+   ========================================================================== */
+
+.med-table--strike .med-table__row {
+  cursor: pointer;
+}
+
+/* Out-specifies the band/latest tints AND the row hover so a struck row
+   always reads as struck, wherever it sits in the table. */
+.med-table--strike .med-table__row--struck,
+.med-table--strike .med-table__row--struck:hover {
+  background: var(--surface-muted);
+  opacity: 0.62;
+}
+
+.med-table--strike .med-table__row--struck .med-table__drug,
+.med-table--strike .med-table__row--struck .med-table__sig {
+  text-decoration: line-through;
+  color: var(--slate);
+}
+
+/* Hint line above the active meds table - explains the tap-to-strike
+   interaction and its session-only lifetime. */
+.med-table-hint {
+  margin-top: var(--sp-sm);
+  font-size: 12px;
+  color: var(--slate);
+  user-select: none;
+}
+
 .med-table__no {
   width: 40px;
   color: var(--slate);

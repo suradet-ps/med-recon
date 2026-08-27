@@ -1,5 +1,7 @@
 //! Client-side application state (signals shared between components).
 
+use std::collections::HashSet;
+
 use leptos::prelude::*;
 use med_recon_core::{PatientHistory, PatientSummary};
 
@@ -56,6 +58,10 @@ pub struct AppState {
     /// re-fetch effect keys off this so programmatic resets don't trigger a
     /// second fetch alongside the patient-search fetch.
     pub window_epoch: RwSignal<u32>,
+    /// Icodes the operator has struck through in the current session - a
+    /// visual "หยุดใช้แล้ว" review aid only. Cleared on every fresh history
+    /// load (new patient, window change) so each review starts clean.
+    pub struck_meds: RwSignal<HashSet<String>>,
 }
 
 impl AppState {
@@ -76,6 +82,7 @@ impl AppState {
             default_history_days: RwSignal::new(730),
             site_name: RwSignal::new(String::new()),
             window_epoch: RwSignal::new(0),
+            struck_meds: RwSignal::new(HashSet::new()),
         }
     }
 }

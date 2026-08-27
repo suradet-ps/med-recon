@@ -6,6 +6,7 @@
 use chrono::{Datelike, NaiveDate};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
+use std::collections::HashSet;
 
 use crate::api;
 use crate::components::icons::{
@@ -47,6 +48,7 @@ pub fn HistoryCanvas(state: AppState) -> impl IntoView {
                                 Ok(h) => {
                                     state.history.set(Some(h));
                                     state.history_error.set(None);
+                                    state.struck_meds.set(HashSet::new());
                                 }
                                 Err(e) => {
                                     state.history.set(None);
@@ -269,7 +271,13 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     if !has_active {
                         view! { <p class="canvas-empty__sub">"ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด"</p> }.into_any()
                     } else {
-                        med_table(&active).into_any()
+                        view! {
+                            <p class="med-table-hint">
+                                "คลิกที่แถวยาเพื่อขีดฆ่า (ยาที่หยุดใช้แล้ว) · เครื่องหมายรีเซ็ตเมื่อโหลดข้อมูลใหม่"
+                            </p>
+                            {med_table(&active, state)}
+                        }
+                            .into_any()
                     }
                 }}
             </section>
@@ -288,7 +296,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     if !has_lapsed {
                         view! { <p class="canvas-empty__sub">"ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด"</p> }.into_any()
                     } else if lapsed_open.get() {
-                        med_table(&lapsed).into_any()
+                        med_table(&lapsed, state).into_any()
                     } else {
                         view! { <p class="canvas-empty__sub">{format!("คลิกเพื่อดู {lapsed_count} รายการที่คาดว่าหยุดใช้แล้ว")}</p> }.into_any()
                     }
@@ -323,10 +331,11 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
 /// Render a medication list as a table:
 /// ลำดับ / วันที่จ่าย / ชื่อยา + ความแรง / วิธีใช้ / จำนวนที่จ่าย (ครั้งล่าสุด) /
 /// วันนัด (`oapp.nextdate` ของ visit ที่จ่ายครั้งล่าสุด, "-" ถ้าไม่มี)
-/// Used identically for both the active and lapsed sections.
-fn med_table(items: &[MedicationItem]) -> impl IntoView {
+/// Used identically for both the active and lapsed sections. Rows are
+/// tappable: clicking toggles the session-local "หยุดใช้แล้ว" strike-through.
+fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
     view! {
-        <table class="med-table">
+        <table class="med-table med-table--strike">
             <thead>
                 <tr>
                     <th class="med-table__no">"ลำดับ"</th>
@@ -365,6 +374,12 @@ fn med_table(items: &[MedicationItem]) -> impl IntoView {
                         let no = (i + 1).to_string();
                         let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), m.last_dispense.month(), m.last_dispense.year());
                         let drug = drug_label(m);
+                        let icode = m.icode.clone();
+                        // Session-local "หยุดใช้แล้ว" review aid - toggled by
+                        // clicking the row. Never persisted; cleared on every
+                        // fresh history load.
+                        let struck_icode = icode.clone();
+                        let is_struck = move || state.struck_meds.get().contains(&struck_icode);
                         // Repeat-dispensing count - how many visits this
                         // drug was dispensed on. Frequent + recent dispensing
                         // is the BPMH signal for an ongoing medication, so the
@@ -390,7 +405,18 @@ fn med_table(items: &[MedicationItem]) -> impl IntoView {
                             format!("{:02}/{:02}/{}", d.day(), d.month(), d.year())
                         }).unwrap_or_default();
                         view! {
-                            <tr class=row_class>
+                            <tr
+                                class=row_class
+                                class:med-table__row--struck=is_struck
+                                title="คลิกเพื่อสลับเครื่องหมาย 'หยุดใช้แล้ว'"
+                                on:click=move |_| {
+                                    state.struck_meds.update(|s| {
+                                        if !s.insert(icode.clone()) {
+                                            s.remove(&icode);
+                                        }
+                                    });
+                                }
+                            >
                                 <td class="med-table__no">{no}</td>
                                 <td class="med-table__date">{date}</td>
                                 <td class="med-table__drug">

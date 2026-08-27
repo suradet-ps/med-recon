@@ -3,6 +3,7 @@
 
 use leptos::prelude::*;
 use leptos::task::spawn_local;
+use std::collections::HashSet;
 
 use crate::api;
 use crate::components::icons::IconSearch;
@@ -96,6 +97,7 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
                 Ok(history) => {
                     state.history.set(Some(history));
                     state.history_error.set(None);
+                    state.struck_meds.set(HashSet::new());
                 }
                 Err(e) => {
                     state.history.set(None);
