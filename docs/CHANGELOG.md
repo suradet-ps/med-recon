@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] - 2026-09-01
+
+### Fixed
+
+- **Same-date duplicate dispensing picks the highest quantity** - when
+  several `opitemrece` rows share one `vstdate` and `icode`, the event
+  with the largest dispensed quantity (`qty`) is now the representative
+  event for that date, so จำนวนที่จ่าย shows the biggest dispense instead
+  of an arbitrary row. Later dates still win over same-date quantities.
+
 ## [0.4.0] - 2026-08-27
 
 ### Added
