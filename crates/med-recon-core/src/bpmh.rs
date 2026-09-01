@@ -36,6 +36,9 @@ pub fn days_supply(qty: f64, sig: &Sig) -> Option<u32> {
 ///
 /// Dedup key is the drug `icode`. Items are sorted by most recent dispense,
 /// newest first. The sig/name/strength/units of the most recent event win.
+/// When several events share the same dispense date (duplicate `icode` rows
+/// on one `vstdate`), the event with the highest dispensed quantity wins -
+/// it is the representative event for that date.
 ///
 /// `current_codes` is the operator-configured current-medication list: an
 /// `icode` present in the set is labelled `Active`, every other dispensed
@@ -53,7 +56,13 @@ pub fn aggregate_medications(
     let mut items: Vec<MedicationItem> = groups
         .into_values()
         .map(|mut events| {
-            events.sort_by_key(|d| d.date);
+            events.sort_by(|a, b| {
+                a.date.cmp(&b.date).then(
+                    a.qty
+                        .partial_cmp(&b.qty)
+                        .unwrap_or(std::cmp::Ordering::Equal),
+                )
+            });
             let latest = *events
                 .last()
                 .expect("invariant: group always has at least one event");
@@ -259,6 +268,33 @@ mod tests {
         let items = aggregate_medications(&dispenses, date(2026, 1, 15), &empty_codes());
         assert_eq!(items[0].icode, "New");
         assert_eq!(items[1].icode, "Old");
+    }
+
+    #[test]
+    fn aggregate_same_date_duplicates_pick_highest_qty() {
+        let dispenses = vec![
+            dispense("A1", 10.0, "vn1", EncounterSource::Opd, date(2026, 1, 1)),
+            dispense("A1", 30.0, "vn2", EncounterSource::Opd, date(2026, 1, 1)),
+            dispense("A1", 20.0, "vn3", EncounterSource::Opd, date(2026, 1, 1)),
+        ];
+        let items = aggregate_medications(&dispenses, date(2026, 1, 2), &empty_codes());
+        let a1 = &items[0];
+        assert_eq!(a1.last_qty, 30.0); // highest qty among same-date duplicates
+        assert_eq!(a1.last_dispense, date(2026, 1, 1));
+        assert_eq!(a1.visit_count, 3);
+        assert_eq!(a1.total_qty, 60.0);
+    }
+
+    #[test]
+    fn aggregate_later_dates_still_win_over_same_date_qty() {
+        let dispenses = vec![
+            dispense("A1", 90.0, "vn1", EncounterSource::Opd, date(2026, 1, 1)),
+            dispense("A1", 10.0, "vn2", EncounterSource::Opd, date(2026, 3, 1)),
+        ];
+        let items = aggregate_medications(&dispenses, date(2026, 4, 1), &empty_codes());
+        let a1 = &items[0];
+        assert_eq!(a1.last_qty, 10.0); // later date wins regardless of qty
+        assert_eq!(a1.last_dispense, date(2026, 3, 1));
     }
 
     #[test]
