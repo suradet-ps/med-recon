@@ -48,3 +48,10 @@ wasm-bindgen = "0.2"                                        # wasm interop
 wasm-bindgen-futures = "0.4"                                # async on wasm
 js-sys = "0.3"                                              # window/global access on wasm
 web-sys = "0.3"                                             # DOM access on wasm
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "z"
+panic = "abort"
+strip = true

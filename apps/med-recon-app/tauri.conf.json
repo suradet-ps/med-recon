@@ -10,7 +10,7 @@
     },
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": {
-      "script": "trunk build frontend/index.html --release",
+      "script": "trunk build frontend/index.html --release && sh ../../script/wasm-opt.sh",
       "cwd": "."
     },
     "frontendDist": "frontend/dist"
