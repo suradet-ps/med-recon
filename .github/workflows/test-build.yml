@@ -7,6 +7,7 @@ on:
     paths:
       - "apps/**"
       - "crates/**"
+      - "script/**"
       - "Cargo.toml"
       - "Cargo.lock"
       - ".github/workflows/test-build.yml"
