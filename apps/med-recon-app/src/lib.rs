@@ -6,6 +6,7 @@ pub mod report;
 pub mod state;
 
 use state::AppState;
+use tauri::Manager;
 
 /// Start the Tauri application.
 pub fn run() {
@@ -19,6 +20,17 @@ pub fn run() {
 
     tauri::Builder::default()
         .manage(AppState::new())
+        .setup(|app| {
+            if let Some(window) = app.get_webview_window("main") {
+                if let Err(e) = window.center() {
+                    tracing::error!("failed to center main window: {e}");
+                }
+                if let Err(e) = window.show() {
+                    tracing::error!("failed to show main window: {e}");
+                }
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             commands::get_app_status,
             commands::is_configured,
