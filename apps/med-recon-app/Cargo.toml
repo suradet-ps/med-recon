@@ -29,7 +29,7 @@ skrifa = { workspace = true }       # font metrics + glyph coverage for PDF layo
 read-fonts = { workspace = true }   # OpenType table access (head bbox) for embedded fonts
 base64 = { workspace = true }        # patient photo BLOB → data URL over IPC
 secrecy = { workspace = true }          # password wrapper in SiteConfigInput conversion
-encryptman = "0.3.0"                    # ephemeral vault fallback (headless)
+encryptman = "0.4.0"                    # ephemeral vault fallback (headless)
 
 [target.'cfg(windows)'.dependencies]
 # WebView2 COM bindings for the screenshot feature (DevTools Protocol
