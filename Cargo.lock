@@ -1171,7 +1171,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1368,12 +1368,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "encryptman"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2af2d062571f0b6e505ce44c752b7d45b693b373a90833ff799b2dc570134008"
+dependencies = [
+ "aes-gcm",
+ "base64 0.23.1",
+ "getrandom 0.4.3",
+ "hkdf 0.13.0",
+ "sha2 0.11.0",
+ "thiserror 2.0.21",
+ "zeroize",
+]
+
+[[package]]
 name = "encryptman-keyring"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4208a65c644ee7f0dcc92a6c567871423c38bd0cec8c0e6dd13da94d623ad19d"
 dependencies = [
- "encryptman",
+ "encryptman 0.4.0",
  "keyring",
  "thiserror 2.0.21",
  "zeroize",
@@ -1436,7 +1451,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3044,7 +3059,7 @@ version = "0.5.1"
 dependencies = [
  "base64 0.23.1",
  "chrono",
- "encryptman",
+ "encryptman 0.5.0",
  "harfrust",
  "med-recon-config",
  "med-recon-core",
@@ -3083,7 +3098,7 @@ name = "med-recon-config"
 version = "0.5.1"
 dependencies = [
  "directories",
- "encryptman",
+ "encryptman 0.5.0",
  "encryptman-keyring",
  "med-recon-core",
  "secrecy",
@@ -3237,7 +3252,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3351,7 +3366,7 @@ version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "680998035259dcfcafe653688bf2aa6d3e2dc05e98be6ab46afb089dc84f1df8"
 dependencies = [
- "proc-macro-crate 1.3.1",
+ "proc-macro-crate 3.5.0",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
@@ -4397,7 +4412,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5647,10 +5662,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6624,7 +6639,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
