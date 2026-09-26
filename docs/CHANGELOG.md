@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-09-26
+
+### Added
+
+- **Canvas-shaped first-load skeleton** - the history canvas shows shimmering
+  placeholder bands and row lines while the first load is in flight (only
+  after a 700 ms delay; a faster load renders nothing rather than flashing).
+- **Retry on a failed history load** - the error panel now carries a
+  "ลองใหม่" button that re-runs the fetch for the selected patient.
+- **Screen-reader narration** - a visually hidden `role="status"` region
+  announces loading and completion, both dialogs are `role="dialog"` with
+  labelled titles, message panels carry `role="alert"` / `role="status"`,
+  and the settings dialog focuses its first field on open.
+
+### Changed
+
+- **The window appears when the UI is ready** - the main window stays hidden
+  until the frontend has mounted (with a 5 s backend fallback), so the app
+  opens with its shell already rendered instead of a white WebView flash.
+- **Loading indicators are delayed by 700 ms** - a load that finishes sooner
+  shows nothing; the threshold sits above the history fetch's own 300 ms
+  debounce so a quick window change never flashes the dim or the load bar.
+- **Medication tables have sticky header cells** - column labels stay
+  visible while a long history scrolls.
+
+### Fixed
+
+- **Window-change stutter** - the debug wasm build made every re-render
+  stutter; the dev profile now builds at opt-level 2 (release at 3).
+
 ## [0.4.1] - 2026-09-01
 
 ### Fixed

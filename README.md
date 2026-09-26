@@ -24,7 +24,7 @@ answer leaves as a PDF the requesting hospital can keep.
 | BPMH ▣ | Allergies ▣ | Visits ▣ | PDF export ▣ |
 |---|---|---|---|
 
-*v0.4.0 - the reconciliation loop is sealed and serving.*
+*v0.5.0 - the review loop, polished: instant boot, honest states, native speed.*
 
 > Built with Tauri 2 + Leptos 0.8, judged by `med-recon-core`, read from
 > HOSxP by `med-recon-hosxp` - never a write, never a plaintext secret.
@@ -118,6 +118,7 @@ v0.1   ▸ search, BPMH, allergies, visits ────────────�
 v0.2   ▸ user manual, setup flows ─────────────────────────────────── ▸ sealed
 v0.3   ▸ A4 PDF export: Sarabun embedded, HarfBuzz shaping ────────── ▸ sealed
 v0.4   ▸ click-to-strike review aid ───────────────────────────────── ▸ sealed
+v0.5   ▸ production interaction pass: boot, states, a11y, speed ───── ▸ sealed
 ```
 
 **Raising the artifact** - read `AGENTS.md` before touching a query -
