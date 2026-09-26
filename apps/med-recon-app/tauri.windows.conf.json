@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "build": {
+    "beforeBuildCommand": {
+      "script": "trunk build frontend/index.html --release && powershell -NoProfile -ExecutionPolicy Bypass -File ../../script/wasm-opt.ps1",
+      "cwd": "."
+    }
+  }
+}

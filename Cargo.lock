@@ -3055,7 +3055,7 @@ dependencies = [
 
 [[package]]
 name = "med-recon-app"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "base64 0.23.1",
  "chrono",
@@ -3082,7 +3082,7 @@ dependencies = [
 
 [[package]]
 name = "med-recon-bridge"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "js-sys",
  "serde",
@@ -3095,7 +3095,7 @@ dependencies = [
 
 [[package]]
 name = "med-recon-config"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "directories",
  "encryptman 0.4.0",
@@ -3110,7 +3110,7 @@ dependencies = [
 
 [[package]]
 name = "med-recon-core"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "chrono",
  "serde",
@@ -3118,7 +3118,7 @@ dependencies = [
 
 [[package]]
 name = "med-recon-frontend"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "chrono",
  "js-sys",
@@ -3135,7 +3135,7 @@ dependencies = [
 
 [[package]]
 name = "med-recon-hosxp"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "chrono",
  "med-recon-core",

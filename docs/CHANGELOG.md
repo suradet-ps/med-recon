@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- **Windows local builds no longer require Git Bash** - the build's wasm-opt
+  step called `sh`, which is not on PATH on a stock Windows machine (GitHub's
+  Windows runners ship Git Bash, which hid the failure in CI). Windows now
+  runs `script/wasm-opt.ps1` via `tauri.windows.conf.json`, a PowerShell port
+  of the same pinned-binaryen pipeline; Unix keeps `wasm-opt.sh`.
+
 ## [0.5.0] - 2026-09-26
 
 ### Added
