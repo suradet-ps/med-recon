@@ -37,8 +37,14 @@ pub fn HelpModal(state: AppState) -> impl IntoView {
             }
             on:click=move |_| close()
         >
-            <section class="modal modal--help" on:click=move |ev| ev.stop_propagation()>
-                <h2 class="modal__title">"คู่มือการใช้งาน"</h2>
+            <section
+                class="modal modal--help"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="help-title"
+                on:click=move |ev| ev.stop_propagation()
+            >
+                <h2 class="modal__title" id="help-title">"คู่มือการใช้งาน"</h2>
                 <p class="modal__status">
                     "วิธีใช้งาน Med Recon ตั้งแต่ตั้งค่าครั้งแรกจนถึงส่งออกรายงาน"
                 </p>

@@ -41,6 +41,9 @@ pub struct AppState {
     pub history: RwSignal<Option<PatientHistory>>,
     /// Whether a history load is in flight.
     pub history_loading: RwSignal<bool>,
+    /// `history_loading`, delayed by a short threshold - what the loading
+    /// indicators bind to, so a fast load never flashes them.
+    pub history_loading_visible: RwSignal<bool>,
     /// Last history-load error message, if any.
     pub history_error: RwSignal<Option<String>>,
     /// Per-query history window override (days). `None` = use the
@@ -77,6 +80,7 @@ impl AppState {
             patient_photo: RwSignal::new(None),
             history: RwSignal::new(None),
             history_loading: RwSignal::new(false),
+            history_loading_visible: RwSignal::new(false),
             history_error: RwSignal::new(None),
             history_days_override: RwSignal::new(None),
             default_history_days: RwSignal::new(730),

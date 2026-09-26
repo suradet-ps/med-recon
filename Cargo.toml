@@ -49,9 +49,19 @@ wasm-bindgen-futures = "0.4"                                # async on wasm
 js-sys = "0.3"                                              # window/global access on wasm
 web-sys = "0.3"                                             # DOM access on wasm
 
+[profile.dev]
+incremental = true
+# The Leptos frontend runs as wasm inside the WebView: an unoptimized debug
+# build makes every re-render (a history window change, a fresh patient)
+# stutter visibly. opt-level 2 keeps dev builds fast enough to feel native
+# while incremental compilation keeps the edit-build loop short.
+opt-level = 2
+
+# Release profile: panic=abort + codegen-units=1 + LTO. opt-level 3 because
+# runtime smoothness matters more than a few MB of desktop binary size.
 [profile.release]
 codegen-units = 1
 lto = true
-opt-level = "z"
+opt-level = 3
 panic = "abort"
 strip = true

@@ -85,6 +85,18 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
     let tab = RwSignal::new(SettingsTab::Connection);
     let generation = RwSignal::new(0u64);
 
+    // Focus the first field whenever the dialog opens. The modal stays
+    // mounted (display toggling), so the `autofocus` attribute alone would
+    // only fire once at boot while the dialog is still hidden.
+    let host_ref = NodeRef::<leptos::html::Input>::new();
+    Effect::new(move |_| {
+        if state.settings_open.get()
+            && let Some(input) = host_ref.get()
+        {
+            let _ = input.focus();
+        }
+    });
+
     // Load the saved connection values, site settings, and current
     // medication list on mount so re-opening the dialog shows what was set
     // (the password is never stored, so it stays empty).
@@ -269,6 +281,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                     <label for="cfg-host">"Host"</label>
                     <input
                         id="cfg-host"
+                        node_ref=host_ref
                         class="form-input form-input--mono"
                         placeholder="192.168.1.10"
                         prop:value=move || host.get()
@@ -324,7 +337,8 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         } else {
                             "modal__message modal__message--error"
                         };
-                        view! { <p class=class>{text}</p> }
+                        let role = if is_success { "status" } else { "alert" };
+                        view! { <p class=class role=role>{text}</p> }
                     })
                 }}
 
@@ -397,7 +411,8 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         } else {
                             "modal__message modal__message--error"
                         };
-                        view! { <p class=class>{text}</p> }
+                        let role = if is_success { "status" } else { "alert" };
+                        view! { <p class=class role=role>{text}</p> }
                     })
                 }}
 
@@ -435,8 +450,14 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             }
             on:click=move |_| close()
         >
-            <section class="modal" on:click=move |ev| ev.stop_propagation()>
-                <h2 class="modal__title">"ตั้งค่า HOSxP"</h2>
+            <section
+                class="modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="settings-title"
+                on:click=move |ev| ev.stop_propagation()
+            >
+                <h2 class="modal__title" id="settings-title">"ตั้งค่า HOSxP"</h2>
                 <p class="modal__status">
                     {move || {
                         if state.configured.get() {

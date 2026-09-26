@@ -34,6 +34,43 @@ pub fn run() {
 fn App() -> impl IntoView {
     let state = AppState::new();
 
+    // The window starts hidden; reveal it once the shell has mounted, so the
+    // user never sees a white WebView flash.
+    let root_ref = NodeRef::<leptos::html::Div>::new();
+    root_ref.on_load(move |_| {
+        spawn_local(async move {
+            let _ = crate::api::show_main_window().await;
+        });
+    });
+
+    // Loading indicators appear only after a delay: a load that finishes
+    // sooner shows nothing at all, because a flashing dim/spinner reads as
+    // jank. The threshold sits above the history fetch's own 300 ms
+    // debounce, so a quick window change never flashes anything either.
+    // The generation guard cancels a pending timer when the load ends or a
+    // new one starts.
+    let load_generation = RwSignal::new(0_u64);
+    let delay_state = state;
+    Effect::new(move |_| {
+        if delay_state.history_loading.get() {
+            let generation = load_generation.get_untracked().wrapping_add(1);
+            load_generation.set(generation);
+            set_timeout(
+                move || {
+                    if load_generation.get_untracked() == generation
+                        && delay_state.history_loading.get_untracked()
+                    {
+                        delay_state.history_loading_visible.set(true);
+                    }
+                },
+                Duration::from_millis(700),
+            );
+        } else {
+            load_generation.update(|generation| *generation = generation.wrapping_add(1));
+            delay_state.history_loading_visible.set(false);
+        }
+    });
+
     // First-run check: no stored settings → open the settings dialog.
     spawn_local(async move {
         match crate::api::is_configured().await {
@@ -89,7 +126,7 @@ fn App() -> impl IntoView {
     });
 
     view! {
-        <div class="app">
+        <div class="app" node_ref=root_ref>
             <TopBar state=state />
             <div class="app__body">
                 <aside class="sidebar">
@@ -101,6 +138,20 @@ fn App() -> impl IntoView {
             </div>
             <SettingsModal state=state />
             <HelpModal state=state />
+
+            // Screen-reader narration for the async states (WCAG 4.1.3);
+            // errors are announced by the canvas' role="alert" panel.
+            <div class="sr-only" role="status" aria-live="polite">
+                {move || {
+                    if state.history_loading_visible.get() {
+                        "กำลังโหลดประวัติยา".to_string()
+                    } else if state.history.with(|history| history.is_some()) {
+                        "โหลดประวัติยาแล้ว".to_string()
+                    } else {
+                        String::new()
+                    }
+                }}
+            </div>
         </div>
     }
 }

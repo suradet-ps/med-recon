@@ -1748,3 +1748,77 @@ code, .mono, .code {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ==========================================================================
+   Polish pass: narration, first-load skeleton, sticky headers, retry
+   ========================================================================== */
+
+/* Visually hidden, still announced by screen readers (WCAG 4.1.3). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* First-load skeleton: canvas-shaped shimmer blocks, shown only after the
+   loading indicator delay (a fast load renders nothing instead). */
+.canvas-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-md);
+  padding: var(--sp-md) 0;
+}
+
+.canvas-skeleton__band {
+  height: 56px;
+  border-radius: 8px;
+}
+
+.canvas-skeleton__band--tall {
+  height: 88px;
+}
+
+.canvas-skeleton__line {
+  height: 12px;
+  border-radius: 4px;
+}
+
+.canvas-skeleton__band,
+.canvas-skeleton__line {
+  background: linear-gradient(
+    90deg,
+    var(--surface-muted) 25%,
+    var(--canvas-raised) 50%,
+    var(--surface-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Header cells stay visible while a long history scrolls. Opaque background
+   matching the canvas so rows never show through. */
+.med-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--canvas-raised);
+}
+
+.banner-warning__action {
+  margin-top: var(--sp-xs);
+}

@@ -69,30 +69,48 @@ pub fn HistoryCanvas(state: AppState) -> impl IntoView {
         <main class="main-canvas">
             <div
                 class="canvas-loadbar"
-                class:canvas-loadbar--active=move || state.history_loading.get()
+                class:canvas-loadbar--active=move || state.history_loading_visible.get()
             ></div>
             {move || {
                 if state.patient.get().is_none() {
                     view! { <EmptyState/> }.into_any()
                 } else if let Some(err) = state.history_error.get() {
-                    view! { <div class="banner-warning">{err}</div> }.into_any()
+                    view! {
+                        <div class="banner-warning" role="alert">
+                            <IconAlert class="banner-warning__icon" />
+                            <span>
+                                <strong>"โหลดประวัติยาไม่สำเร็จ"</strong>
+                                <div>{err}</div>
+                                <button
+                                    class="button-secondary button-secondary--inline banner-warning__action"
+                                    on:click=move |_| state.window_epoch.update(|e| *e += 1)
+                                >
+                                    "ลองใหม่"
+                                </button>
+                            </span>
+                        </div>
+                    }
+                        .into_any()
                 } else if let Some(history) = state.history.get() {
                     view! {
                         <div
                             class="history-stack"
-                            class:history-stack--loading=move || state.history_loading.get()
+                            class:history-stack--loading=move || state.history_loading_visible.get()
+                            aria-busy=move || {
+                                if state.history_loading.get() { "true" } else { "false" }
+                            }
                         >
                             <HistoryView history=history state=state/>
                         </div>
                     }
                         .into_any()
                 } else if state.history_loading.get() {
-                    view! {
-                        <div class="canvas-loading">
-                            <span class="spinner" aria-label="loading"></span>
-                        </div>
+                    if state.history_loading_visible.get() {
+                        view! { <CanvasSkeleton/> }.into_any()
+                    } else {
+                        // Fast load: render nothing rather than a flash.
+                        ().into_any()
                     }
-                        .into_any()
                 } else {
                     view! { <EmptyState/> }.into_any()
                 }
@@ -109,6 +127,23 @@ fn EmptyState() -> impl IntoView {
             <IconUser class="canvas-empty__icon" />
             <h2 class="canvas-empty__title">"เลือกผู้ป่วยเพื่อดูประวัติยา"</h2>
             <p class="canvas-empty__sub">"ค้นหาด้วยชื่อ-สกุล, HN หรือ CID ทางซ้าย แล้วเลือกผู้ป่วย"</p>
+        </div>
+    }
+}
+
+/// First-load skeleton: the canvas' own geometry (patient bar, verdict bands,
+/// table rows) as shimmering placeholders. Shown only after the loading
+/// indicator delay, so a fast load never flashes it.
+#[component]
+fn CanvasSkeleton() -> impl IntoView {
+    view! {
+        <div class="canvas-skeleton" aria-busy="true" aria-label="กำลังโหลดประวัติยา">
+            <div class="canvas-skeleton__band canvas-skeleton__band--tall"></div>
+            <div class="canvas-skeleton__band"></div>
+            <div class="canvas-skeleton__band"></div>
+            {(0..5)
+                .map(|_| view! { <div class="canvas-skeleton__line"></div> })
+                .collect_view()}
         </div>
     }
 }
@@ -249,7 +284,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                                     >
                                         {label}
                                         {move || {
-                                            if state.history_loading.get() && is_active() {
+                                            if state.history_loading_visible.get() && is_active() {
                                                 view! {
                                                     <span
                                                         class="segmented__spinner"

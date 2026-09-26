@@ -6,7 +6,22 @@ pub mod report;
 pub mod state;
 
 use state::AppState;
-use tauri::Manager;
+use std::time::Duration;
+use tauri::{Manager, WebviewWindow};
+
+/// Safety net: how long to wait for the frontend's `show_main_window` call
+/// before revealing the window anyway, so a broken UI can never leave an
+/// invisible app running.
+const WINDOW_SHOW_FALLBACK: Duration = Duration::from_secs(5);
+
+/// Reveal the main window. The frontend calls this once it has mounted, so
+/// the user never sees a white WebView flash - the window appears with the
+/// UI already rendered.
+#[tauri::command]
+fn show_main_window(window: WebviewWindow) {
+    let _ = window.show();
+    let _ = window.set_focus();
+}
 
 /// Start the Tauri application.
 pub fn run() {
@@ -22,16 +37,15 @@ pub fn run() {
         .manage(AppState::new())
         .setup(|app| {
             if let Some(window) = app.get_webview_window("main") {
-                if let Err(e) = window.center() {
-                    tracing::error!("failed to center main window: {e}");
-                }
-                if let Err(e) = window.show() {
-                    tracing::error!("failed to show main window: {e}");
-                }
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(WINDOW_SHOW_FALLBACK).await;
+                    let _ = window.show();
+                });
             }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            show_main_window,
             commands::get_app_status,
             commands::is_configured,
             commands::connection_health,

@@ -149,6 +149,12 @@ pub async fn connection_health() -> Result<ConnectionHealth, ApiError> {
     call_empty("connection_health").await
 }
 
+/// Reveal the main window once the UI has mounted (the window starts hidden
+/// so the user never sees a white WebView flash).
+pub async fn show_main_window() -> Result<(), ApiError> {
+    call_empty("show_main_window").await
+}
+
 /// Save the site connection config (encrypted at rest) and connect.
 pub async fn save_connection(config: &ConnectionInput) -> Result<(), ApiError> {
     call_struct_arg("save_connection", "config", config).await

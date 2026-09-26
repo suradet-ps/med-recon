@@ -180,6 +180,26 @@ HN/CID) from Google Fonts. Base 14 px, line-height 1.5.
   (green) / error (red) message panels.
 - **Warning banner** - amber tint, alert icon, used for completeness
   warnings and degraded-connection messages.
+- **Medication table** - fixed layout with pinned short columns; header cells
+  are sticky, so a long history keeps its column labels while scrolling.
+
+### 3.4 Interaction states
+
+Every async state is deliberate:
+
+| State | Presentation |
+|---|---|
+| First load (no history) | Canvas-shaped skeleton (bands + row lines), shown only after a 700 ms delay; a faster load renders nothing |
+| Refresh (history present) | 3 px sticky load bar + the previous history dimmed to 50%; the active window segment shows an inline spinner |
+| Empty | `canvas-empty` icon + title + hint before a patient is chosen; section-level "ไม่พบ..." lines keep the layout |
+| Error | `banner-warning` with `role="alert"`, the backend message, and a "ลองใหม่" retry that re-runs the load |
+| Narration | A visually hidden `role="status"` region announces loading and completion (WCAG 4.1.3) |
+| Focus | The settings dialog focuses its first field on open; both dialogs are `role="dialog"` with Escape/backdrop close |
+
+Timing discipline: loading indicators appear only after 700 ms - a load that
+finishes sooner shows nothing, because a flashing spinner reads as jank. The
+threshold sits above the history fetch's own 300 ms debounce, so a quick
+window change never flashes the dim or the load bar.
 
 ---
 
