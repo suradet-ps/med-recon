@@ -1,13 +1,11 @@
 # Med Recon
 
-```
-███╗   ███╗███████╗██████╗ ██████╗ ███████╗ ██████╗ ██████╗ ███╗   ██╗
-████╗ ████║██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔═══██╗████╗  ██║
-██╔████╔██║█████╗  ██║  ██║██████╔╝█████╗  ██║     ██║   ██║██╔██╗ ██║
-██║╚██╔╝██║██╔══╝  ██║  ██║██╔══██╗██╔══╝  ██║     ██║   ██║██║╚██╗██║
-██║ ╚═╝ ██║███████╗██████╔╝██║  ██║███████╗╚██████╗╚██████╔╝██║ ╚████║
-╚═╝     ╚═╝╚══════╝╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝
-```
+[![CI](https://github.com/suradet-ps/med-recon/actions/workflows/ci.yml/badge.svg)](https://github.com/suradet-ps/med-recon/actions/workflows/ci.yml)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
+[![Rust: stable](https://img.shields.io/badge/rust-stable-orange.svg?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![Tauri v2](https://img.shields.io/badge/Tauri-v2-24c8db.svg?logo=tauri&logoColor=white)](https://tauri.app/)
+[![Leptos v0.8](https://img.shields.io/badge/Leptos-v0.8-blue.svg)](https://leptos.dev)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/suradet-ps/med-recon/issues)
 
 ---
 
