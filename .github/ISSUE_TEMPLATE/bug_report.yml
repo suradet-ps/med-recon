@@ -1,0 +1,73 @@
+name: Bug report
+description: Something is not working as it should
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make Med Recon better. Please fill in the fields below.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: A short, clear description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the error message shown in the app, if any.
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Med Recon version
+      description: Shown in the footer of an exported PDF.
+      placeholder: "e.g. 0.5.0"
+    validations:
+      required: true
+  - type: input
+    id: hosxp
+    attributes:
+      label: HOSxP / MariaDB version
+      description: If known - HOSxP schema drifts between sites and versions.
+      placeholder: "e.g. HOSxP XE 4.x, MariaDB 10.5"
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or extra context
+      description: Paste relevant logs. Never paste passwords, connection strings, or patient data (HN, CID, names).
+      render: text
+    validations:
+      required: false

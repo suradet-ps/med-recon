@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Development guide
+    url: https://github.com/suradet-ps/med-recon/blob/main/AGENTS.md
+    about: Build commands, HOSxP schema reference, and project conventions
