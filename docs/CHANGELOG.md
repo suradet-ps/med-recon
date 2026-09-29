@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.2] - 2026-09-29
+
+### Changed
+
+- **New brand mark and emerald palette** - `icon-master.svg` is replaced by
+  the blister-panel artwork (outer drop shadow removed), every platform icon
+  is regenerated from it, and the in-app logo, UI design tokens, and the PDF
+  report palette move to the matching emerald / soft-yellow family.
+
 ## [0.5.1] - 2026-09-26
 
 ### Fixed
