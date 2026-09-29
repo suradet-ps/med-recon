@@ -905,6 +905,10 @@ code, .mono, .code {
 
 .history-stack--loading {
   opacity: 0.5;
+  /* The loading opacity creates a stacking context for this flex item; without
+     a stack level here the canvas load bar (z-index 5) would paint over the
+     pinned table header. Keep the dimmed stack above the bar. */
+  z-index: 6;
 }
 
 .canvas-empty {
