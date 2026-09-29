@@ -8,19 +8,19 @@
    ========================================================================== */
 
 :root {
-  /* Brand - green family */
-  --brand: #00754A;
-  --brand-dark: #005C38;
-  --brand-soft: #DCF2EA;
+  /* Brand - emerald family (matches icon-master.svg) */
+  --brand: #059669;
+  --brand-dark: #047857;
+  --brand-soft: #D1FAE5;
 
   /* Status - connection dot */
-  --status-connected: #43A047;
+  --status-connected: #10B981;
   --status-disconnected: #C62828;
 
   /* Verdict - medication state bands */
-  --verdict-found: #E8F5E9;
-  --verdict-found-text: #1B5E20;
-  --verdict-found-border: #A5D6A7;
+  --verdict-found: #F0FDF4;
+  --verdict-found-text: #065F46;
+  --verdict-found-border: #A7F3D0;
   --verdict-notfound: #FFEBEE;
   --verdict-notfound-text: #B71C1C;
   --verdict-notfound-border: #FFCDD2;
@@ -46,9 +46,9 @@
   --muted-code: #5A5E61;
 
   /* Warning */
-  --warning-bg: #FFF8E1;
-  --warning-text: #5F470F;
-  --warning-border: #FFE082;
+  --warning-bg: #FEF9C3;
+  --warning-text: #713F12;
+  --warning-border: #FDE047;
 
   /* Elevation */
   --elev-3: 0 8px 24px rgba(0, 0, 0, 0.18);
@@ -451,7 +451,7 @@ code, .mono, .code {
   outline: none;
   border: 2px solid var(--brand);
   padding: 0 calc(var(--sp-sm) - 1px) 0 31px;
-  box-shadow: 0 0 0 3px rgba(0, 117, 74, 0.1);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
 }
 
 .result-list {
@@ -1290,12 +1290,12 @@ code, .mono, .code {
    table. Green tint + left brand accent bar so the latest visit reads as
    the most prominent row block, above the alternating banding. */
 .med-table__row--latest {
-  background: #F0F9F4;
+  background: #ECFDF5;
 }
 
 /* Out-specifies the generic row hover so the tint survives hover. */
 .med-table .med-table__row--latest:hover {
-  background: #E7F5EE;
+  background: #DCFCE7;
 }
 
 /* ==========================================================================
@@ -1580,7 +1580,7 @@ code, .mono, .code {
   outline: none;
   border: 2px solid var(--brand);
   padding: 0 calc(var(--sp-sm) - 1px);
-  box-shadow: 0 0 0 3px rgba(0, 117, 74, 0.1);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
 }
 
 .form-input--mono {

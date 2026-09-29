@@ -107,14 +107,14 @@ Two-panel desktop layout adapted from the AllerX design language, with a
 
 | Token | Value | Role |
 |---|---|---|
-| `--brand` | `#00754A` | Primary green - filled buttons, active accents |
-| `--brand-dark` | `#005C38` | Hover/down state of primary buttons |
-| `--brand-soft` | `#DCF2EA` | Patient bar, selection tint |
-| `--status-connected` | `#43A047` | Top-bar health dot |
+| `--brand` | `#059669` | Primary emerald - filled buttons, active accents |
+| `--brand-dark` | `#047857` | Hover/down state of primary buttons |
+| `--brand-soft` | `#D1FAE5` | Patient bar, selection tint |
+| `--status-connected` | `#10B981` | Top-bar health dot |
 | `--status-disconnected` | `#C62828` | Top-bar health dot (error) |
-| `--verdict-found` | `#E8F5E9` | Active-medication band background |
-| `--verdict-found-text` | `#2E7D32` | Active-medication band text |
-| `--verdict-found-border` | `#A5D6A7` | Active-medication band border |
+| `--verdict-found` | `#F0FDF4` | Active-medication band background |
+| `--verdict-found-text` | `#065F46` | Active-medication band text |
+| `--verdict-found-border` | `#A7F3D0` | Active-medication band border |
 | `--verdict-notfound` | `#FFEBEE` | Allergy / error band background |
 | `--verdict-notfound-text` | `#C62828` | Allergy / error text |
 | `--verdict-notfound-border` | `#FFCDD2` | Allergy / error border |
@@ -128,9 +128,14 @@ Two-panel desktop layout adapted from the AllerX design language, with a
 | `--ink` | `#212121` | Primary text |
 | `--slate` | `#616161` | Secondary text |
 | `--steel` | `#9E9E9E` | Placeholder / disabled text |
-| `--warning-bg` | `#FFF8E1` | Warning banner |
-| `--warning-text` | `#8a6420` | Warning text (WCAG AA on the banner) |
-| `--warning-border` | `#FFE082` | Warning border |
+| `--warning-bg` | `#FEF9C3` | Warning banner |
+| `--warning-text` | `#713F12` | Warning text (WCAG AA on the banner) |
+| `--warning-border` | `#FDE047` | Warning border |
+
+The emerald + soft-yellow palette mirrors the brand mark
+(`icon-master.svg`: blister panel `#FDE047`, pill `#059669`, emptied
+pocket `#10B981`); the in-app `IconLogo` and the generated app icons
+share the same artwork.
 
 Radii: `--rounded-sm 4px`, `--rounded-md 6px`, `--rounded-lg 8px`,
 `--rounded-full 9999px`. Elevation: `--elev-3 0 8px 24px rgba(0,0,0,0.18)`

@@ -1,233 +1,97 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 560" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
-    <!-- Hard Pop Art Shadow -->
-    <filter id="pop-shadow-med-recon" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow
-        dx="10"
-        dy="12"
-        stdDeviation="0"
-        flood-color="#14161A"
-        flood-opacity="1"
-      />
+    <!-- ============================================================
+         SOFT INNER GLOW
+         Lifts the four pockets off the panel. There is deliberately
+         no outer drop shadow: the icon must keep a clean silhouette
+         at every platform size (dock, taskbar, store tiles).
+         ============================================================ -->
+    <filter id="inner-glow-med-recon" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.15" />
     </filter>
+
+    <!-- ============================================================
+         BLISTER PANEL GRADIENT
+         Soft yellow, lit from the upper left:
+         #FEF9C3 (light) -> #FEF08A (mid) -> #FDE047 (deep)
+         ============================================================ -->
+    <radialGradient id="panel-yellow-med-recon" cx="40%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#FEF9C3" />
+      <stop offset="60%" stop-color="#FEF08A" />
+      <stop offset="100%" stop-color="#FDE047" />
+    </radialGradient>
+
+    <!-- ============================================================
+         FILLED POCKET GRADIENT
+         White fading to cream: #FFFFFF -> #FEF3C7
+         ============================================================ -->
+    <radialGradient id="pocket-white-med-recon" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+      <stop offset="100%" stop-color="#FEF3C7" stop-opacity="0.9" />
+    </radialGradient>
+
+    <!-- ============================================================
+         EMPTIED POCKET GRADIENT
+         Soft green tint: #F0FDF4 -> #D1FAE5
+         ============================================================ -->
+    <radialGradient id="pocket-empty-med-recon" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#F0FDF4" stop-opacity="1" />
+      <stop offset="100%" stop-color="#D1FAE5" stop-opacity="0.95" />
+    </radialGradient>
   </defs>
 
   <!-- ============================================================
-       FULL-CANVAS SCALE-UP
-       The whole artwork is scaled 1.12x about the canvas center so
-       the disc + shadow fills ~92% of the icon instead of ~82%.
-       Without this the generated icons looked small next to other
-       apps' icons. The pop-art shadow stays inside the canvas
-       (bottom edge: (230+6+12) * 1.12 = 277.8 <= 280).
+       BLISTER PANEL
+       Rounded yellow square, #EAB308 border. No shadow filter here -
+       the former hard outer shadow was dropped on purpose.
        ============================================================ -->
 
-  <g
-    transform="translate(280, 280) scale(1.12) translate(-280, -280)"
-  >
-
-<!-- ============================================================
-       MED RECON BRAND BACKGROUND
-       Disc: warm yellow #FBC02D
-       ============================================================ -->
-
-  <circle
-    cx="280"
-    cy="280"
-    r="230"
-    fill="#FBC02D"
-    stroke="#14161A"
-    stroke-width="12"
-    filter="url(#pop-shadow-med-recon)"
+  <rect
+    x="24"
+    y="24"
+    width="464"
+    height="464"
+    rx="88"
+    fill="url(#panel-yellow-med-recon)"
+    stroke="#EAB308"
+    stroke-width="8"
   />
 
   <!-- ============================================================
-       SUBTLE CREAM ACCENT
-       Adds visual depth without introducing a new color family
+       FOUR POCKETS
+       Centered and slightly enlarged (1.35x) so the strip reads as
+       one solid panel instead of four floating bubbles.
        ============================================================ -->
 
-  <circle
-    cx="280"
-    cy="280"
-    r="196"
-    fill="none"
-    stroke="#FFF8E1"
-    stroke-width="5"
-    opacity="0.45"
-  />
+  <g transform="translate(256, 256) scale(1.35)" filter="url(#inner-glow-med-recon)">
 
-  <!-- ============================================================
-       ANGLED MEDICATION BLISTER
-       ============================================================ -->
+    <!-- Pocket 1 (green pill - top left) -->
+    <g transform="translate(-68, -68)">
+      <circle cx="0" cy="0" r="62" fill="url(#pocket-white-med-recon)" stroke="#FDE68A" stroke-width="3.5" />
+      <circle cx="0" cy="0" r="38" fill="#059669" />
+      <ellipse cx="-8" cy="-10" rx="10" ry="5" fill="#FFFFFF" opacity="0.5" />
+    </g>
 
-  <g
-    transform="translate(280, 270) rotate(-12) translate(-280, -270)"
-    filter="url(#pop-shadow-med-recon)"
-  >
+    <!-- Pocket 2 (already taken - top right, "?" placeholder) -->
+    <g transform="translate(68, -68)">
+      <circle cx="0" cy="0" r="62" fill="url(#pocket-empty-med-recon)" stroke="#A7F3D0" stroke-width="3.5" />
+      <circle cx="0" cy="0" r="28" fill="#10B981" />
+      <text x="0" y="10" font-family="Arial, sans-serif" font-weight="bold" font-size="34" fill="#FFFFFF" text-anchor="middle">?</text>
+    </g>
 
-    <!-- Blister Board -->
-    <rect
-      x="150"
-      y="130"
-      width="260"
-      height="280"
-      rx="30"
-      fill="#FFFFFF"
-      stroke="#14161A"
-      stroke-width="11"
-    />
+    <!-- Pocket 3 (green pill - bottom left) -->
+    <g transform="translate(-68, 68)">
+      <circle cx="0" cy="0" r="62" fill="url(#pocket-white-med-recon)" stroke="#FDE68A" stroke-width="3.5" />
+      <circle cx="0" cy="0" r="38" fill="#059669" />
+      <ellipse cx="-8" cy="-10" rx="10" ry="5" fill="#FFFFFF" opacity="0.5" />
+    </g>
 
-<!-- ==========================================================
-         FOUR MEDICATION POCKETS
-         Light green: #66BB6A
-         ========================================================== -->
-
-    <circle
-      cx="210"
-      cy="200"
-      r="35"
-      fill="#66BB6A"
-      stroke="#14161A"
-      stroke-width="8"
-    />
-
-    <circle
-      cx="350"
-      cy="200"
-      r="35"
-      fill="#66BB6A"
-      stroke="#14161A"
-      stroke-width="8"
-    />
-
-    <circle
-      cx="210"
-      cy="340"
-      r="35"
-      fill="#66BB6A"
-      stroke="#14161A"
-      stroke-width="8"
-    />
-
-    <circle
-      cx="350"
-      cy="340"
-      r="35"
-      fill="#66BB6A"
-      stroke="#14161A"
-      stroke-width="8"
-    />
-
-    <!-- ==========================================================
-         BLISTER DIVIDERS
-         ========================================================== -->
-
-    <line
-      x1="150"
-      y1="270"
-      x2="410"
-      y2="270"
-      stroke="#14161A"
-      stroke-width="6"
-      stroke-dasharray="12 12"
-    />
-
-    <line
-      x1="280"
-      y1="130"
-      x2="280"
-      y2="410"
-      stroke="#14161A"
-      stroke-width="6"
-      stroke-dasharray="12 12"
-    />
-
-  </g>
-
-  <!-- ============================================================
-       MEDICATION RECONCILIATION BADGE
-       ============================================================ -->
-
-  <g
-    transform="translate(350, 330) rotate(10)"
-    filter="url(#pop-shadow-med-recon)"
-  >
-
-<!-- Badge -->
-    <circle
-      cx="0"
-      cy="0"
-      r="65"
-      fill="#FFFFFF"
-      stroke="#43A047"
-      stroke-width="10"
-    />
-
-    <!-- ==========================================================
-         MEDICAL CROSS
-         Medium green: #2E7D32
-         ========================================================== -->
-
-    <path
-      d="
-        M -15 -5
-        H -5
-        V -15
-        H 5
-        V -5
-        H 15
-        V 5
-        H 5
-        V 15
-        H -5
-        V 5
-        H -15
-        Z
-      "
-      fill="#2E7D32"
-      stroke="#14161A"
-      stroke-width="3"
-    />
-
-    <!-- ==========================================================
-         RECONCILIATION / SYNC ARROW - TOP
-         ========================================================== -->
-
-    <path
-      d="M -28 -14 A 32 32 0 0 1 25 -20"
-      fill="none"
-      stroke="#66BB6A"
-      stroke-width="6"
-      stroke-linecap="round"
-    />
-
-    <polygon
-      points="25,-26 31,-19 23,-16"
-      fill="#66BB6A"
-      stroke="#14161A"
-      stroke-width="1"
-    />
-
-    <!-- ==========================================================
-         RECONCILIATION / SYNC ARROW - BOTTOM
-         ========================================================== -->
-
-    <path
-      d="M 28 14 A 32 32 0 0 1 -25 20"
-      fill="none"
-      stroke="#66BB6A"
-      stroke-width="6"
-      stroke-linecap="round"
-    />
-
-    <polygon
-      points="-25,26 -31,19 -23,16"
-      fill="#66BB6A"
-      stroke="#14161A"
-      stroke-width="1"
-    />
-
-  </g>
+    <!-- Pocket 4 (green pill - bottom right) -->
+    <g transform="translate(68, 68)">
+      <circle cx="0" cy="0" r="62" fill="url(#pocket-white-med-recon)" stroke="#FDE68A" stroke-width="3.5" />
+      <circle cx="0" cy="0" r="38" fill="#059669" />
+      <ellipse cx="-8" cy="-10" rx="10" ry="5" fill="#FFFFFF" opacity="0.5" />
+    </g>
 
   </g>
 </svg>
-

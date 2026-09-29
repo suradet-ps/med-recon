@@ -65,18 +65,18 @@ fn pdf_y(top_down: f32) -> f32 {
 // ---------------------------------------------------------------- colors
 
 // App design tokens (see style.css) as RGB 0-1.
-const HOUSE: [f32; 3] = [0.118, 0.224, 0.196]; // #1E3932
-const BRAND: [f32; 3] = [0.000, 0.459, 0.290]; // #00754A
+const HOUSE: [f32; 3] = [0.024, 0.306, 0.231]; // #064E3B
+const BRAND: [f32; 3] = [0.020, 0.588, 0.412]; // #059669
 const CANVAS: [f32; 3] = [0.949, 0.941, 0.922]; // #F2F0EB
 const RED: [f32; 3] = [0.784, 0.125, 0.078]; // #C82014
 const RED_BG: [f32; 3] = [0.992, 0.953, 0.953]; // #FDF3F2
-const AMBER: [f32; 3] = [0.541, 0.427, 0.000]; // #8A6D00
-const AMBER_BG: [f32; 3] = [0.980, 0.965, 0.910]; // #FAF6E8
+const AMBER: [f32; 3] = [0.443, 0.247, 0.071]; // #713F12
+const AMBER_BG: [f32; 3] = [0.996, 0.976, 0.765]; // #FEF9C3
 const TEXT: [f32; 3] = [0.133, 0.133, 0.133]; // #222222
 const MUTED: [f32; 3] = [0.420, 0.420, 0.420]; // #6B6B6B
 const BORDER: [f32; 3] = [0.906, 0.906, 0.906]; // #E7E7E7
 const WHITE: [f32; 3] = [1.0, 1.0, 1.0];
-const WHITE_SOFT: [f32; 3] = [0.760, 0.800, 0.780]; // white at ~70% on the house green
+const WHITE_SOFT: [f32; 3] = [0.756, 0.827, 0.808]; // white at ~75% on the house green
 
 // ---------------------------------------------------------------- fonts
 

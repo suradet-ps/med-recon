@@ -139,89 +139,100 @@ icon!(
     <path d="M12 17h.01" />
 );
 
-/// Brand mark - a faithful miniature of `icon-master.svg`: warm-yellow
-/// disc, angled white blister board with four light-green pockets, and the
-/// reconciliation badge (white disc + medium-green cross) overlapping the
-/// bottom-right pocket. Colors follow the app's design tokens via CSS
-/// variables.
+/// Brand mark - a faithful miniature of `icon-master.svg`: a soft-yellow
+/// blister panel with four pockets - three holding green pills and one
+/// already taken (soft-green pocket with a "?"). Shape reads through
+/// tinted borders instead of dark outlines, like the master artwork.
+/// Colors follow the app's design tokens via CSS variables.
 #[component]
 pub fn IconLogo(class: &'static str) -> impl IntoView {
     view! {
         <svg class=class viewBox="0 0 24 24" aria-hidden="true">
-            <circle
-                cx="12"
-                cy="12"
-                r="11.25"
-                fill="var(--logo-disc, #FBC02D)"
-                stroke="var(--ink)"
-                stroke-width="1"
+            <rect
+                x="1.1"
+                y="1.1"
+                width="21.8"
+                height="21.8"
+                rx="4.1"
+                fill="var(--logo-panel, #FDE047)"
+                stroke="var(--logo-panel-border, #EAB308)"
+                stroke-width="0.4"
             />
             <circle
-                cx="12"
-                cy="12"
-                r="9.6"
-                fill="none"
-                stroke="var(--logo-ring, #FFF8E1)"
+                cx="7.7"
+                cy="7.7"
+                r="3.92"
+                fill="var(--logo-pocket, #FFFFFF)"
+                stroke="var(--logo-pocket-border, #FDE68A)"
                 stroke-width="0.5"
-                opacity="0.55"
             />
-            <g transform="rotate(-8 12 12)">
-                <rect
-                    x="4.6"
-                    y="4.2"
-                    width="14.8"
-                    height="15.6"
-                    rx="2.6"
-                    fill="var(--on-brand)"
-                    stroke="var(--ink)"
-                    stroke-width="0.8"
-                />
-                <circle
-                    cx="8.4"
-                    cy="8.6"
-                    r="2.1"
-                    fill="var(--logo-pocket, #66BB6A)"
-                    stroke="var(--ink)"
-                    stroke-width="0.55"
-                />
-                <circle
-                    cx="15.6"
-                    cy="8.6"
-                    r="2.1"
-                    fill="var(--logo-pocket, #66BB6A)"
-                    stroke="var(--ink)"
-                    stroke-width="0.55"
-                />
-                <circle
-                    cx="8.4"
-                    cy="15.6"
-                    r="2.1"
-                    fill="var(--logo-pocket, #66BB6A)"
-                    stroke="var(--ink)"
-                    stroke-width="0.55"
-                />
-                <circle
-                    cx="15.6"
-                    cy="15.6"
-                    r="2.1"
-                    fill="var(--logo-pocket, #66BB6A)"
-                    stroke="var(--ink)"
-                    stroke-width="0.55"
-                />
-            </g>
+            <circle cx="7.7" cy="7.7" r="2.4" fill="var(--logo-pill, #059669)" />
+            <ellipse
+                cx="7.19"
+                cy="7.07"
+                rx="0.63"
+                ry="0.32"
+                fill="#FFFFFF"
+                opacity="0.5"
+            />
             <circle
-                cx="16.4"
-                cy="15.2"
-                r="4.2"
-                fill="var(--on-brand)"
-                stroke="var(--logo-badge, #43A047)"
-                stroke-width="1.1"
+                cx="16.3"
+                cy="7.7"
+                r="3.92"
+                fill="var(--logo-empty, #F0FDF4)"
+                stroke="var(--logo-empty-border, #A7F3D0)"
+                stroke-width="0.5"
             />
-            <path
-                d="M16.4 13.2v4M14.4 15.2h4"
-                stroke="var(--logo-cross, #2E7D32)"
-                stroke-width="1.7"
-                stroke-linecap="round"
+            <circle
+                cx="16.3"
+                cy="7.7"
+                r="1.77"
+                fill="var(--logo-empty-pill, #10B981)"
+            />
+            <text
+                x="16.3"
+                y="8.33"
+                font-family="Arial, sans-serif"
+                font-weight="bold"
+                font-size="2.2"
+                fill="#FFFFFF"
+                text-anchor="middle"
+            >
+                "?"
+            </text>
+            <circle
+                cx="7.7"
+                cy="16.3"
+                r="3.92"
+                fill="var(--logo-pocket, #FFFFFF)"
+                stroke="var(--logo-pocket-border, #FDE68A)"
+                stroke-width="0.5"
+            />
+            <circle cx="7.7" cy="16.3" r="2.4" fill="var(--logo-pill, #059669)" />
+            <ellipse
+                cx="7.19"
+                cy="15.67"
+                rx="0.63"
+                ry="0.32"
+                fill="#FFFFFF"
+                opacity="0.5"
+            />
+            <circle
+                cx="16.3"
+                cy="16.3"
+                r="3.92"
+                fill="var(--logo-pocket, #FFFFFF)"
+                stroke="var(--logo-pocket-border, #FDE68A)"
+                stroke-width="0.5"
+            />
+            <circle cx="16.3" cy="16.3" r="2.4" fill="var(--logo-pill, #059669)" />
+            <ellipse
+                cx="15.79"
+                cy="15.67"
+                rx="0.63"
+                ry="0.32"
+                fill="#FFFFFF"
+                opacity="0.5"
             />
         </svg>
     }
