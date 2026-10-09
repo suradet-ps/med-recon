@@ -74,7 +74,7 @@ Top to bottom:
 3. **BPMH note** - persistent shield banner: dispensing-derived data is one
    source among several.
 4. **ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่ายังคงใช้อยู่ (likely active)** - green verdict bands, one per
-   deduplicated drug.
+   deduplicated drug and sig.
 5. **ยาเดิมที่ผู้ป่วยเคยได้รับและคาดว่าหยุดใช้แล้ว (likely lapsed)** - neutral bands.
 6. **แพ้ยา / อาการไม่พึงประสงค์** - red bands.
 7. **ประวัติการเข้ารับบริการ** - visit timeline (date, OPD/IPD badge,
@@ -224,7 +224,8 @@ window change never flashes the dim or the load bar.
   `opitemrece.drugusage`/`opitemrece.sp_use`.
 - `qty` is DECIMAL in HOSxP; sqlx cannot decode DECIMAL as `f64`, so the
   SQL casts it to CHAR and the client parses it.
-- Columns that vary by site (`strength`, `units`) are selected through
+- Columns that vary by site (`strength`, `units`, and the `drugusage`/
+  `sp_use` order codes used for sig matching) are selected through
   fallback query tiers (MySQL 1054 → degrade; 1146 → skip + warn).
 
 ### 4.3 BPMH aggregation (med-recon-core)
@@ -233,10 +234,15 @@ Input: raw `Dispense` events (OPD + IPD) + the operator-configured
 **current-medication list** (`current_med_codes`, from the settings screen).
 Output: `MedicationItem`s.
 
-1. **Dedup by `icode`** - all visits for the same drug merge into one item.
+1. **Dedup by `icode` + sig** - dispensing events merge into one item only
+   when the drug code and the directions for use both match. Different
+   sigs stay as separate items, so a change of directions (or two orders
+   with different sigs in one visit) stays visible. Events without sig
+   data fold into the most recently dispensed sig group - missing sig is
+   missing data, not a different order.
 2. **Derived days supply** - `qty / (dose_per_admin × frequency_per_day)`,
-   rounded up; `None` when the sig is missing. Display-only - it no longer
-   drives the active/lapsed verdict.
+   rounded up; `None` when the group has no sig data. Display-only - it no
+   longer drives the active/lapsed verdict.
 3. **Active/lapsed verdict - operator-configured, not inferred.** A drug
    whose `icode` is on the current-medication list is `active` no matter
    when it was last dispensed; every other dispensed drug is `lapsed`

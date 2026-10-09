@@ -9,7 +9,7 @@
 use chrono::NaiveDate;
 use med_recon_core::{
     AllergyRecord, Dispense, EncounterSource, MedicationItem, OpdScreenRecord, PatientHistory,
-    PatientSummary, VisitSummary, aggregate_medications, normalize_date,
+    PatientSummary, Sig, VisitSummary, aggregate_medications, normalize_date,
 };
 use secrecy::ExposeSecret;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPool, MySqlPoolOptions};
@@ -172,20 +172,16 @@ impl HosxpClient {
 
         let mut warnings = Vec::new();
 
+        let sigs = self.load_sigs(hn, cutoff, &mut warnings).await?;
         let appointments = self.load_appointments(hn, cutoff, &mut warnings).await?;
         let opd_dispenses = self
-            .load_opd_dispenses(hn, cutoff, &appointments, &mut warnings)
+            .load_opd_dispenses(hn, cutoff, &appointments, &sigs, &mut warnings)
             .await?;
-        let mut ipd_dispenses = self.load_ipd_dispenses(hn, cutoff, &mut warnings).await?;
+        let mut ipd_dispenses = self
+            .load_ipd_dispenses(hn, cutoff, &sigs, &mut warnings)
+            .await?;
         let mut dispenses = opd_dispenses;
         dispenses.append(&mut ipd_dispenses);
-
-        let sigs = self.load_sigs(hn, cutoff, &mut warnings).await?;
-        for d in &mut dispenses {
-            if let Some(sig) = sigs.get(&(d.visit_id.clone(), d.icode.clone())) {
-                d.sig = Some(sig.clone());
-            }
-        }
 
         let allergies = self.load_allergies(hn, &mut warnings).await?;
         let screen_records = self.load_screen_records(hn, cutoff, &mut warnings).await?;
@@ -297,6 +293,7 @@ impl HosxpClient {
         hn: &str,
         cutoff: NaiveDate,
         appointments: &HashMap<String, NaiveDate>,
+        sigs: &HashMap<SigKey, Sig>,
         warnings: &mut Vec<String>,
     ) -> Result<Vec<Dispense>> {
         let rows: Vec<DispenseRow> = match self
@@ -307,6 +304,14 @@ impl HosxpClient {
                 ),
                 (
                     queries::OPD_DISPENSE_SQL_FALLBACK,
+                    vec![P::Str(hn.to_owned()), P::Date(cutoff)],
+                ),
+                (
+                    queries::OPD_DISPENSE_SQL_NO_CODES,
+                    vec![P::Str(hn.to_owned()), P::Date(cutoff)],
+                ),
+                (
+                    queries::OPD_DISPENSE_SQL_MINIMAL,
                     vec![P::Str(hn.to_owned()), P::Date(cutoff)],
                 ),
             ])
@@ -321,10 +326,20 @@ impl HosxpClient {
         };
         Ok(rows
             .into_iter()
-            .filter_map(|r| map_dispense(r, hn, EncounterSource::Opd, cutoff))
-            .map(|mut d| {
-                d.appointment = appointments.get(&d.visit_id).copied();
-                d
+            .filter_map(|r| {
+                let sig = sigs
+                    .get(&(
+                        r.visit_id.clone()?,
+                        r.icode.clone(),
+                        r.drugusage.clone(),
+                        r.sp_use.clone(),
+                    ))
+                    .cloned();
+                map_dispense(r, hn, EncounterSource::Opd, cutoff).map(|mut d| {
+                    d.sig = sig;
+                    d.appointment = appointments.get(&d.visit_id).copied();
+                    d
+                })
             })
             .collect())
     }
@@ -333,6 +348,7 @@ impl HosxpClient {
         &self,
         hn: &str,
         cutoff: NaiveDate,
+        sigs: &HashMap<SigKey, Sig>,
         warnings: &mut Vec<String>,
     ) -> Result<Vec<Dispense>> {
         let rows: Vec<DispenseRow> = match self
@@ -343,6 +359,14 @@ impl HosxpClient {
                 ),
                 (
                     queries::IPD_DISPENSE_SQL_FALLBACK,
+                    vec![P::Str(hn.to_owned()), P::Date(cutoff)],
+                ),
+                (
+                    queries::IPD_DISPENSE_SQL_NO_CODES,
+                    vec![P::Str(hn.to_owned()), P::Date(cutoff)],
+                ),
+                (
+                    queries::IPD_DISPENSE_SQL_MINIMAL,
                     vec![P::Str(hn.to_owned()), P::Date(cutoff)],
                 ),
             ])
@@ -357,16 +381,34 @@ impl HosxpClient {
         };
         Ok(rows
             .into_iter()
-            .filter_map(|r| map_dispense(r, hn, EncounterSource::Ipd, cutoff))
+            .filter_map(|r| {
+                let sig = sigs
+                    .get(&(
+                        r.visit_id.clone()?,
+                        r.icode.clone(),
+                        r.drugusage.clone(),
+                        r.sp_use.clone(),
+                    ))
+                    .cloned();
+                map_dispense(r, hn, EncounterSource::Ipd, cutoff).map(|mut d| {
+                    d.sig = sig;
+                    d
+                })
+            })
             .collect())
     }
 
+    /// Load the directions for use (sig) for every dispensing order.
+    ///
+    /// Keyed by visit id, `icode`, and the order's `drugusage`/`sp_use`
+    /// codes, so two orders for the same drug in the same visit with
+    /// different sigs stay distinct instead of overwriting each other.
     async fn load_sigs(
         &self,
         hn: &str,
         cutoff: NaiveDate,
         warnings: &mut Vec<String>,
-    ) -> Result<HashMap<(String, String), med_recon_core::Sig>> {
+    ) -> Result<HashMap<SigKey, Sig>> {
         let rows: Vec<SigRow> = match self
             .fetch_rows(queries::SIG_SQL, &[P::Str(hn.to_owned()), P::Date(cutoff)])
             .await
@@ -378,17 +420,7 @@ impl HosxpClient {
             }
             Err(e) => return Err(e),
         };
-        Ok(rows
-            .into_iter()
-            .filter_map(|r| {
-                let visit_id = r.an.or(r.vn)?;
-                let sig = queries::sig_from_names(
-                    &[r.d_name1, r.d_name2, r.d_name3],
-                    &[r.s_name1, r.s_name2, r.s_name3],
-                )?;
-                Some(((visit_id, r.icode), sig))
-            })
-            .collect())
+        Ok(collect_sigs(rows))
     }
 
     /// Load OPD screening records (`opdscreen` CC/PE) for one patient, newest
@@ -641,6 +673,27 @@ fn warn_missing(warnings: &mut Vec<String>, table: &str, section: &str) {
     warnings.push(message);
 }
 
+/// Collect sig rows into an order-line-keyed lookup.
+///
+/// The visit id is the admission number (`an`) when present and non-blank,
+/// otherwise the visit number (`vn`) - the same split the dispensing
+/// queries use. Because the key also carries the `drugusage`/`sp_use`
+/// codes, two orders for the same drug in the same visit with different
+/// sigs no longer overwrite each other. Rows whose codes both resolve to
+/// no sig text are skipped.
+fn collect_sigs(rows: Vec<SigRow>) -> HashMap<SigKey, Sig> {
+    rows.into_iter()
+        .filter_map(|r| {
+            let visit_id = r.an.filter(|an| !an.trim().is_empty()).or(r.vn)?;
+            let sig = queries::sig_from_names(
+                &[r.d_name1, r.d_name2, r.d_name3],
+                &[r.s_name1, r.s_name2, r.s_name3],
+            )?;
+            Some(((visit_id, r.icode, r.drugusage, r.sp_use), sig))
+        })
+        .collect()
+}
+
 /// A typed SQL parameter. MySQL prepared statements reject `VARCHAR`
 /// parameters for `LIMIT` and for DATE column comparisons, so the repository
 /// binds each value with its native type.
@@ -682,7 +735,18 @@ struct DispenseRow {
     strength: Option<String>,
     units: Option<String>,
     disp_date: NaiveDate,
+    /// Order-level sig codes, used to match this row to its own
+    /// [`SigKey`].
+    drugusage: Option<String>,
+    sp_use: Option<String>,
 }
+
+/// Sig lookup key: `(visit id, icode, drugusage code, sp_use code)`.
+///
+/// All four parts identify one `opitemrece` order line, so two orders for
+/// the same drug in the same visit with different sigs get distinct
+/// entries instead of overwriting each other.
+type SigKey = (String, String, Option<String>, Option<String>);
 
 /// Raw row shape for `drugusage`/`sp_use` sig queries. `vn` (OPD) and `an`
 /// (IPD) are mutually exclusive on a given row; the visit-id key is the
@@ -692,6 +756,8 @@ struct SigRow {
     vn: Option<String>,
     an: Option<String>,
     icode: String,
+    drugusage: Option<String>,
+    sp_use: Option<String>,
     d_name1: Option<String>,
     d_name2: Option<String>,
     d_name3: Option<String>,
@@ -812,4 +878,62 @@ fn parse_qty(raw: &str) -> f64 {
 /// Normalize a free-text allergy agent: collapse whitespace.
 fn clean_agent(agent: &str) -> String {
     agent.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sig_row(
+        vn: Option<&str>,
+        an: Option<&str>,
+        drugusage: Option<&str>,
+        first_name: Option<&str>,
+    ) -> SigRow {
+        SigRow {
+            vn: vn.map(String::from),
+            an: an.map(String::from),
+            icode: "A1".into(),
+            drugusage: drugusage.map(String::from),
+            sp_use: None,
+            d_name1: first_name.map(String::from),
+            d_name2: None,
+            d_name3: None,
+            s_name1: None,
+            s_name2: None,
+            s_name3: None,
+        }
+    }
+
+    #[test]
+    fn collect_sigs_keeps_different_drugusage_variants() {
+        let sigs = collect_sigs(vec![
+            sig_row(Some("vn1"), None, Some("d1"), Some("1x1")),
+            sig_row(Some("vn1"), None, Some("d2"), Some("1x2")),
+        ]);
+        assert_eq!(sigs.len(), 2);
+        let note = |drugusage: &str| {
+            sigs.get(&("vn1".into(), "A1".into(), Some(drugusage.into()), None))
+                .and_then(|s| s.note.clone())
+        };
+        assert_eq!(note("d1").as_deref(), Some("1x1"));
+        assert_eq!(note("d2").as_deref(), Some("1x2"));
+    }
+
+    #[test]
+    fn collect_sigs_blank_an_falls_back_to_vn() {
+        let sigs = collect_sigs(vec![sig_row(Some("vn1"), Some("  "), None, Some("1x1"))]);
+        assert_eq!(sigs.len(), 1);
+        assert!(sigs.contains_key(&("vn1".into(), "A1".into(), None, None)));
+    }
+
+    #[test]
+    fn collect_sigs_unresolved_names_are_skipped() {
+        let sigs = collect_sigs(vec![
+            sig_row(Some("vn1"), None, Some("d1"), None),
+            sig_row(Some("vn1"), None, Some("d2"), Some("1x1")),
+        ]);
+        assert_eq!(sigs.len(), 1);
+        assert!(sigs.contains_key(&("vn1".into(), "A1".into(), Some("d2".into()), None)));
+    }
 }
