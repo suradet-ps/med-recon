@@ -25,7 +25,7 @@ jobs:
         run: mkdir -p apps/med-recon-app/frontend/dist && touch apps/med-recon-app/frontend/dist/index.html
 
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
           components: clippy
 
@@ -50,7 +50,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust nightly
-        uses: dtolnay/rust-toolchain@0e28dd9a7764e5f83064112bb1f24025a14c313c # nightly
+        uses: dtolnay/rust-toolchain@f0d5300ba8908d942c808f4d31c08471d7798ba3 # nightly
         with:
           components: miri
 
