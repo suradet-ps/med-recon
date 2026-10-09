@@ -100,12 +100,13 @@ pub enum MedicationStatus {
     Lapsed,
 }
 
-/// A deduplicated BPMH entry for one drug.
+/// A deduplicated BPMH entry for one drug and one sig.
 ///
-/// All dispensing events sharing an `icode` are merged into a single item.
+/// Dispensing events sharing an `icode` and the same directions for use
+/// (sig) are merged into a single item; different sigs stay separate.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MedicationItem {
-    /// Drug master code - the dedup key.
+    /// Drug master code - one half of the dedup key (the other is the sig).
     pub icode: String,
     /// Display name of the drug.
     pub drug_name: String,

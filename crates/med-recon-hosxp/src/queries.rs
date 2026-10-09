@@ -80,12 +80,15 @@ LIMIT 1"#;
 /// `qty` is CAST to CHAR because sqlx cannot decode MySQL DECIMAL as `f64`;
 /// the value is parsed in the client. `d.strength`/`d.units` are selected
 /// with a fallback tier for instances lacking those columns (MySQL 1054).
+/// `o.drugusage`/`o.sp_use` identify the order's sig so each dispensing
+/// row can be matched to its own directions for use.
 ///
 /// Parameters: `(hn, cutoff)`.
 pub const OPD_DISPENSE_SQL: &str = r#"
 SELECT o.vn AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
        o.vstdate AS disp_date,
-       d.name AS drug_name, d.strength, d.units
+       d.name AS drug_name, d.strength, d.units,
+       o.drugusage, o.sp_use
 FROM opitemrece o
 JOIN drugitems d ON d.icode = o.icode
 WHERE o.hn = ?
@@ -98,7 +101,38 @@ ORDER BY o.vstdate"#;
 pub const OPD_DISPENSE_SQL_FALLBACK: &str = r#"
 SELECT o.vn AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
        o.vstdate AS disp_date,
-        d.name AS drug_name, NULL AS strength, NULL AS units
+        d.name AS drug_name, NULL AS strength, NULL AS units,
+        o.drugusage, o.sp_use
+FROM opitemrece o
+JOIN drugitems d ON d.icode = o.icode
+WHERE o.hn = ?
+  AND o.vstdate >= ?
+  AND (o.an IS NULL OR TRIM(o.an) = '')
+ORDER BY o.vstdate"#;
+
+/// OPD dispensing history without the `drugusage`/`sp_use` order codes -
+/// same result shape with `NULL` in their place (MySQL 1054 degradation
+/// on sites whose `opitemrece` predates those columns). Without the codes
+/// the rows cannot be matched to their sig; sig display is skipped.
+pub const OPD_DISPENSE_SQL_NO_CODES: &str = r#"
+SELECT o.vn AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
+       o.vstdate AS disp_date,
+       d.name AS drug_name, d.strength, d.units,
+       NULL AS drugusage, NULL AS sp_use
+FROM opitemrece o
+JOIN drugitems d ON d.icode = o.icode
+WHERE o.hn = ?
+  AND o.vstdate >= ?
+  AND (o.an IS NULL OR TRIM(o.an) = '')
+ORDER BY o.vstdate"#;
+
+/// OPD dispensing history with every optional column absent - the minimal
+/// shape used when both fallback tiers above fail (MySQL 1054).
+pub const OPD_DISPENSE_SQL_MINIMAL: &str = r#"
+SELECT o.vn AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
+       o.vstdate AS disp_date,
+       d.name AS drug_name, NULL AS strength, NULL AS units,
+       NULL AS drugusage, NULL AS sp_use
 FROM opitemrece o
 JOIN drugitems d ON d.icode = o.icode
 WHERE o.hn = ?
@@ -114,7 +148,8 @@ ORDER BY o.vstdate"#;
 pub const IPD_DISPENSE_SQL: &str = r#"
 SELECT o.an AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
        o.vstdate AS disp_date,
-       d.name AS drug_name, d.strength, d.units
+       d.name AS drug_name, d.strength, d.units,
+       o.drugusage, o.sp_use
 FROM opitemrece o
 JOIN drugitems d ON d.icode = o.icode
 WHERE o.hn = ?
@@ -126,7 +161,36 @@ ORDER BY o.vstdate"#;
 pub const IPD_DISPENSE_SQL_FALLBACK: &str = r#"
 SELECT o.an AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
        o.vstdate AS disp_date,
-        d.name AS drug_name, NULL AS strength, NULL AS units
+        d.name AS drug_name, NULL AS strength, NULL AS units,
+        o.drugusage, o.sp_use
+FROM opitemrece o
+JOIN drugitems d ON d.icode = o.icode
+WHERE o.hn = ?
+  AND o.vstdate >= ?
+  AND o.an IS NOT NULL AND TRIM(o.an) <> ''
+ORDER BY o.vstdate"#;
+
+/// IPD dispensing without the `drugusage`/`sp_use` order codes - same
+/// result shape with `NULL` in their place.
+pub const IPD_DISPENSE_SQL_NO_CODES: &str = r#"
+SELECT o.an AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
+       o.vstdate AS disp_date,
+       d.name AS drug_name, d.strength, d.units,
+       NULL AS drugusage, NULL AS sp_use
+FROM opitemrece o
+JOIN drugitems d ON d.icode = o.icode
+WHERE o.hn = ?
+  AND o.vstdate >= ?
+  AND o.an IS NOT NULL AND TRIM(o.an) <> ''
+ORDER BY o.vstdate"#;
+
+/// IPD dispensing with every optional column absent - the minimal shape
+/// used when both fallback tiers above fail (MySQL 1054).
+pub const IPD_DISPENSE_SQL_MINIMAL: &str = r#"
+SELECT o.an AS visit_id, o.hn, o.icode, CAST(o.qty AS CHAR) AS qty,
+       o.vstdate AS disp_date,
+       d.name AS drug_name, NULL AS strength, NULL AS units,
+       NULL AS drugusage, NULL AS sp_use
 FROM opitemrece o
 JOIN drugitems d ON d.icode = o.icode
 WHERE o.hn = ?
@@ -138,11 +202,13 @@ ORDER BY o.vstdate"#;
 /// hold codes resolved through the `drugusage` and `sp_use` lookup tables
 /// (`name1`/`name2`/`name3` each). LEFT JOIN so rows without a code still
 /// come back with empty sig text. Covers both OPD (`vn`) and IPD (`an`)
-/// dispensing rows; the client keys each row by whichever visit id is set.
+/// dispensing rows; the client keys each row by the visit id plus both
+/// codes, so two orders for the same drug in one visit with different
+/// sigs stay distinct.
 ///
 /// Parameters: `(hn, cutoff)`.
 pub const SIG_SQL: &str = r#"
-SELECT o.vn, o.an, o.icode,
+SELECT o.vn, o.an, o.icode, o.drugusage, o.sp_use,
        d.name1 AS d_name1, d.name2 AS d_name2, d.name3 AS d_name3,
        s.name1 AS s_name1, s.name2 AS s_name2, s.name3 AS s_name3
 FROM opitemrece o
@@ -428,8 +494,12 @@ mod tests {
             PATIENT_IMAGE_SQL,
             OPD_DISPENSE_SQL,
             OPD_DISPENSE_SQL_FALLBACK,
+            OPD_DISPENSE_SQL_NO_CODES,
+            OPD_DISPENSE_SQL_MINIMAL,
             IPD_DISPENSE_SQL,
             IPD_DISPENSE_SQL_FALLBACK,
+            IPD_DISPENSE_SQL_NO_CODES,
+            IPD_DISPENSE_SQL_MINIMAL,
             SIG_SQL,
             ALLERGY_SQL,
             OPD_SCREEN_SQL,
