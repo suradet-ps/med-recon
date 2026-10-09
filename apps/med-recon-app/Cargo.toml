@@ -35,5 +35,7 @@ encryptman = "0.5.0"                    # ephemeral vault fallback (headless)
 # WebView2 COM bindings for the screenshot feature (DevTools Protocol
 # Page.captureScreenshot - re-rasterizes at devicePixelRatio, unlike
 # CapturePreview which grabs the DPI-scaled on-screen surface). Already in
-# the tree via wry; added as a direct dep only.
-webview2-com = "0.38"
+# the tree via wry; added as a direct dep only. Keep the major.minor in
+# lockstep with the version tauri/wry resolves, otherwise two windows-core
+# versions end up in the graph and the COM types stop matching.
+webview2-com = "0.39"
