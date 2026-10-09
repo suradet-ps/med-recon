@@ -97,7 +97,7 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
                 Ok(history) => {
                     state.history.set(Some(history));
                     state.history_error.set(None);
-                    state.struck_meds.set(HashSet::new());
+                    state.dismissed_meds.set(HashSet::new());
                 }
                 Err(e) => {
                     state.history.set(None);

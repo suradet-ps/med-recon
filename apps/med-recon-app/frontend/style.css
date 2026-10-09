@@ -1309,31 +1309,18 @@ code, .mono, .code {
 }
 
 /* ==========================================================================
-   Medication row strike-through ("หยุดใช้แล้ว" review aid)
-   Session-local only: toggled by clicking a medication row, cleared on
-   every fresh history load. `--strike` scopes the tap affordance to
-   medication tables so the CC/PE table's rows stay non-interactive.
+   Medication row dismissal ("หยุดใช้แล้ว" review aid)
+   Session-local only: clicking a medication row hides it, cleared on every
+   fresh history load (which also restores the hidden rows). `--dismissible`
+   scopes the tap affordance to medication tables so the CC/PE table's rows
+   stay non-interactive.
    ========================================================================== */
 
-.med-table--strike .med-table__row {
+.med-table--dismissible .med-table__row {
   cursor: pointer;
 }
 
-/* Out-specifies the band/latest tints AND the row hover so a struck row
-   always reads as struck, wherever it sits in the table. */
-.med-table--strike .med-table__row--struck,
-.med-table--strike .med-table__row--struck:hover {
-  background: var(--surface-muted);
-  opacity: 0.62;
-}
-
-.med-table--strike .med-table__row--struck .med-table__drug,
-.med-table--strike .med-table__row--struck .med-table__sig {
-  text-decoration: line-through;
-  color: var(--slate);
-}
-
-/* Hint line above the active meds table - explains the tap-to-strike
+/* Hint line above the active meds table - explains the tap-to-hide
    interaction and its session-only lifetime. */
 .med-table-hint {
   margin-top: var(--sp-sm);
@@ -1392,6 +1379,18 @@ code, .mono, .code {
   width: 80px;
   white-space: nowrap;
   color: var(--slate);
+}
+
+/* Dismiss (hide) column - the keyboard-focusable button for the session
+   "หยุดใช้แล้ว" review aid. The rows are clickable too, but the button is
+   the path that keyboard and screen-reader operators can use. */
+.med-table__dismiss {
+  width: 36px;
+  text-align: right;
+}
+
+.med-table__dismiss-btn {
+  vertical-align: middle;
 }
 
 /* Screening table (CC/PE) - ลำดับ/วันที่ are short and pinned; CC/PE share

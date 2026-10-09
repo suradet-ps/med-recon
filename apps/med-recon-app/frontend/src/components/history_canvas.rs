@@ -10,7 +10,7 @@ use std::collections::HashSet;
 
 use crate::api;
 use crate::components::icons::{
-    IconAlert, IconCheckCircle, IconChevron, IconClipboard, IconUser, IconXCircle,
+    IconAlert, IconCheckCircle, IconChevron, IconClipboard, IconUser, IconX, IconXCircle,
 };
 use crate::state::AppState;
 use med_recon_core::{
@@ -48,7 +48,7 @@ pub fn HistoryCanvas(state: AppState) -> impl IntoView {
                                 Ok(h) => {
                                     state.history.set(Some(h));
                                     state.history_error.set(None);
-                                    state.struck_meds.set(HashSet::new());
+                                    state.dismissed_meds.set(HashSet::new());
                                 }
                                 Err(e) => {
                                     state.history.set(None);
@@ -150,23 +150,43 @@ fn CanvasSkeleton() -> impl IntoView {
 
 #[component]
 fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
-    let active: Vec<MedicationItem> = history
-        .medications
-        .iter()
-        .filter(|m| m.status == MedicationStatus::Active)
-        .cloned()
-        .collect();
-    let lapsed: Vec<MedicationItem> = history
-        .medications
-        .iter()
-        .filter(|m| m.status == MedicationStatus::Lapsed)
-        .cloned()
-        .collect();
+    let active = StoredValue::new(
+        history
+            .medications
+            .iter()
+            .filter(|m| m.status == MedicationStatus::Active)
+            .cloned()
+            .collect::<Vec<_>>(),
+    );
+    let lapsed = StoredValue::new(
+        history
+            .medications
+            .iter()
+            .filter(|m| m.status == MedicationStatus::Lapsed)
+            .cloned()
+            .collect::<Vec<_>>(),
+    );
 
-    let active_count = active.len();
-    let has_active = active_count > 0;
-    let lapsed_count = lapsed.len();
-    let has_lapsed = lapsed_count > 0;
+    let visible_active = Signal::derive(move || {
+        let dismissed = state.dismissed_meds.get();
+        active.with_value(|items| {
+            items
+                .iter()
+                .filter(|m| !dismissed.contains(&med_row_key(m)))
+                .cloned()
+                .collect::<Vec<_>>()
+        })
+    });
+    let visible_lapsed = Signal::derive(move || {
+        let dismissed = state.dismissed_meds.get();
+        lapsed.with_value(|items| {
+            items
+                .iter()
+                .filter(|m| !dismissed.contains(&med_row_key(m)))
+                .cloned()
+                .collect::<Vec<_>>()
+        })
+    });
     let lapsed_open = RwSignal::new(false);
     let screen_records = history.screen_records.clone();
     let screen_count = screen_records.len();
@@ -259,7 +279,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                 <div class="timeline-header-row">
                     <h3 class="timeline-header" style="margin:0">
                         <IconCheckCircle class="icon" />
-                        {move || format!("ยาที่ผู้ป่วยเคยได้รับ ({active_count})")}
+                        {move || format!("ยาที่ผู้ป่วยเคยได้รับ ({})", visible_active.get().len())}
                     </h3>
                     <div class="segmented">
                         <span class="segmented__label">
@@ -303,16 +323,19 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     </div>
                 </div>
                 {move || {
-                    if !has_active {
-                        view! { <p class="canvas-empty__sub">"ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด"</p> }.into_any()
-                    } else {
+                    let items = visible_active.get();
+                    if !items.is_empty() {
                         view! {
                             <p class="med-table-hint">
-                                "คลิกที่แถวยาเพื่อขีดฆ่า (ยาที่หยุดใช้แล้ว) · เครื่องหมายรีเซ็ตเมื่อโหลดข้อมูลใหม่"
+                                "คลิกที่แถวยาเพื่อซ่อนรายการ (ยาที่คาดว่าหยุดใช้แล้ว) · โหลดประวัติใหม่เพื่อเรียกคืน"
                             </p>
-                            {med_table(&active, state)}
+                            {med_table(&items, state)}
                         }
                             .into_any()
+                    } else if active.with_value(|items| items.is_empty()) {
+                        view! { <p class="canvas-empty__sub">"ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด"</p> }.into_any()
+                    } else {
+                        view! { <p class="canvas-empty__sub">"ซ่อนทุกรายการแล้ว · โหลดประวัติใหม่เพื่อเรียกคืน"</p> }.into_any()
                     }
                 }}
             </section>
@@ -324,16 +347,21 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                     aria-expanded=move || if lapsed_open.get() { "true" } else { "false" }
                 >
                     <IconXCircle class="icon" />
-                    {move || format!("ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ) ({lapsed_count})")}
+                    {move || format!("ยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ) ({})", visible_lapsed.get().len())}
                     <IconChevron class="timeline-header__chevron" />
                 </button>
                 {move || {
-                    if !has_lapsed {
-                        view! { <p class="canvas-empty__sub">"ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด"</p> }.into_any()
+                    let items = visible_lapsed.get();
+                    if items.is_empty() {
+                        if lapsed.with_value(|items| items.is_empty()) {
+                            view! { <p class="canvas-empty__sub">"ไม่พบประวัติการจ่ายยาในช่วงเวลาที่กำหนด"</p> }.into_any()
+                        } else {
+                            view! { <p class="canvas-empty__sub">"ซ่อนทุกรายการแล้ว · โหลดประวัติใหม่เพื่อเรียกคืน"</p> }.into_any()
+                        }
                     } else if lapsed_open.get() {
-                        med_table(&lapsed, state).into_any()
+                        med_table(&items, state).into_any()
                     } else {
-                        view! { <p class="canvas-empty__sub">{format!("คลิกเพื่อดู {lapsed_count} รายการที่คาดว่าหยุดใช้แล้ว")}</p> }.into_any()
+                        view! { <p class="canvas-empty__sub">{format!("คลิกเพื่อดู {} รายการที่คาดว่าหยุดใช้แล้ว", items.len())}</p> }.into_any()
                     }
                 }}
             </section>
@@ -367,10 +395,11 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
 /// ลำดับ / วันที่จ่าย / ชื่อยา + ความแรง / วิธีใช้ / จำนวนที่จ่าย (ครั้งล่าสุด) /
 /// วันนัด (`oapp.nextdate` ของ visit ที่จ่ายครั้งล่าสุด, "-" ถ้าไม่มี)
 /// Used identically for both the active and lapsed sections. Rows are
-/// tappable: clicking toggles the session-local "หยุดใช้แล้ว" strike-through.
+/// tappable: clicking dismisses the session-local "หยุดใช้แล้ว" row, which
+/// hides it until the next fresh history load.
 fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
     view! {
-        <table class="med-table med-table--strike">
+        <table class="med-table med-table--dismissible">
             <thead>
                 <tr>
                     <th class="med-table__no">"ลำดับ"</th>
@@ -379,6 +408,9 @@ fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
                     <th>"วิธีใช้"</th>
                     <th class="med-table__qty">"จำนวนที่จ่าย"</th>
                     <th class="med-table__appt">"วันนัด"</th>
+                    <th class="med-table__dismiss">
+                        <span class="sr-only">"ซ่อนรายการ"</span>
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -409,12 +441,14 @@ fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
                         let no = (i + 1).to_string();
                         let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), m.last_dispense.month(), m.last_dispense.year());
                         let drug = drug_label(m);
-                        let icode = m.icode.clone();
-                        // Session-local "หยุดใช้แล้ว" review aid - toggled by
-                        // clicking the row. Never persisted; cleared on every
-                        // fresh history load.
-                        let struck_icode = icode.clone();
-                        let is_struck = move || state.struck_meds.get().contains(&struck_icode);
+                        // Session-local "หยุดใช้แล้ว" review aid - clicking
+                        // the row or its dismiss button hides it. Never
+                        // persisted; cleared (and the rows restored) on every
+                        // fresh history load. The button is the keyboard /
+                        // screen-reader path to the same action.
+                        let dismiss_key = med_row_key(m);
+                        let dismiss_key_row = dismiss_key.clone();
+                        let dismiss_label = format!("ซ่อนรายการยา {drug}");
                         // Repeat-dispensing count - how many visits this
                         // drug was dispensed on. Frequent + recent dispensing
                         // is the BPMH signal for an ongoing medication, so the
@@ -442,13 +476,10 @@ fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
                         view! {
                             <tr
                                 class=row_class
-                                class:med-table__row--struck=is_struck
-                                title="คลิกเพื่อสลับเครื่องหมาย 'หยุดใช้แล้ว'"
+                                title="คลิกเพื่อซ่อนรายการนี้ (ยาที่คาดว่าหยุดใช้แล้ว)"
                                 on:click=move |_| {
-                                    state.struck_meds.update(|s| {
-                                        if !s.insert(icode.clone()) {
-                                            s.remove(&icode);
-                                        }
+                                    state.dismissed_meds.update(|s| {
+                                        s.insert(dismiss_key_row.clone());
                                     });
                                 }
                             >
@@ -473,6 +504,22 @@ fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
                                 </td>
                                 <td class="med-table__appt">
                                     {if appt.is_empty() { "-".to_string() } else { appt }}
+                                </td>
+                                <td class="med-table__dismiss">
+                                    <button
+                                        class="icon-button med-table__dismiss-btn"
+                                        type="button"
+                                        title="ซ่อนรายการนี้ (ยาที่คาดว่าหยุดใช้แล้ว)"
+                                        aria-label=dismiss_label
+                                        on:click=move |ev| {
+                                            ev.stop_propagation();
+                                            state.dismissed_meds.update(|s| {
+                                                s.insert(dismiss_key.clone());
+                                            });
+                                        }
+                                    >
+                                        <IconX class="icon" />
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -512,6 +559,24 @@ fn screen_table(items: &[OpdScreenRecord]) -> impl IntoView {
             </tbody>
         </table>
     }
+}
+
+/// Stable session key for one medication row.
+///
+/// BPMH items are unique per `(icode, sig)`, so the sig fields join the
+/// icode in the key: dismissing a row must not hide other rows of the same
+/// drug that carry different directions for use. Floating point fields use
+/// their bit patterns so equal sigs always produce equal keys.
+fn med_row_key(m: &MedicationItem) -> String {
+    let (dose_bits, frequency_bits, note) = match &m.sig {
+        Some(sig) => (
+            sig.dose_per_admin.map(f64::to_bits),
+            sig.frequency_per_day.map(f64::to_bits),
+            sig.note.as_deref().unwrap_or_default(),
+        ),
+        None => (None, None, ""),
+    };
+    format!("{}|{dose_bits:?}|{frequency_bits:?}|{note}", m.icode)
 }
 
 /// "Name · strength" label for the drug column.
@@ -644,5 +709,28 @@ mod tests {
             note: None,
         };
         assert_eq!(format_sig(&sig), "");
+    }
+
+    #[test]
+    fn med_row_key_is_stable_for_equal_items() {
+        let a = item("Paracetamol", None, None);
+        let b = item("Paracetamol", None, None);
+        assert_eq!(med_row_key(&a), med_row_key(&b));
+    }
+
+    #[test]
+    fn med_row_key_separates_sig_variants_of_one_icode() {
+        let sig = |frequency| Sig {
+            dose_per_admin: Some(1.0),
+            frequency_per_day: Some(frequency),
+            note: Some("หลังอาหาร".into()),
+        };
+        let three_times = item("Paracetamol", None, Some(sig(3.0)));
+        let twice = item("Paracetamol", None, Some(sig(2.0)));
+        assert_ne!(med_row_key(&three_times), med_row_key(&twice));
+        assert_ne!(
+            med_row_key(&three_times),
+            med_row_key(&item("Paracetamol", None, None))
+        );
     }
 }

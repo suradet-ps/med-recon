@@ -92,8 +92,9 @@ written.
    sealed.
 2. Search by name, HN, or CID. The result list answers.
 3. Read the patient: BPMH with active and lapsed sections, allergies,
-   and the visit history. Click a row to strike it when the review says
-   "หยุดใช้แล้ว" - a session-local mark, cleared on the next fresh load.
+   and the visit history. Click a row to hide it when the review says
+   "หยุดใช้แล้ว" - a session-local mark; the next fresh load brings the
+   rows back.
 4. Export: the A4 PDF carries the BPMH disclaimer, the patient card,
    and the PHI footer - ready for the requesting hospital.
 
