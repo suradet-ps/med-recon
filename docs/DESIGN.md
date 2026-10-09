@@ -241,8 +241,8 @@ Output: `MedicationItem`s.
    data fold into the most recently dispensed sig group - missing sig is
    missing data, not a different order.
 2. **Derived days supply** - `qty / (dose_per_admin × frequency_per_day)`,
-   rounded up; `None` when the sig is missing. Display-only - it no longer
-   drives the active/lapsed verdict.
+   rounded up; `None` when the group has no sig data. Display-only - it no
+   longer drives the active/lapsed verdict.
 3. **Active/lapsed verdict - operator-configured, not inferred.** A drug
    whose `icode` is on the current-medication list is `active` no matter
    when it was last dispensed; every other dispensed drug is `lapsed`

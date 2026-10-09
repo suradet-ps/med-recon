@@ -146,6 +146,10 @@ fn most_recent_sig_key(by_sig: &BTreeMap<SigKey, Vec<&Dispense>>) -> Option<SigK
 
 /// Build one medication item from the events of a single
 /// `(icode, sig)` group.
+///
+/// The group's sig (shared by all sig-bearing events in it) also backs the
+/// days supply, so a newer no-sig event cannot leave the row showing
+/// directions without a supply estimate.
 fn build_item(
     mut events: Vec<&Dispense>,
     reference_date: chrono::NaiveDate,
@@ -174,10 +178,8 @@ fn build_item(
         sources.entry(d.source).or_insert(());
     }
 
-    let days_supply = latest
-        .sig
-        .as_ref()
-        .and_then(|sig| days_supply(latest.qty, sig));
+    let sig = events.iter().find_map(|d| d.sig.clone());
+    let days_supply = sig.as_ref().and_then(|sig| days_supply(latest.qty, sig));
     let status = if current_codes.contains(latest.icode.as_str()) {
         MedicationStatus::Active
     } else {
@@ -197,7 +199,7 @@ fn build_item(
         sources: sources.into_keys().collect(),
         last_source: latest.source,
         days_supply,
-        sig: events.iter().find_map(|d| d.sig.clone()),
+        sig,
         appointment_date: latest.appointment,
         status,
         days_since_last_dispense: (reference_date - latest.date).num_days(),
@@ -450,5 +452,24 @@ mod tests {
             items[1].sig.as_ref().and_then(|s| s.frequency_per_day),
             Some(3.0)
         );
+    }
+
+    #[test]
+    fn aggregate_days_supply_uses_group_sig_when_latest_event_has_none() {
+        let dispenses = vec![
+            Dispense {
+                sig: Some(sig(1.0, 2.0)),
+                ..dispense("A1", 30.0, "vn1", EncounterSource::Opd, date(2026, 1, 1))
+            },
+            // The later no-sig order folds into the group above and becomes
+            // the latest event.
+            dispense("A1", 40.0, "vn2", EncounterSource::Opd, date(2026, 2, 1)),
+        ];
+        let items = aggregate_medications(&dispenses, date(2026, 2, 2), &empty_codes());
+        assert_eq!(items.len(), 1);
+        let item = &items[0];
+        assert_eq!(item.last_qty, 40.0);
+        assert!(item.sig.is_some());
+        assert_eq!(item.days_supply, Some(20)); // 40 / (1 x 2)
     }
 }

@@ -131,9 +131,9 @@ pub struct MedicationItem {
     /// date/qty/sig all come from the latest event, so the provenance badge
     /// follows the same event.
     pub last_source: EncounterSource,
-    /// Derived days supply from the most recent event's sig.
+    /// Derived days supply: the group's sig applied to the latest quantity.
     pub days_supply: Option<u32>,
-    /// Sig from the most recent event.
+    /// Sig shared by the item's dispensing events.
     pub sig: Option<Sig>,
     /// Next appointment date (`oapp.nextdate`) of the most recent event's
     /// visit, if any.
