@@ -1381,6 +1381,18 @@ code, .mono, .code {
   color: var(--slate);
 }
 
+/* Dismiss (hide) column - the keyboard-focusable button for the session
+   "หยุดใช้แล้ว" review aid. The rows are clickable too, but the button is
+   the path that keyboard and screen-reader operators can use. */
+.med-table__dismiss {
+  width: 36px;
+  text-align: right;
+}
+
+.med-table__dismiss-btn {
+  vertical-align: middle;
+}
+
 /* Screening table (CC/PE) - ลำดับ/วันที่ are short and pinned; CC/PE share
    the remaining width equally. Long text must wrap inside cells. */
 .med-table--screen {

@@ -10,7 +10,7 @@ use std::collections::HashSet;
 
 use crate::api;
 use crate::components::icons::{
-    IconAlert, IconCheckCircle, IconChevron, IconClipboard, IconUser, IconXCircle,
+    IconAlert, IconCheckCircle, IconChevron, IconClipboard, IconUser, IconX, IconXCircle,
 };
 use crate::state::AppState;
 use med_recon_core::{
@@ -408,6 +408,9 @@ fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
                     <th>"วิธีใช้"</th>
                     <th class="med-table__qty">"จำนวนที่จ่าย"</th>
                     <th class="med-table__appt">"วันนัด"</th>
+                    <th class="med-table__dismiss">
+                        <span class="sr-only">"ซ่อนรายการ"</span>
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -439,9 +442,13 @@ fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
                         let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), m.last_dispense.month(), m.last_dispense.year());
                         let drug = drug_label(m);
                         // Session-local "หยุดใช้แล้ว" review aid - clicking
-                        // the row hides it. Never persisted; cleared (and the
-                        // rows restored) on every fresh history load.
+                        // the row or its dismiss button hides it. Never
+                        // persisted; cleared (and the rows restored) on every
+                        // fresh history load. The button is the keyboard /
+                        // screen-reader path to the same action.
                         let dismiss_key = med_row_key(m);
+                        let dismiss_key_row = dismiss_key.clone();
+                        let dismiss_label = format!("ซ่อนรายการยา {drug}");
                         // Repeat-dispensing count - how many visits this
                         // drug was dispensed on. Frequent + recent dispensing
                         // is the BPMH signal for an ongoing medication, so the
@@ -472,7 +479,7 @@ fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
                                 title="คลิกเพื่อซ่อนรายการนี้ (ยาที่คาดว่าหยุดใช้แล้ว)"
                                 on:click=move |_| {
                                     state.dismissed_meds.update(|s| {
-                                        s.insert(dismiss_key.clone());
+                                        s.insert(dismiss_key_row.clone());
                                     });
                                 }
                             >
@@ -497,6 +504,22 @@ fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
                                 </td>
                                 <td class="med-table__appt">
                                     {if appt.is_empty() { "-".to_string() } else { appt }}
+                                </td>
+                                <td class="med-table__dismiss">
+                                    <button
+                                        class="icon-button med-table__dismiss-btn"
+                                        type="button"
+                                        title="ซ่อนรายการนี้ (ยาที่คาดว่าหยุดใช้แล้ว)"
+                                        aria-label=dismiss_label
+                                        on:click=move |ev| {
+                                            ev.stop_propagation();
+                                            state.dismissed_meds.update(|s| {
+                                                s.insert(dismiss_key.clone());
+                                            });
+                                        }
+                                    >
+                                        <IconX class="icon" />
+                                    </button>
                                 </td>
                             </tr>
                         }
