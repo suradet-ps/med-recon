@@ -12,7 +12,7 @@ use crate::api;
 use crate::components::icons::{
     IconAlert, IconCheckCircle, IconChevron, IconClipboard, IconUser, IconX, IconXCircle,
 };
-use crate::state::AppState;
+use crate::state::{AppState, HISTORY_PATIENT_MISMATCH};
 use med_recon_core::{
     EncounterSource, MedicationItem, MedicationStatus, OpdScreenRecord, PatientHistory, Sig,
 };
@@ -20,7 +20,6 @@ use med_recon_core::{
 #[component]
 pub fn HistoryCanvas(state: AppState) -> impl IntoView {
     // Re-fetch history when the window override changes (debounced).
-    let last_timeout = RwSignal::new(None::<leptos::prelude::TimeoutHandle>);
     Effect::new(move |prev: Option<()>| {
         // Re-fetch only when the operator changes the window (window_epoch).
         // A programmatic reset on patient search bumps nothing here, so the
@@ -31,24 +30,37 @@ pub fn HistoryCanvas(state: AppState) -> impl IntoView {
         {
             let override_val = state.history_days_override.get_untracked();
             let hn = patient.hn.clone();
+            // A new request supersedes any in-flight window fetch and any
+            // debounce that has not fired yet.
+            state.cancel_pending_history_fetch();
+            let request = state.begin_history_request();
             // Keep the previously loaded history on screen (dimmed via
             // history-stack--loading) instead of blanking to a spinner - the
             // top load bar + active-segment spinner carry the loading state.
             state.history_error.set(None);
             state.history_loading.set(true);
-            if let Some(prev_handle) = last_timeout.get_untracked() {
-                prev_handle.clear();
-            }
-            last_timeout.set(Some(
+            state.history_debounce.set(Some(
                 set_timeout_with_handle(
                     move || {
-                        let hn = hn.clone();
+                        if !state.is_current_history_request(request) {
+                            return;
+                        }
                         spawn_local(async move {
-                            match api::load_history(&hn, override_val).await {
-                                Ok(h) => {
-                                    state.history.set(Some(h));
+                            let result = api::load_history(&hn, override_val).await;
+                            if !state.is_current_history_request(request) {
+                                return;
+                            }
+                            match result {
+                                Ok(history) if history.patient.hn == hn => {
+                                    state.history.set(Some(history));
                                     state.history_error.set(None);
                                     state.dismissed_meds.set(HashSet::new());
+                                }
+                                Ok(_) => {
+                                    state.history.set(None);
+                                    state
+                                        .history_error
+                                        .set(Some(HISTORY_PATIENT_MISMATCH.to_string()));
                                 }
                                 Err(e) => {
                                     state.history.set(None);
