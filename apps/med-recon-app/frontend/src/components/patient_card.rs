@@ -79,6 +79,10 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
     };
 
     let on_clear = move |_| {
+        // Invalidate any in-flight history load and its pending debounce so
+        // a late response cannot repopulate the cleared selection.
+        state.cancel_pending_history_fetch();
+        state.begin_history_request();
         state.patient.set(None);
         state.patient_photo.set(None);
         state.history.set(None);

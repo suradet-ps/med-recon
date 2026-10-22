@@ -5,6 +5,10 @@ use std::collections::HashSet;
 use leptos::prelude::*;
 use med_recon_core::{PatientHistory, PatientSummary};
 
+/// Shown when a history response does not belong to the selected patient.
+/// This is a safety net; the backend should always echo the requested HN.
+pub const HISTORY_PATIENT_MISMATCH: &str = "ข้อมูลประวัติที่ได้รับไม่ตรงกับผู้ป่วยที่เลือก กรุณาลองใหม่";
+
 /// Live HOSxP reachability, mirrored from the backend's
 /// `connection_health` command - drives the top-bar status dot.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -61,6 +65,14 @@ pub struct AppState {
     /// re-fetch effect keys off this so programmatic resets don't trigger a
     /// second fetch alongside the patient-search fetch.
     pub window_epoch: RwSignal<u32>,
+    /// Monotonic token for the latest history load. Bumped when a patient
+    /// is picked or cleared and when the window changes, so a slower
+    /// response from an older request can never overwrite the current one.
+    pub history_request_epoch: RwSignal<u64>,
+    /// Pending debounced window-change fetch. Kept here so picking or
+    /// clearing a patient can cancel it before it starts for the previous
+    /// selection.
+    pub history_debounce: RwSignal<Option<leptos::prelude::TimeoutHandle>>,
     /// Row keys the operator has dismissed in the current session - a
     /// "หยุดใช้แล้ว" review aid only: dismissed rows disappear from the
     /// table. Cleared on every fresh history load (new patient, window
@@ -87,8 +99,32 @@ impl AppState {
             default_history_days: RwSignal::new(730),
             site_name: RwSignal::new(String::new()),
             window_epoch: RwSignal::new(0),
+            history_request_epoch: RwSignal::new(0),
+            history_debounce: RwSignal::new(None),
             dismissed_meds: RwSignal::new(HashSet::new()),
         }
+    }
+
+    /// Start a new patient-scoped history load and return its token.
+    ///
+    /// Any response carrying an older token must be discarded.
+    pub fn begin_history_request(&self) -> u64 {
+        let token = self.history_request_epoch.get_untracked().wrapping_add(1);
+        self.history_request_epoch.set(token);
+        token
+    }
+
+    /// Whether `token` still identifies the latest history load.
+    pub fn is_current_history_request(&self, token: u64) -> bool {
+        self.history_request_epoch.get_untracked() == token
+    }
+
+    /// Cancel the pending debounced window-change fetch, if any.
+    pub fn cancel_pending_history_fetch(&self) {
+        if let Some(handle) = self.history_debounce.get_untracked() {
+            handle.clear();
+        }
+        self.history_debounce.set(None);
     }
 }
 

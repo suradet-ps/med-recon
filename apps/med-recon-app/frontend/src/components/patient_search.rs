@@ -7,7 +7,7 @@ use std::collections::HashSet;
 
 use crate::api;
 use crate::components::icons::IconSearch;
-use crate::state::AppState;
+use crate::state::{AppState, HISTORY_PATIENT_MISMATCH};
 use med_recon_core::{PatientSummary, QueryKind, detect_query_kind};
 
 /// Debounce window for the search input (milliseconds).
@@ -70,6 +70,10 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
     let on_pick = move |patient: PatientSummary| {
         let hn = patient.hn.clone();
         let name = patient.display_name();
+        // A new selection invalidates every older history response and the
+        // pending window-change fetch from the previous patient.
+        state.cancel_pending_history_fetch();
+        let request = state.begin_history_request();
         // Close the dropdown: clear the result list, cancel any pending
         // debounced search, and reflect the picked name in the input so only
         // the selected patient remains.
@@ -93,11 +97,21 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
         let hn_photo = hn.clone();
         let override_days = state.history_days_override.get_untracked();
         spawn_local(async move {
-            match api::load_history(&hn, override_days).await {
-                Ok(history) => {
+            let result = api::load_history(&hn, override_days).await;
+            if !state.is_current_history_request(request) {
+                return;
+            }
+            match result {
+                Ok(history) if history.patient.hn == hn => {
                     state.history.set(Some(history));
                     state.history_error.set(None);
                     state.dismissed_meds.set(HashSet::new());
+                }
+                Ok(_) => {
+                    state.history.set(None);
+                    state
+                        .history_error
+                        .set(Some(HISTORY_PATIENT_MISMATCH.to_string()));
                 }
                 Err(e) => {
                     state.history.set(None);
@@ -108,7 +122,9 @@ pub fn PatientSearch(state: AppState) -> impl IntoView {
         });
         // Photo is decorative - a failure just keeps the placeholder avatar.
         spawn_local(async move {
-            if let Ok(Some(photo)) = api::load_patient_image(&hn_photo).await {
+            if let Ok(Some(photo)) = api::load_patient_image(&hn_photo).await
+                && state.patient.get_untracked().map(|p| p.hn) == Some(hn_photo)
+            {
                 state.patient_photo.set(Some(photo));
             }
         });
