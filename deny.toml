@@ -31,6 +31,13 @@ ignore = [
   "RUSTSEC-2026-0173",
   # paste unmaintained (transitive dep of glib/gtk, via pest/cfg-if chain)
   "RUSTSEC-2024-0436",
+  # zvariant, zvariant_derive, and zbus_names are unmaintained (transitive
+  # deps of keyring's zbus secret service backend on Linux). No safe upgrade
+  # exists until keyring moves to zbus 6; these advisories flag unmaintained
+  # crates, not vulnerabilities.
+  { id = "RUSTSEC-2026-0370", reason = "keyring 4.2 zbus 5 backend; no safe upgrade until zbus 6" },
+  { id = "RUSTSEC-2026-0371", reason = "keyring 4.2 zbus 5 backend; no safe upgrade until zbus 6" },
+  { id = "RUSTSEC-2026-0372", reason = "keyring 4.2 zbus 5 backend; no safe upgrade until zbus 6" },
   # unic-* unmaintained (transitive dep of tauri-utils via urlpattern)
   "RUSTSEC-2025-0075",
   "RUSTSEC-2025-0080",
