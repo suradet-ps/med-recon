@@ -14,17 +14,6 @@ ignore = [
   # (rustls) on the local hospital LAN - advisory itself says local use on
   # a non-compromised computer is fine. No patched release exists.
   { id = "RUSTSEC-2023-0071", reason = "sqlx-mysql RSA auth exchange; TLS-only connections, local hospital LAN" },
-  # GTK3 bindings unmaintained (transitive deps of tauri on Linux)
-  "RUSTSEC-2024-0411",
-  "RUSTSEC-2024-0412",
-  "RUSTSEC-2024-0413",
-  "RUSTSEC-2024-0414",
-  "RUSTSEC-2024-0415",
-  "RUSTSEC-2024-0416",
-  "RUSTSEC-2024-0417",
-  "RUSTSEC-2024-0418",
-  "RUSTSEC-2024-0419",
-  "RUSTSEC-2024-0420",
   # proc-macro-error unmaintained (transitive dep of glib/gtk)
   "RUSTSEC-2024-0370",
   # proc-macro-error2 unmaintained (transitive dep of glib/gtk)
@@ -38,12 +27,6 @@ ignore = [
   { id = "RUSTSEC-2026-0370", reason = "keyring 4.2 zbus 5 backend; no safe upgrade until zbus 6" },
   { id = "RUSTSEC-2026-0371", reason = "keyring 4.2 zbus 5 backend; no safe upgrade until zbus 6" },
   { id = "RUSTSEC-2026-0372", reason = "keyring 4.2 zbus 5 backend; no safe upgrade until zbus 6" },
-  # unic-* unmaintained (transitive dep of tauri-utils via urlpattern)
-  "RUSTSEC-2025-0075",
-  "RUSTSEC-2025-0080",
-  "RUSTSEC-2025-0081",
-  "RUSTSEC-2025-0098",
-  "RUSTSEC-2025-0100",
 ]
 
 [licenses]
