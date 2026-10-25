@@ -10,9 +10,9 @@ use std::collections::HashSet;
 use std::time::{Duration, Instant};
 
 use med_recon_config::{ConnectionConfig, SiteSettings};
-use med_recon_core::{PatientHistory, PatientSummary};
+use med_recon_core::{PatientHistory, PatientSummary, SessionUser, verify_password};
 use med_recon_hosxp::{HosxpClient, HosxpConfig};
-use secrecy::SecretString;
+use secrecy::{ExposeSecret, SecretString};
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
@@ -59,6 +59,10 @@ pub enum CommandErrorKind {
     Guard,
     /// The statement failed server-side.
     Query,
+    /// The operator is not signed in, or the credentials were rejected.
+    Auth,
+    /// The submitted input is not usable.
+    Validation,
 }
 
 /// User-facing command error: a machine-readable kind plus the Thai message
@@ -78,6 +82,21 @@ impl CommandError {
             kind,
             message: message.into(),
         }
+    }
+
+    /// Rejects unusable operator input.
+    fn validation(message: impl Into<String>) -> Self {
+        Self::new(CommandErrorKind::Validation, message)
+    }
+
+    /// Rejects missing or invalid credentials.
+    fn auth(message: impl Into<String>) -> Self {
+        Self::new(CommandErrorKind::Auth, message)
+    }
+
+    /// Rejects a command that requires a signed-in operator.
+    fn unauthorized() -> Self {
+        Self::auth("กรุณาเข้าสู่ระบบก่อนใช้งาน")
     }
 }
 
@@ -148,6 +167,17 @@ impl From<ConnectionInput> for ConnectionConfig {
     }
 }
 
+/// Username/password submitted from the login gate. Deliberately does not
+/// derive `Debug` - the password must never be formatted into a log line.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LoginInput {
+    /// HOSxP `officer.officer_login_name`.
+    pub username: String,
+    /// Plaintext password, verified in memory against the stored MD5.
+    pub password: String,
+}
+
 /// Site settings submitted from the settings dialog (non-secret).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -213,6 +243,7 @@ pub async fn search_drugs(
     state: State<'_, AppState>,
     query: String,
 ) -> Result<Vec<DrugInfo>, CommandError> {
+    require_session(&state).await?;
     let client = client(&state, "ค้นหายา").await?;
     let results = client
         .search_drugs(&query)
@@ -229,6 +260,7 @@ pub async fn search_drugs(
 /// The operator-configured current medications, resolved to names.
 #[tauri::command]
 pub async fn get_current_meds(state: State<'_, AppState>) -> Result<Vec<DrugInfo>, CommandError> {
+    require_session(&state).await?;
     let codes: Vec<String> = configured_med_codes(&state).into_iter().collect();
     if codes.is_empty() {
         return Ok(Vec::new());
@@ -332,6 +364,16 @@ async fn client(state: &AppState, action: &'static str) -> Result<HosxpClient, C
         *slot = Some(client.clone());
     }
     Ok(client)
+}
+
+/// Rejects a command that requires a signed-in operator.
+async fn require_session(state: &AppState) -> Result<SessionUser, CommandError> {
+    state
+        .session
+        .read()
+        .await
+        .clone()
+        .ok_or_else(CommandError::unauthorized)
 }
 
 /// Non-sensitive summary of the saved configuration (never includes the
@@ -466,6 +508,10 @@ pub async fn save_connection(
         }
     }
 
+    // A new connection is a new identity scope: the session must not survive
+    // a site switch, even when the account name is the same.
+    *state.session.write().await = None;
+
     // Replace the cached client under a short lock; the previous pool is
     // closed after the lock is released so no in-flight query is disturbed.
     let old = {
@@ -530,6 +576,7 @@ pub async fn save_site_settings(
     state: State<'_, AppState>,
     settings: SiteSettingsInput,
 ) -> Result<(), CommandError> {
+    require_session(&state).await?;
     let settings: SiteSettings = settings.into();
     state.store.save_settings(&settings).map_err(|e| {
         dev_log(
@@ -539,6 +586,82 @@ pub async fn save_site_settings(
             "บันทึกการตั้งค่าไม่สำเร็จ",
         )
     })
+}
+
+/// Verifies a HOSxP officer password and starts an in-memory session.
+///
+/// The plaintext password is moved into a [`SecretString`] for the
+/// verification window; the stored hash never leaves this process.
+#[tauri::command]
+pub async fn login(
+    state: State<'_, AppState>,
+    input: LoginInput,
+) -> Result<SessionUser, CommandError> {
+    let username = input.username.trim();
+    if username.is_empty() {
+        return Err(CommandError::validation("กรุณากรอกชื่อผู้ใช้"));
+    }
+    if username.chars().count() > 100 {
+        return Err(CommandError::validation("ชื่อผู้ใช้ยาวเกินไป"));
+    }
+    let password = SecretString::from(input.password);
+    if password.expose_secret().is_empty() {
+        return Err(CommandError::validation("กรุณากรอกรหัสผ่าน"));
+    }
+    if password.expose_secret().chars().count() > 200 {
+        return Err(CommandError::validation("รหัสผ่านยาวเกินไป"));
+    }
+
+    *state.session.write().await = None;
+    let client = client(&state, "เข้าสู่ระบบ").await?;
+    let account = client
+        .fetch_officer(username)
+        .await
+        .map_err(|e| map_repo_error(e, "เข้าสู่ระบบ"))?;
+    let Some(account) = account else {
+        return Err(CommandError::auth("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"));
+    };
+    if account.auth_type_id != 1 {
+        return Err(CommandError::auth(
+            "บัญชีนี้ใช้การยืนยันตัวตนแบบ LDAP ซึ่งยังไม่เปิดใช้งาน",
+        ));
+    }
+    if !account.active.eq_ignore_ascii_case("Y") {
+        return Err(CommandError::auth("บัญชีนี้ถูกปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ"));
+    }
+    if !verify_password(password.expose_secret(), &account.password_md5) {
+        return Err(CommandError::auth("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"));
+    }
+
+    let display_name = if account.display_name.trim().is_empty() {
+        account.login_name.clone()
+    } else {
+        account.display_name
+    };
+    let user = SessionUser {
+        officer_id: account.officer_id,
+        login_name: account.login_name,
+        display_name,
+        doctor_code: account.doctor_code,
+        role: "STAFF".to_string(),
+    };
+    *state.session.write().await = Some(user.clone());
+    Ok(user)
+}
+
+/// Clears the in-memory session.
+#[tauri::command]
+pub async fn logout(state: State<'_, AppState>) -> Result<(), CommandError> {
+    *state.session.write().await = None;
+    Ok(())
+}
+
+/// Returns the current session, if any (memory only).
+#[tauri::command]
+pub async fn current_session(
+    state: State<'_, AppState>,
+) -> Result<Option<SessionUser>, CommandError> {
+    Ok(state.session.read().await.clone())
 }
 
 /// Validate connectivity against the given settings (without saving) or the
@@ -588,6 +711,7 @@ pub async fn test_connection(
 #[tauri::command]
 pub async fn clear_site_config(state: State<'_, AppState>) -> Result<(), CommandError> {
     *state.client.write().await = None;
+    *state.session.write().await = None;
     state.store.clear().map_err(|e| {
         dev_log(
             "clear_site_config",
@@ -604,6 +728,7 @@ pub async fn search_patients(
     state: State<'_, AppState>,
     query: String,
 ) -> Result<Vec<PatientSummary>, CommandError> {
+    require_session(&state).await?;
     let client = client(&state, "ค้นหาผู้ป่วย").await?;
     let results = client
         .search_patients(&query)
@@ -624,6 +749,7 @@ pub async fn load_history(
     hn: String,
     history_days: Option<u32>,
 ) -> Result<PatientHistory, CommandError> {
+    require_session(&state).await?;
     let client = client(&state, "โหลดประวัติ").await?;
     let current_codes = configured_med_codes(&state);
     let history = client
@@ -658,6 +784,7 @@ pub async fn load_patient_image(
     state: State<'_, AppState>,
     hn: String,
 ) -> Result<Option<String>, CommandError> {
+    require_session(&state).await?;
     let client = client(&state, "อ่านรูปผู้ป่วย").await?;
     let image = client
         .load_patient_image(&hn)
@@ -678,6 +805,7 @@ pub async fn export_report(
     hn: String,
     labels: crate::report::ReportLabels,
 ) -> Result<String, CommandError> {
+    require_session(&state).await?;
     let client = client(&state, "พิมพ์ประวัติการได้รับยา").await?;
     let current_codes = configured_med_codes(&state);
     let history = client
@@ -733,10 +861,12 @@ const SCREENSHOT_SUPERSAMPLE: f64 = 2.0;
 /// `{base_name}-YYYYMMDD-HHMMSS.png`.
 #[tauri::command]
 pub async fn capture_screenshot(
+    state: State<'_, AppState>,
     window: tauri::WebviewWindow,
     base_name: String,
     scale: f64,
 ) -> Result<String, CommandError> {
+    require_session(&state).await?;
     #[cfg(target_os = "windows")]
     {
         // WebView2 callbacks resolve on the main thread and we wait on them;
@@ -888,4 +1018,39 @@ fn parse_cdp_screenshot(response: &str) -> Result<Vec<u8>, String> {
     base64::engine::general_purpose::STANDARD
         .decode(data)
         .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn test_state() -> AppState {
+        AppState {
+            store: med_recon_config::ConfigStore::with_vault(
+                Box::new(EphemeralVault::default()),
+                PathBuf::new(),
+            ),
+            client: tokio::sync::RwLock::new(None),
+            health: tokio::sync::RwLock::new(ConnectionHealth::Unconfigured),
+            session: tokio::sync::RwLock::new(None),
+        }
+    }
+
+    #[tokio::test]
+    async fn require_session_rejects_without_a_session() {
+        let state = test_state();
+        let error = require_session(&state).await.expect_err("must reject");
+        assert_eq!(error.kind, CommandErrorKind::Auth);
+
+        let user = SessionUser {
+            officer_id: 7,
+            login_name: "pharm".into(),
+            display_name: "Pharmacist".into(),
+            doctor_code: None,
+            role: "STAFF".into(),
+        };
+        *state.session.write().await = Some(user.clone());
+        assert_eq!(require_session(&state).await.expect("session"), user);
+    }
 }

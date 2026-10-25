@@ -36,23 +36,29 @@ rationale behind the Best Possible Medication History (BPMH) engine.
 
 ## 2. UX Flows
 
-### 2.1 First launch → connection setup
+### 2.1 First launch → connection setup → sign-in
 
-The settings dialog has **two independent sections**, each saved to its
-own file (see 4.6):
+The app opens on the **HOSxP officer login gate**. Patient data is never
+visible before sign-in. The settings dialog has **two independent
+sections**, each saved to its own file (see 4.6):
 
-1. App starts with no connection config → the **settings dialog opens
-   automatically**.
+1. With no connection config, the login card says so and offers
+   **ตั้งค่าการเชื่อมต่อ**, which opens the settings dialog. The dialog
+   exposes only the connection section until an officer is signed in.
 2. **HOSxP connection section** - host, port, database, user, password.
    **Test** runs against the typed values before anything is saved
    (latency shown). **Save** connects first, then persists the config
    **encrypted** (`connection.json`, AES-256-GCM; master key in the OS
    keychain).
-3. **Site settings section** - site name (shown on exported reports),
-   history window, and the current-medication list (ตั้งค่ายา). Saved as
-   plain JSON (`settings.json`); usable before a connection exists.
-4. Success updates the status dot; the dialog stays open so the operator
-   can continue with site settings.
+3. **Sign-in** - username/password verified against the HOSxP `officer`
+   account (MD5 check, active/auth-type checks); see `docs/auth.md`.
+   The session is memory-only; a restart requires signing in again.
+4. **Site settings section** (signed-in only) - site name (shown on
+   exported reports), history window, and the current-medication list
+   (ตั้งค่ายา). Saved as plain JSON (`settings.json`).
+5. Success updates the status dot. Changing the connection clears the
+   session and returns to the login gate, so no patient data survives a
+   site switch.
 
 ### 2.2 Search
 
@@ -94,7 +100,9 @@ only - the visit timeline stays on screen and is not exported.
 ### 2.5 Settings (revisiting)
 
 The gear button reopens the dialog; "Close" zeroizes the typed password
-buffers; Escape closes from anywhere.
+buffers; Escape closes from anywhere. The top bar shows the signed-in
+officer's display name and an **ออกจากระบบ** action; signing out clears the
+session and all patient-scoped state, returning to the login gate.
 
 ---
 
@@ -164,8 +172,13 @@ HN/CID) from Google Fonts. Base 14 px, line-height 1.5.
 
 ### 3.3 Components
 
-- **Top bar** - 44 px, raised surface, hairline bottom border; logo +
-  title, status dot (7 px, green/red), settings button.
+- **Login gate** - full-height split surface before sign-in: a soft emerald
+  brand panel (logo, headline, medication-history illustration) and a
+  centered login card with officer credentials, connection notice, and a
+  settings shortcut. No patient UI exists behind the gate.
+- **Top bar** - 44 px, raised surface, hairline bottom border; logo + title,
+  status dot (7 px, green/red), signed-in officer chip, help, settings, and
+  logout actions.
 - **Search input** - 38 px, mono-capable, focus ring = 2 px brand + 3 px
   soft halo; magnifier icon left, kind hint below.
 - **Result list** - hairline-bordered list, hover = muted surface, active
@@ -194,6 +207,8 @@ Every async state is deliberate:
 
 | State | Presentation |
 |---|---|
+| Startup | Splash with the brand mark while configuration and session are probed |
+| Signed out | Login gate; connection settings remain reachable |
 | First load (no history) | Canvas-shaped skeleton (bands + row lines), shown only after a 700 ms delay; a faster load renders nothing |
 | Refresh (history present) | 3 px sticky load bar + the previous history dimmed to 50%; the active window segment shows an inline spinner |
 | Empty | `canvas-empty` icon + title + hint before a patient is chosen; section-level "ไม่พบ..." lines keep the layout |

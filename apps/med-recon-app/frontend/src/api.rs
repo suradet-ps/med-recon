@@ -8,7 +8,7 @@
 //! components switch on `kind` (e.g. to raise the connection banner) and
 //! display `message` verbatim.
 
-use med_recon_core::{PatientHistory, PatientSummary};
+use med_recon_core::{PatientHistory, PatientSummary, SessionUser};
 use serde::{Deserialize, Serialize};
 
 use crate::state::ConnectionHealth;
@@ -26,6 +26,10 @@ pub enum ApiErrorKind {
     Guard,
     /// The statement failed server-side.
     Query,
+    /// The operator is not signed in, or the credentials were rejected.
+    Auth,
+    /// The submitted input is not usable.
+    Validation,
 }
 
 /// A backend command failure: machine-readable kind + the Thai message to
@@ -64,6 +68,17 @@ pub struct ConnectionInput {
     pub port: u16,
     pub database: String,
     pub user: String,
+    pub password: String,
+}
+
+/// Login credentials sent to the backend. The password lives in the webview
+/// heap while the operator types; the backend never stores it.
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LoginInput {
+    /// HOSxP login name.
+    pub username: String,
+    /// HOSxP password.
     pub password: String,
 }
 
@@ -147,6 +162,29 @@ pub async fn is_configured() -> Result<bool, ApiError> {
 /// Live connection health for the top-bar status dot.
 pub async fn connection_health() -> Result<ConnectionHealth, ApiError> {
     call_empty("connection_health").await
+}
+
+/// Verifies an officer against HOSxP and starts a backend session.
+pub async fn login(username: &str, password: &str) -> Result<SessionUser, ApiError> {
+    call_struct_arg(
+        "login",
+        "input",
+        &LoginInput {
+            username: username.to_string(),
+            password: password.to_string(),
+        },
+    )
+    .await
+}
+
+/// Clears the backend session.
+pub async fn logout() -> Result<(), ApiError> {
+    call_empty("logout").await
+}
+
+/// Current backend session, if any.
+pub async fn current_session() -> Result<Option<SessionUser>, ApiError> {
+    call_empty("current_session").await
 }
 
 /// Reveal the main window once the UI has mounted (the window starts hidden

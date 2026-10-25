@@ -219,6 +219,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
         conn_busy.set(true);
         conn_message.set(None);
         let token = arm_operation_timeout(generation, conn_busy, conn_message);
+        let had_session = state.session.get_untracked().is_some();
         spawn_local(async move {
             let result = api::save_connection(&input).await;
             if generation.get_untracked() == token {
@@ -229,6 +230,12 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         conn_message.set(Some((true, "บันทึกการตั้งค่าและเชื่อมต่อแล้ว".to_string())));
                         state.configured.set(true);
                         state.health.set(ConnectionHealth::Connected);
+                        // The backend drops the session on a connection
+                        // change - return to the login gate, never keep
+                        // showing the previous site's patient data.
+                        if had_session {
+                            state.clear_session();
+                        }
                     }
                     Err(error) => conn_message.set(Some((false, error.message))),
                 }
@@ -457,7 +464,15 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                 aria-labelledby="settings-title"
                 on:click=move |ev| ev.stop_propagation()
             >
-                <h2 class="modal__title" id="settings-title">"ตั้งค่า HOSxP"</h2>
+                <h2 class="modal__title" id="settings-title">
+                    {move || {
+                        if state.session.get().is_some() {
+                            "ตั้งค่า HOSxP"
+                        } else {
+                            "ตั้งค่าการเชื่อมต่อ"
+                        }
+                    }}
+                </h2>
                 <p class="modal__status">
                     {move || {
                         if state.configured.get() {
@@ -471,7 +486,9 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                 <div class="tabs">
                     <button
                         class=move || {
-                            if tab.get() == SettingsTab::Connection {
+                            if state.session.get().is_none()
+                                || tab.get() == SettingsTab::Connection
+                            {
                                 "tab tab--active"
                             } else {
                                 "tab"
@@ -482,23 +499,35 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         <IconPlug class="icon" />
                         "การเชื่อมต่อ"
                     </button>
-                    <button
-                        class=move || {
-                            if tab.get() == SettingsTab::Site {
-                                "tab tab--active"
-                            } else {
-                                "tab"
-                            }
-                        }
-                        on:click=move |_| tab.set(SettingsTab::Site)
-                    >
-                        <IconCheckCircle class="icon" />
-                        "ตั้งค่าอื่นๆ"
-                    </button>
+                    {move || {
+                        state
+                            .session
+                            .get()
+                            .is_some()
+                            .then(|| {
+                                view! {
+                                    <button
+                                        class=move || {
+                                            if tab.get() == SettingsTab::Site {
+                                                "tab tab--active"
+                                            } else {
+                                                "tab"
+                                            }
+                                        }
+                                        on:click=move |_| tab.set(SettingsTab::Site)
+                                    >
+                                        <IconCheckCircle class="icon" />
+                                        "ตั้งค่าอื่นๆ"
+                                    </button>
+                                }
+                            })
+                    }}
                 </div>
 
                 {move || {
-                    if tab.get() == SettingsTab::Connection {
+                    if tab.get() == SettingsTab::Connection
+                        || state.session.get().is_none()
+                    {
                         connection_panel()
                     } else {
                         site_panel()

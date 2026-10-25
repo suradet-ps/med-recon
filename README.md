@@ -53,9 +53,10 @@ The release artifact: `⟫ cargo tauri build`
 
 </details>
 
-On first launch the Setup screen asks for the HOSxP connection and the
-site identity (ชื่อสถานบริการ) - the credentials are encrypted before
-they ever touch disk.
+On first launch the login gate asks the operator to connect to HOSxP and
+sign in with their **officer** account; the connection credentials are
+encrypted before they ever touch disk, and the session never leaves the
+app process.
 
 ---
 
@@ -88,8 +89,9 @@ written.
 
 **The core ceremony** - an inter-hospital inquiry:
 
-1. Open Med Recon, connect to HOSxP. One configuration, remembered and
-   sealed.
+1. Open Med Recon, connect to HOSxP, and sign in with an officer account.
+   One configuration, remembered and sealed; the session lives only in
+   memory.
 2. Search by name, HN, or CID. The result list answers.
 3. Read the patient: BPMH with active and lapsed sections, allergies,
    and the visit history. Click a row to hide it when the review says
