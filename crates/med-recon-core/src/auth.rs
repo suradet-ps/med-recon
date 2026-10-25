@@ -83,44 +83,40 @@ pub fn verify_password(password: &str, stored_md5: &str) -> bool {
 mod tests {
     use super::*;
 
+    // A non-secret test vector: verifies the algorithm, not a credential.
+    const TEST_INPUT: &str = "med-recon-test";
+    const TEST_INPUT_MD5: &str = "2b0294858ab9daeabf6c01979594c4d5";
+
     #[test]
-    fn md5_hex_matches_known_digests() {
-        assert_eq!(md5_hex("password"), "5f4dcc3b5aa765d61d8327deb882cf99");
-        assert_eq!(md5_hex("123456"), "e10adc3949ba59abbe56e057f20f883e");
+    fn md5_hex_matches_a_known_digest() {
+        assert_eq!(md5_hex(TEST_INPUT), TEST_INPUT_MD5);
     }
 
     #[test]
     fn verify_accepts_lower_and_upper_hex() {
+        assert!(verify_password(TEST_INPUT, TEST_INPUT_MD5));
         assert!(verify_password(
-            "password",
-            "5f4dcc3b5aa765d61d8327deb882cf99"
-        ));
-        assert!(verify_password(
-            "password",
-            "5F4DCC3B5AA765D61D8327DEB882CF99"
+            TEST_INPUT,
+            &md5_hex(TEST_INPUT).to_uppercase()
         ));
     }
 
     #[test]
     fn verify_rejects_wrong_or_malformed_hashes() {
-        assert!(!verify_password(
-            "wrong",
-            "5f4dcc3b5aa765d61d8327deb882cf99"
-        ));
-        assert!(!verify_password("password", ""));
-        assert!(!verify_password("password", "not-a-md5"));
-        assert!(!verify_password(
-            "password",
-            "5f4dcc3b5aa765d61d8327deb882cf9z"
-        ));
+        assert!(!verify_password("different-input", TEST_INPUT_MD5));
+        assert!(!verify_password(TEST_INPUT, ""));
+        assert!(!verify_password(TEST_INPUT, "not-a-md5"));
+        let malformed = format!("{}z", &TEST_INPUT_MD5[..31]);
+        assert!(!verify_password(TEST_INPUT, &malformed));
     }
 
     #[test]
     fn officer_debug_redacts_the_password_hash() {
+        let digest = md5_hex(TEST_INPUT);
         let account = OfficerAccount {
             officer_id: 1,
             login_name: "pharm".into(),
-            password_md5: "5f4dcc3b5aa765d61d8327deb882cf99".into(),
+            password_md5: digest.clone(),
             active: "Y".into(),
             auth_type_id: 1,
             doctor_code: None,
@@ -128,6 +124,6 @@ mod tests {
         };
         let debug = format!("{account:?}");
         assert!(debug.contains("<redacted>"));
-        assert!(!debug.contains("5f4dcc3b5aa765d61d8327deb882cf99"));
+        assert!(!debug.contains(&digest));
     }
 }
