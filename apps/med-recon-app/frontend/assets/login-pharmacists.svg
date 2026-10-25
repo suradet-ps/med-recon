@@ -141,12 +141,12 @@
   <g filter="url(#pharm-bubble-shadow)">
     <path d="M78 46h150c12 0 22 9 22 21v50c0 12-10 21-22 21h-55l-16 22-4-22H78c-12 0-22-9-22-21V67c0-12 10-21 22-21Z" fill="#FFFFFF" />
   </g>
-  <text x="155" y="80" text-anchor="middle" font-family="Sarabun, sans-serif" font-size="17" font-weight="700" fill="#065F46">ตรวจสอบ</text>
-  <text x="155" y="103" text-anchor="middle" font-family="Sarabun, sans-serif" font-size="13.5" font-weight="500" fill="#3D6B5B">รายการยาเดิม</text>
+  <text x="155" y="80" text-anchor="middle" font-family="Sarabun, sans-serif" font-size="16" font-weight="700" fill="#065F46">ยาตัวนี้</text>
+  <text x="155" y="103" text-anchor="middle" font-family="Sarabun, sans-serif" font-size="13.5" font-weight="500" fill="#3D6B5B">ยังใช้อยู่ไหม?</text>
 
   <g filter="url(#pharm-bubble-shadow)">
     <path d="M306 46h150c12 0 22 9 22 21v50c0 12-10 21-22 21h-55l-16 22-4-22h-75c-12 0-22-9-22-21V67c0-12 10-21 22-21Z" fill="#FFFFFF" />
   </g>
-  <text x="386" y="80" text-anchor="middle" font-family="Sarabun, sans-serif" font-size="17" font-weight="700" fill="#065F46">ยืนยัน</text>
+  <text x="386" y="80" text-anchor="middle" font-family="Sarabun, sans-serif" font-size="16" font-weight="700" fill="#065F46">ยืนยันแล้ว</text>
   <text x="386" y="103" text-anchor="middle" font-family="Sarabun, sans-serif" font-size="13.5" font-weight="500" fill="#3D6B5B">กับผู้ป่วย</text>
 </svg>
