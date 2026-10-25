@@ -79,7 +79,14 @@ it is never written to disk, logged, or returned to the frontend.
   `search_patients`, `load_history`, `load_patient_image`, `export_report`,
   and `capture_screenshot`.
 - A session is also required for the settings that follow the BPMH rules:
-  `search_drugs`, `get_current_meds`, and `save_site_settings`.
+  `search_drugs`, `get_current_meds`, `save_site_settings`, and
+  `clear_site_config`.
+- Consecutive failed credential attempts are throttled in memory: after five
+  failures the gate locks for 30 seconds, doubling up to eight minutes. A
+  successful sign-in resets the counter.
+- A connection change clears the session and bumps a session epoch, so an
+  in-flight login cannot restore a session that was verified against the
+  previous site. The same epoch guard applies to logout.
 - Connection commands (`is_configured`, `get_connection`, `test_connection`,
   `save_connection`, `get_site_settings`, `get_app_status`,
   `connection_health`) stay available before sign-in so the operator can set

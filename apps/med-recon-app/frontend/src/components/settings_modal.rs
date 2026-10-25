@@ -233,6 +233,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                             // The backend drops the session on a connection
                             // change - return to the login gate, never keep
                             // showing the previous site's patient data.
+                            wipe_connection_fields();
                             state.clear_session();
                         } else {
                             // Saving from the login gate closes the dialog

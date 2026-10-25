@@ -7,6 +7,7 @@
 //! translated for the UI.
 
 use std::collections::HashSet;
+use std::sync::atomic::Ordering;
 use std::time::{Duration, Instant};
 
 use med_recon_config::{ConnectionConfig, SiteSettings};
@@ -26,6 +27,7 @@ pub struct EphemeralVault {
 }
 
 impl med_recon_config::SecretVault for EphemeralVault {
+    /// Encrypts a plaintext string with the ephemeral in-memory key.
     fn encrypt(&self, plaintext: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         let mut guard = self.key.lock().expect("invariant: ephemeral key lock");
         let key = guard.get_or_insert_with(|| {
@@ -34,6 +36,7 @@ impl med_recon_config::SecretVault for EphemeralVault {
         Ok(encryptman::encrypt(key, plaintext)?)
     }
 
+    /// Decrypts a ciphertext string with the ephemeral in-memory key.
     fn decrypt(
         &self,
         ciphertext: &str,
@@ -45,6 +48,15 @@ impl med_recon_config::SecretVault for EphemeralVault {
         Ok(encryptman::decrypt(key, ciphertext)?)
     }
 }
+
+/// Consecutive authentication failures before the login gate locks.
+const LOGIN_FAILURE_THRESHOLD: u32 = 5;
+
+/// Base lockout duration once the failure threshold is reached.
+const LOGIN_LOCK_BASE_SECS: u64 = 30;
+
+/// Maximum number of doublings for the growing lockout delay.
+const LOGIN_LOCK_MAX_STEPS: u32 = 4;
 
 /// Failure class of a command - the frontend switches on this for
 /// presentation.
@@ -77,6 +89,7 @@ pub struct CommandError {
 }
 
 impl CommandError {
+    /// Creates a command error from a kind and Thai message.
     fn new(kind: CommandErrorKind, message: impl Into<String>) -> Self {
         Self {
             kind,
@@ -376,6 +389,64 @@ async fn require_session(state: &AppState) -> Result<SessionUser, CommandError> 
         .ok_or_else(CommandError::unauthorized)
 }
 
+/// Clears the in-memory session and bumps the epoch so an in-flight login
+/// cannot restore it. Returns the new epoch.
+async fn clear_session(state: &AppState) -> u64 {
+    let epoch = state
+        .session_epoch
+        .fetch_add(1, Ordering::SeqCst)
+        .wrapping_add(1);
+    *state.session.write().await = None;
+    epoch
+}
+
+/// Returns the exponential lockout duration for a failure count.
+fn login_lockout_duration(failures: u32) -> Duration {
+    let steps = failures
+        .saturating_sub(LOGIN_FAILURE_THRESHOLD)
+        .min(LOGIN_LOCK_MAX_STEPS);
+    Duration::from_secs(LOGIN_LOCK_BASE_SECS << steps)
+}
+
+/// Returns the remaining lockout time, clearing an expired lockout.
+async fn login_lockout_remaining(state: &AppState) -> Option<Duration> {
+    let now = Instant::now();
+    let mut throttle = state.login_throttle.lock().await;
+    match throttle.locked_until {
+        Some(until) if until > now => Some(until - now),
+        Some(_) => {
+            throttle.locked_until = None;
+            throttle.failed_attempts = 0;
+            None
+        }
+        None => None,
+    }
+}
+
+/// Records one failed credential attempt and starts a lockout at the
+/// threshold.
+async fn record_login_failure(state: &AppState) {
+    let mut throttle = state.login_throttle.lock().await;
+    throttle.failed_attempts = throttle.failed_attempts.saturating_add(1);
+    if throttle.failed_attempts >= LOGIN_FAILURE_THRESHOLD {
+        let lockout = login_lockout_duration(throttle.failed_attempts);
+        throttle.locked_until = Some(Instant::now() + lockout);
+    }
+}
+
+/// Clears the failure counter after a successful sign-in.
+async fn reset_login_failures(state: &AppState) {
+    let mut throttle = state.login_throttle.lock().await;
+    throttle.failed_attempts = 0;
+    throttle.locked_until = None;
+}
+
+/// Records a credential failure and returns the user-facing auth error.
+async fn auth_failure(state: &AppState, message: &'static str) -> CommandError {
+    record_login_failure(state).await;
+    CommandError::auth(message)
+}
+
 /// Non-sensitive summary of the saved configuration (never includes the
 /// password).
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -510,7 +581,7 @@ pub async fn save_connection(
 
     // A new connection is a new identity scope: the session must not survive
     // a site switch, even when the account name is the same.
-    *state.session.write().await = None;
+    clear_session(&state).await;
 
     // Replace the cached client under a short lock; the previous pool is
     // closed after the lock is released so no in-flight query is disturbed.
@@ -612,25 +683,30 @@ pub async fn login(
         return Err(CommandError::validation("รหัสผ่านยาวเกินไป"));
     }
 
-    *state.session.write().await = None;
+    if let Some(remaining) = login_lockout_remaining(&state).await {
+        return Err(CommandError::auth(format!(
+            "เข้าสู่ระบบถูกระงับชั่วคราว กรุณารอ {} วินาทีแล้วลองใหม่",
+            remaining.as_secs().max(1)
+        )));
+    }
+
+    let epoch = clear_session(&state).await;
     let client = client(&state, "เข้าสู่ระบบ").await?;
     let account = client
         .fetch_officer(username)
         .await
         .map_err(|e| map_repo_error(e, "เข้าสู่ระบบ"))?;
     let Some(account) = account else {
-        return Err(CommandError::auth("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"));
+        return Err(auth_failure(&state, "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง").await);
     };
     if account.auth_type_id != 1 {
-        return Err(CommandError::auth(
-            "บัญชีนี้ใช้การยืนยันตัวตนแบบ LDAP ซึ่งยังไม่เปิดใช้งาน",
-        ));
+        return Err(auth_failure(&state, "บัญชีนี้ใช้การยืนยันตัวตนแบบ LDAP ซึ่งยังไม่เปิดใช้งาน").await);
     }
     if !account.active.eq_ignore_ascii_case("Y") {
-        return Err(CommandError::auth("บัญชีนี้ถูกปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ"));
+        return Err(auth_failure(&state, "บัญชีนี้ถูกปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ").await);
     }
     if !verify_password(password.expose_secret(), &account.password_md5) {
-        return Err(CommandError::auth("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"));
+        return Err(auth_failure(&state, "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง").await);
     }
 
     let display_name = if account.display_name.trim().is_empty() {
@@ -645,14 +721,19 @@ pub async fn login(
         doctor_code: account.doctor_code,
         role: "STAFF".to_string(),
     };
-    *state.session.write().await = Some(user.clone());
+    reset_login_failures(&state).await;
+    let mut slot = state.session.write().await;
+    if state.session_epoch.load(Ordering::SeqCst) != epoch {
+        return Err(CommandError::auth("เซสชันถูกยกเลิก กรุณาเข้าสู่ระบบอีกครั้ง"));
+    }
+    *slot = Some(user.clone());
     Ok(user)
 }
 
 /// Clears the in-memory session.
 #[tauri::command]
 pub async fn logout(state: State<'_, AppState>) -> Result<(), CommandError> {
-    *state.session.write().await = None;
+    clear_session(&state).await;
     Ok(())
 }
 
@@ -710,8 +791,9 @@ pub async fn test_connection(
 /// Remove the saved configuration and drop the connection pool.
 #[tauri::command]
 pub async fn clear_site_config(state: State<'_, AppState>) -> Result<(), CommandError> {
+    require_session(&state).await?;
     *state.client.write().await = None;
-    *state.session.write().await = None;
+    clear_session(&state).await;
     state.store.clear().map_err(|e| {
         dev_log(
             "clear_site_config",
@@ -1025,6 +1107,7 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
+    /// Builds an in-memory state for command tests.
     fn test_state() -> AppState {
         AppState {
             store: med_recon_config::ConfigStore::with_vault(
@@ -1034,7 +1117,52 @@ mod tests {
             client: tokio::sync::RwLock::new(None),
             health: tokio::sync::RwLock::new(ConnectionHealth::Unconfigured),
             session: tokio::sync::RwLock::new(None),
+            session_epoch: std::sync::atomic::AtomicU64::new(0),
+            login_throttle: tokio::sync::Mutex::new(crate::state::LoginThrottle::default()),
         }
+    }
+
+    #[test]
+    fn login_lockout_duration_grows_and_caps() {
+        assert_eq!(
+            login_lockout_duration(LOGIN_FAILURE_THRESHOLD),
+            Duration::from_secs(LOGIN_LOCK_BASE_SECS)
+        );
+        assert_eq!(
+            login_lockout_duration(LOGIN_FAILURE_THRESHOLD + 1),
+            Duration::from_secs(LOGIN_LOCK_BASE_SECS * 2)
+        );
+        assert_eq!(
+            login_lockout_duration(LOGIN_FAILURE_THRESHOLD + LOGIN_LOCK_MAX_STEPS),
+            Duration::from_secs(LOGIN_LOCK_BASE_SECS << LOGIN_LOCK_MAX_STEPS)
+        );
+        assert_eq!(
+            login_lockout_duration(LOGIN_FAILURE_THRESHOLD + 20),
+            Duration::from_secs(LOGIN_LOCK_BASE_SECS << LOGIN_LOCK_MAX_STEPS)
+        );
+    }
+
+    #[tokio::test]
+    async fn failed_logins_lock_and_success_resets() {
+        let state = test_state();
+        for _ in 0..LOGIN_FAILURE_THRESHOLD {
+            record_login_failure(&state).await;
+        }
+        assert!(login_lockout_remaining(&state).await.is_some());
+
+        reset_login_failures(&state).await;
+        assert!(login_lockout_remaining(&state).await.is_none());
+        assert_eq!(state.login_throttle.lock().await.failed_attempts, 0);
+    }
+
+    #[tokio::test]
+    async fn clear_session_bumps_the_epoch() {
+        let state = test_state();
+        let before = state.session_epoch.load(Ordering::SeqCst);
+        let epoch = clear_session(&state).await;
+        assert_eq!(epoch, before + 1);
+        assert_eq!(state.session_epoch.load(Ordering::SeqCst), epoch);
+        assert!(state.session.read().await.is_none());
     }
 
     #[tokio::test]

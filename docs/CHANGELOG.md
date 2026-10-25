@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Patient search, history, photo, report, screenshot, drug lookup, and site
   settings now require a signed-in session at the Tauri command boundary.
   Login passwords are verified in Rust and never stored or logged.
+- Failed logins are throttled in memory after five consecutive attempts
+  (30 seconds, doubling up to eight minutes), and a session epoch prevents an
+  in-flight login from restoring a session after a connection change or
+  logout.
 
 ## [0.5.2] - 2026-09-29
 

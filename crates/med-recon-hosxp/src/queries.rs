@@ -512,7 +512,12 @@ mod tests {
     fn officer_query_uses_only_safe_columns() {
         assert!(FETCH_OFFICER_SQL.contains("FROM officer o"));
         assert!(FETCH_OFFICER_SQL.contains("officer_login_password_md5"));
-        assert!(!FETCH_OFFICER_SQL.contains("officer_login_password "));
+        for (idx, _) in FETCH_OFFICER_SQL.match_indices("officer_login_password") {
+            assert!(
+                FETCH_OFFICER_SQL[idx..].starts_with("officer_login_password_md5"),
+                "plaintext password column must never be selected"
+            );
+        }
         assert!(!FETCH_OFFICER_SQL.contains("opduser"));
         assert!(FETCH_OFFICER_SQL.contains("LEFT JOIN doctor d"));
         assert!(FETCH_OFFICER_SQL.contains("d.name"));
