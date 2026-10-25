@@ -2058,6 +2058,22 @@ code, .mono, .code {
   margin-bottom: 0;
 }
 
+.settings-group .form-row {
+  margin-bottom: var(--sp-md);
+}
+
+.settings-group .form-row .form-field {
+  margin-bottom: 0;
+}
+
+.settings-group .form-row:last-child {
+  margin-bottom: 0;
+}
+
+.settings-group .form-row + .settings-hint {
+  margin-top: 0;
+}
+
 .settings-hint {
   margin: 8px 0 0;
   font-size: 11.5px;
