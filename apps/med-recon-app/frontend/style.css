@@ -492,28 +492,89 @@ code, .mono, .code {
   color: var(--slate);
 }
 
-.login__hero {
+.login__scene {
   position: relative;
-  display: grid;
-  place-items: center;
-  width: min(100%, 440px);
-  aspect-ratio: 520 / 440;
-  margin-top: 2px;
+  width: min(100%, 460px);
+  margin-top: 22px;
   animation: login-enter 700ms cubic-bezier(0.22, 0.8, 0.28, 1) both;
 }
 
-.login__art {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  filter: drop-shadow(0 22px 32px rgba(5, 150, 105, 0.12));
-  animation: login-float 9s ease-in-out infinite;
+.login__bubble {
+  position: absolute;
+  top: 12px;
+  z-index: 2;
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 14px;
+  background: var(--canvas-raised);
+  box-shadow: 0 12px 26px -14px rgba(6, 95, 70, 0.5);
+  color: var(--brand-dark);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  animation: login-bubble-in 600ms cubic-bezier(0.22, 0.8, 0.28, 1) both;
 }
 
-.login__art svg {
+.login__bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
+  border-right: 1px solid rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.9);
+  background: var(--canvas-raised);
+  transform: rotate(45deg);
+}
+
+.login__bubble--left {
+  left: 12px;
+}
+
+.login__bubble--left::after {
+  left: 110px;
+}
+
+.login__bubble--right {
+  right: 12px;
+  animation-delay: 120ms;
+}
+
+.login__bubble--right::after {
+  right: 100px;
+}
+
+.login__photo {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 24px;
+  background: var(--brand-soft);
+  box-shadow: 0 28px 50px -24px rgba(4, 120, 87, 0.55);
+}
+
+.login__photo img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.92) contrast(1.03);
+}
+
+.login__photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    rgba(16, 185, 129, 0.04) 0%,
+    rgba(4, 120, 87, 0.24) 100%
+  );
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
 @keyframes login-enter {
@@ -527,19 +588,20 @@ code, .mono, .code {
   }
 }
 
-@keyframes login-float {
-  0%,
-  100% {
-    transform: translateY(0);
+@keyframes login-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
   }
-  50% {
-    transform: translateY(-4px);
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .login__hero,
-  .login__art {
+  .login__scene,
+  .login__bubble {
     animation: none;
   }
 }
@@ -549,8 +611,8 @@ code, .mono, .code {
     font-size: 26px;
   }
 
-  .login__hero {
-    width: min(100%, 320px);
+  .login__scene {
+    width: min(100%, 360px);
   }
 }
 

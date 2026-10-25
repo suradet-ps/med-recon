@@ -71,11 +71,16 @@ pub fn LoginScreen(state: AppState) -> impl IntoView {
                     <p class="login__lede">
                         "BPMH · ประวัติการแพ้ยา · ประวัติการเข้ารับบริการ"
                     </p>
-                    <div class="login__hero" aria-hidden="true">
-                        <div
-                            class="login__art"
-                            inner_html=include_str!("../../assets/login-pharmacists.svg")
-                        ></div>
+                    <div class="login__scene" aria-hidden="true">
+                        <div class="login__bubble login__bubble--left">
+                            "ยาตัวนี้ยังใช้อยู่ไหม?"
+                        </div>
+                        <div class="login__bubble login__bubble--right">
+                            "ยืนยันกับผู้ป่วยแล้ว"
+                        </div>
+                        <figure class="login__photo">
+                            <img src="assets/login-team.jpg" alt="" loading="eager" />
+                        </figure>
                     </div>
                 </div>
             </aside>
