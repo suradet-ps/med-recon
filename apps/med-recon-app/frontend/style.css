@@ -342,6 +342,337 @@ code, .mono, .code {
   outline-offset: 1px;
 }
 
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--rounded-full);
+  background: var(--canvas-raised);
+}
+
+.user-chip__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.user-chip__name {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.top-bar__logout {
+  color: var(--status-disconnected);
+  border-color: var(--verdict-notfound-border);
+}
+
+.top-bar__logout:hover {
+  color: var(--verdict-notfound-text);
+  background: var(--verdict-notfound);
+  border-color: var(--verdict-notfound-border);
+}
+
+/* ==========================================================================
+   Login gate
+   ========================================================================== */
+
+.login {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(380px, 0.92fr) minmax(520px, 1.08fr);
+  min-height: 100vh;
+  width: 100%;
+  background: var(--canvas);
+}
+
+.login__brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: 52px var(--sp-xl);
+  background:
+    radial-gradient(circle at 82% 10%, rgba(16, 185, 129, 0.2), transparent 52%),
+    radial-gradient(circle at 10% 88%, rgba(5, 150, 105, 0.16), transparent 48%),
+    linear-gradient(162deg, #F7FEFB 0%, #ECFDF5 46%, #D1FAE5 100%);
+}
+
+.login__brand::after {
+  content: "";
+  position: absolute;
+  right: -180px;
+  bottom: -210px;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: rgba(5, 150, 105, 0.08);
+}
+
+.login__brand-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-md);
+}
+
+.login__brand-mark {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+}
+
+.login__brand-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.login__brand-name {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--ink);
+}
+
+.login__brand-sub {
+  font-size: 11.5px;
+  color: var(--slate);
+}
+
+.login__stage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-md);
+  min-height: 0;
+  padding-bottom: 24px;
+}
+
+.login__headline {
+  margin: 0;
+  max-width: 420px;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.8px;
+  text-align: center;
+  color: var(--ink);
+}
+
+.login__art {
+  width: min(100%, 440px);
+}
+
+.login__art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.login__main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 72px 48px 48px;
+}
+
+.login__toolbar {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+}
+
+.login__card {
+  width: 100%;
+  max-width: 460px;
+  padding: 32px;
+  background: var(--canvas-raised);
+  border: 1px solid var(--hairline);
+  border-radius: var(--rounded-lg);
+  box-shadow: var(--elev-3);
+}
+
+.login__card-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 22px;
+}
+
+.login__card-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+}
+
+.login__card-sub {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--steel);
+}
+
+.login__notice {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--warning-border);
+  border-radius: var(--rounded-md);
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.login__notice b {
+  display: block;
+  font-size: 12.5px;
+}
+
+.login__notice small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.login__notice .button-secondary {
+  align-self: flex-start;
+}
+
+.login__form {
+  display: grid;
+  gap: 14px;
+}
+
+.login__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--slate);
+}
+
+.login__field .form-input {
+  height: 38px;
+  font-size: 13px;
+}
+
+.login__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.login__submit {
+  flex: 1;
+  height: 42px;
+}
+
+.login__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--verdict-notfound-border);
+  border-radius: var(--rounded-sm);
+  background: var(--verdict-notfound);
+  color: var(--verdict-notfound-text);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.login__error .icon {
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+}
+
+.startup {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 14px;
+  background: var(--canvas);
+  color: var(--steel);
+  font-size: 13px;
+}
+
+.startup__logo {
+  width: 44px;
+  height: 44px;
+}
+
+.startup p {
+  margin: 0;
+}
+
+@media (max-width: 1000px) {
+  .login {
+    grid-template-columns: 1fr;
+  }
+
+  .login__brand {
+    display: none;
+  }
+
+  .login__main {
+    padding: 56px 24px 24px;
+  }
+
+  .top-bar__status-text {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .login__card {
+    padding: 24px;
+  }
+
+  .user-chip__name {
+    display: none;
+  }
+}
+
 /* ==========================================================================
    Sidebar
    ========================================================================== */

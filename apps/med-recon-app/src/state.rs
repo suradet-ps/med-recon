@@ -1,6 +1,7 @@
 //! Shared application state for the Tauri backend.
 
 use med_recon_config::ConfigStore;
+use med_recon_core::SessionUser;
 use med_recon_hosxp::HosxpClient;
 use tokio::sync::RwLock;
 
@@ -12,6 +13,9 @@ pub struct AppState {
     pub client: RwLock<Option<HosxpClient>>,
     /// Cached connection health, refreshed by `connection_health`.
     pub health: RwLock<crate::commands::ConnectionHealth>,
+    /// Signed-in HOSxP officer for this app process. Memory only - a restart
+    /// requires signing in again.
+    pub session: RwLock<Option<SessionUser>>,
 }
 
 impl AppState {
@@ -34,6 +38,7 @@ impl AppState {
             store,
             client: RwLock::new(None),
             health: RwLock::new(crate::commands::ConnectionHealth::Unconfigured),
+            session: RwLock::new(None),
         }
     }
 }

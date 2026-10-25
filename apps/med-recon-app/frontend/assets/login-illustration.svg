@@ -1,0 +1,121 @@
+<svg class="login-illustration" viewBox="0 0 520 440" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="lr-title">
+  <title id="lr-title">ประวัติยาผู้ป่วย</title>
+  <defs>
+    <linearGradient id="mr-paper" x1="150" y1="48" x2="400" y2="378" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#F0FDF4" />
+    </linearGradient>
+    <linearGradient id="mr-header" x1="150" y1="54" x2="400" y2="130" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10B981" />
+      <stop offset="1" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="mr-capsule" x1="58" y1="88" x2="100" y2="166" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#D1FAE5" />
+    </linearGradient>
+    <linearGradient id="mr-capsule-fill" x1="58" y1="88" x2="100" y2="166" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6EE7B7" />
+      <stop offset="1" stop-color="#059669" />
+    </linearGradient>
+    <filter id="mr-shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#065F46" flood-opacity="0.18" />
+    </filter>
+    <filter id="mr-soft" x="-40%" y="-40%" width="180%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#065F46" flood-opacity="0.16" />
+    </filter>
+    <clipPath id="mr-paper-clip">
+      <rect x="88" y="54" width="250" height="340" rx="20" />
+    </clipPath>
+    <clipPath id="mr-capsule-clip">
+      <rect x="58" y="88" width="42" height="78" rx="21" />
+    </clipPath>
+  </defs>
+
+  <circle cx="268" cy="216" r="190" fill="#FFFFFF" fill-opacity="0.32" />
+  <circle cx="268" cy="216" r="134" fill="#FFFFFF" fill-opacity="0.2" />
+  <path d="M70 268C48 136 190 36 338 58C462 76 512 182 478 302" stroke="#FFFFFF" stroke-opacity="0.62" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 11" />
+  <circle cx="472" cy="192" r="4" fill="#10B981" fill-opacity="0.7" />
+  <circle cx="76" cy="176" r="3" fill="#FFFFFF" fill-opacity="0.9" />
+  <circle cx="448" cy="270" r="3" fill="#FFFFFF" fill-opacity="0.85" />
+
+  <g transform="rotate(-11 213 224)" opacity="0.5">
+    <rect x="100" y="68" width="250" height="340" rx="20" fill="#FFFFFF" fill-opacity="0.55" />
+  </g>
+
+  <g transform="rotate(-7 213 224)" filter="url(#mr-shadow)">
+    <rect x="88" y="54" width="250" height="340" rx="20" fill="url(#mr-paper)" />
+    <g clip-path="url(#mr-paper-clip)">
+      <path d="M108 54h210a20 20 0 0 1 20 20v56H88V74a20 20 0 0 1 20-20Z" fill="url(#mr-header)" />
+      <circle cx="318" cy="58" r="58" fill="#FFFFFF" fill-opacity="0.1" />
+      <circle cx="280" cy="124" r="44" fill="#FFFFFF" fill-opacity="0.07" />
+      <rect x="112" y="76" width="128" height="10" rx="5" fill="#FFFFFF" fill-opacity="0.94" />
+      <rect x="112" y="95" width="82" height="6" rx="3" fill="#FFFFFF" fill-opacity="0.55" />
+      <rect x="274" y="70" width="44" height="44" rx="13" fill="#FFFFFF" fill-opacity="0.18" />
+      <path d="M296 81v22M285 92h22" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round" />
+
+      <rect x="112" y="164" width="202" height="16" rx="8" fill="#D1FAE5" />
+      <rect x="124" y="168" width="48" height="8" rx="4" fill="#6EE7B7" fill-opacity="0.7" />
+
+      <g>
+        <rect x="112" y="192" width="12" height="12" rx="3.5" fill="#D1FAE5" />
+        <rect x="133" y="193" width="92" height="7" rx="3.5" fill="#CDE9DC" />
+        <rect x="133" y="205" width="56" height="5" rx="2.5" fill="#E7F6EE" />
+        <rect x="238" y="191" width="34" height="14" rx="7" fill="#D1FAE5" />
+        <rect x="280" y="191" width="34" height="14" rx="7" fill="#F0FDF4" />
+      </g>
+      <g>
+        <rect x="112" y="222" width="12" height="12" rx="3.5" fill="#D1FAE5" />
+        <rect x="133" y="223" width="78" height="7" rx="3.5" fill="#CDE9DC" />
+        <rect x="133" y="235" width="48" height="5" rx="2.5" fill="#E7F6EE" />
+        <rect x="238" y="221" width="34" height="14" rx="7" fill="#D1FAE5" />
+        <rect x="280" y="221" width="34" height="14" rx="7" fill="#F0FDF4" />
+      </g>
+      <g>
+        <rect x="112" y="252" width="12" height="12" rx="3.5" fill="#D1FAE5" />
+        <rect x="133" y="253" width="102" height="7" rx="3.5" fill="#CDE9DC" />
+        <rect x="133" y="265" width="62" height="5" rx="2.5" fill="#E7F6EE" />
+        <rect x="238" y="251" width="34" height="14" rx="7" fill="#D1FAE5" />
+        <rect x="280" y="251" width="34" height="14" rx="7" fill="#F0FDF4" />
+      </g>
+      <g>
+        <rect x="112" y="282" width="12" height="12" rx="3.5" fill="#D1FAE5" />
+        <rect x="133" y="283" width="84" height="7" rx="3.5" fill="#CDE9DC" />
+        <rect x="133" y="295" width="52" height="5" rx="2.5" fill="#E7F6EE" />
+        <rect x="238" y="281" width="34" height="14" rx="7" fill="#D1FAE5" />
+        <rect x="280" y="281" width="34" height="14" rx="7" fill="#F0FDF4" />
+      </g>
+
+      <path d="M114 344c8-9 14 8 23 1s13-9 21-2 13 6 21-2" stroke="#047857" stroke-width="2.2" stroke-linecap="round" />
+      <rect x="114" y="354" width="96" height="2" rx="1" fill="#DCEFE5" />
+      <rect x="114" y="362" width="52" height="4" rx="2" fill="#EAF7F0" />
+
+      <g transform="rotate(14 280 328)">
+        <circle cx="280" cy="328" r="38" fill="#D1FAE5" fill-opacity="0.75" stroke="#10B981" stroke-width="2.4" stroke-dasharray="5 5" />
+        <circle cx="280" cy="328" r="28" stroke="#10B981" stroke-opacity="0.5" stroke-width="1.5" />
+        <path d="M268 328l8 8 17-18" stroke="#047857" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+      </g>
+    </g>
+  </g>
+
+  <g transform="rotate(-28 79 127)" filter="url(#mr-soft)">
+    <rect x="58" y="88" width="42" height="78" rx="21" fill="url(#mr-capsule)" />
+    <g clip-path="url(#mr-capsule-clip)">
+      <path d="M58 127h42v18a21 21 0 0 1-42 0Z" fill="url(#mr-capsule-fill)" />
+      <path d="M67 101v10" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="3" stroke-linecap="round" />
+    </g>
+    <rect x="58" y="88" width="42" height="78" rx="21" stroke="#FFFFFF" stroke-width="2" />
+    <path d="M58 127h42" stroke="#6EE7B7" stroke-width="2" />
+  </g>
+
+  <g filter="url(#mr-soft)">
+    <circle cx="446" cy="342" r="34" fill="#FFFFFF" fill-opacity="0.94" />
+    <circle cx="446" cy="342" r="20" stroke="#059669" stroke-width="4" fill="none" />
+    <path d="m460 356 14 14" stroke="#059669" stroke-width="5" stroke-linecap="round" />
+    <circle cx="446" cy="342" r="10" fill="#D1FAE5" />
+  </g>
+
+  <g filter="url(#mr-soft)">
+    <circle cx="470" cy="58" r="30" fill="#FFFFFF" fill-opacity="0.94" />
+    <path d="M470 47c-4.4-9-16-7.6-16 1.6 0 6.6 8.2 11.4 16 16.4 7.8-5 16-9.8 16-16.4 0-9.2-11.6-10.6-16-1.6Z" fill="#10B981" />
+  </g>
+</svg>

@@ -3,7 +3,7 @@
 use std::collections::HashSet;
 
 use leptos::prelude::*;
-use med_recon_core::{PatientHistory, PatientSummary};
+use med_recon_core::{PatientHistory, PatientSummary, SessionUser};
 
 /// Shown when a history response does not belong to the selected patient.
 /// This is a safety net; the backend should always echo the requested HN.
@@ -28,6 +28,10 @@ pub enum ConnectionHealth {
 pub struct AppState {
     /// Whether encrypted HOSxP connection settings exist on this machine.
     pub configured: RwSignal<bool>,
+    /// Signed-in HOSxP officer, mirrored from the backend session.
+    pub session: RwSignal<Option<SessionUser>>,
+    /// True once the startup probe (configuration + session) finished.
+    pub auth_checked: RwSignal<bool>,
     /// Whether the connection settings dialog is open.
     pub settings_open: RwSignal<bool>,
     /// Whether the user manual (คู่มือการใช้งาน) dialog is open.
@@ -85,6 +89,8 @@ impl AppState {
     pub fn new() -> Self {
         Self {
             configured: RwSignal::new(false),
+            session: RwSignal::new(None),
+            auth_checked: RwSignal::new(false),
             settings_open: RwSignal::new(false),
             help_open: RwSignal::new(false),
             health: RwSignal::new(ConnectionHealth::Unconfigured),
@@ -125,6 +131,34 @@ impl AppState {
             handle.clear();
         }
         self.history_debounce.set(None);
+    }
+
+    /// Completes a successful login and opens the search screen.
+    pub fn finish_login(&self, user: SessionUser) {
+        self.session.set(Some(user));
+        self.settings_open.set(false);
+    }
+
+    /// Clears the session and every patient-scoped signal (backend logout is
+    /// performed by the caller). In-flight history responses are invalidated
+    /// so PHI from the previous session cannot reappear after sign-out.
+    pub fn clear_session(&self) {
+        self.session.set(None);
+        self.search_query.set(String::new());
+        self.patient.set(None);
+        self.patient_photo.set(None);
+        self.history.set(None);
+        self.history_loading.set(false);
+        self.history_loading_visible.set(false);
+        self.history_error.set(None);
+        self.history_days_override.set(None);
+        self.cancel_pending_history_fetch();
+        self.history_request_epoch.update(|epoch| {
+            *epoch = epoch.wrapping_add(1);
+        });
+        self.dismissed_meds.set(HashSet::new());
+        self.settings_open.set(false);
+        self.help_open.set(false);
     }
 }
 

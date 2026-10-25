@@ -6,12 +6,14 @@
 //! era normalization (auto-detected พ.ศ. / ค.ศ. per value) and PHI
 //! redaction helpers used across the application.
 
+pub mod auth;
 pub mod bpmh;
 pub mod eras;
 pub mod model;
 pub mod query_kind;
 pub mod redact;
 
+pub use auth::{OfficerAccount, SessionUser, md5_hex, verify_password};
 pub use bpmh::{aggregate_medications, days_supply};
 pub use eras::{
     BUDDHIST_ERA_YEAR_THRESHOLD, buddhist_to_christian, is_buddhist_era_year, normalize_date,

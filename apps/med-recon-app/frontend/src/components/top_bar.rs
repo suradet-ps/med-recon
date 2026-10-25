@@ -1,14 +1,22 @@
-//! Top bar - 44px header: brand, live connection status, settings button.
+//! Top bar - 44px header: brand, live connection status, signed-in officer,
+//! settings, and logout.
 
 use leptos::prelude::*;
 
-use crate::components::icons::{IconHelp, IconLogo, IconSettings};
+use crate::api;
+use crate::components::icons::{IconHelp, IconLogOut, IconLogo, IconSettings};
 use crate::state::{AppState, ConnectionHealth};
 
 #[component]
 pub fn TopBar(state: AppState) -> impl IntoView {
     let on_settings = move |_| state.settings_open.set(true);
     let on_help = move |_| state.help_open.set(true);
+    let on_logout = move |_| {
+        leptos::task::spawn_local(async move {
+            let _ = api::logout().await;
+            state.clear_session();
+        });
+    };
 
     let site_name = move || {
         let name = state.site_name.get();
@@ -41,6 +49,27 @@ pub fn TopBar(state: AppState) -> impl IntoView {
                     ></span>
                     <span class="top-bar__status-text">{status_text}</span>
                 </span>
+                {move || {
+                    state
+                        .session
+                        .get()
+                        .map(|user| {
+                            let initial = user
+                                .display_name
+                                .chars()
+                                .next()
+                                .or_else(|| user.login_name.chars().next())
+                                .map(|c| c.to_string())
+                                .unwrap_or_default();
+                            let title = format!("{} · {}", user.display_name, user.login_name);
+                            view! {
+                                <span class="user-chip" title=title>
+                                    <span class="user-chip__avatar">{initial}</span>
+                                    <span class="user-chip__name">{user.display_name}</span>
+                                </span>
+                            }
+                        })
+                }}
                 <button class="top-bar__button" on:click=on_help>
                     <IconHelp class="icon" />
                     "คู่มือ"
@@ -48,6 +77,14 @@ pub fn TopBar(state: AppState) -> impl IntoView {
                 <button class="top-bar__button" on:click=on_settings>
                     <IconSettings class="icon" />
                     "ตั้งค่า"
+                </button>
+                <button
+                    class="top-bar__button top-bar__logout"
+                    title="ออกจากระบบ"
+                    on:click=on_logout
+                >
+                    <IconLogOut class="icon" />
+                    "ออกจากระบบ"
                 </button>
             </div>
         </header>

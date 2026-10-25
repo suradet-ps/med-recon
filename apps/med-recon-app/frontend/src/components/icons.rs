@@ -100,6 +100,29 @@ icon!(
 );
 
 icon!(
+    /// Lock - password field and the login gate.
+    IconLock,
+    <rect x="4" y="10" width="16" height="11" rx="3" />
+    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    <path d="M12 14v3" />
+);
+
+icon!(
+    /// Arrow right - submit / continue.
+    IconArrowRight,
+    <path d="M4 12h15" />
+    <path d="m14 7 5 5-5 5" />
+);
+
+icon!(
+    /// Log out - end the session.
+    IconLogOut,
+    <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" />
+    <path d="m14 8 4 4-4 4" />
+    <path d="M18 12H9" />
+);
+
+icon!(
     /// Check-circle - positive state (active medication).
     IconCheckCircle,
     <circle cx="12" cy="12" r="10" />

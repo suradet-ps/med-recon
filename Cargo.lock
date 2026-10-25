@@ -3086,6 +3086,7 @@ name = "med-recon-core"
 version = "0.5.2"
 dependencies = [
  "chrono",
+ "md-5",
  "serde",
 ]
 
