@@ -67,7 +67,7 @@ pub fn LoginScreen(state: AppState) -> impl IntoView {
                 </div>
 
                 <div class="login__stage">
-                    <h1 class="login__headline">"ประวัติยาของผู้ป่วย ในหน้าเดียว"</h1>
+                    <h1 class="login__headline">"ประสานรายการยาผู้ป่วย"</h1>
                     <p class="login__lede">
                         "BPMH · ประวัติการแพ้ยา · ประวัติการเข้ารับบริการ"
                     </p>
@@ -78,9 +78,6 @@ pub fn LoginScreen(state: AppState) -> impl IntoView {
                             inner_html=include_str!("../../../../../icon-master.svg")
                         ></div>
                     </div>
-                    <p class="login__caption">
-                        "อ่านข้อมูลจาก HOSxP แบบอ่านเท่านั้น · ข้อมูลผู้ป่วยอยู่ในเครื่อง"
-                    </p>
                 </div>
             </aside>
 
@@ -95,9 +92,6 @@ pub fn LoginScreen(state: AppState) -> impl IntoView {
                 <div class="login__card">
                     <header class="login__card-head">
                         <h2 class="login__card-title">"เข้าสู่ระบบ"</h2>
-                        <p class="login__card-sub">
-                            "ใช้บัญชี officer ของ HOSxP เพื่อเข้าใช้งาน"
-                        </p>
                     </header>
 
                     {move || {
