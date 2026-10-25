@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **Connection settings dialog redesigned** - a fixed header with a close
+  button, grouped server/account fields, a scrolling body, and a fixed action
+  bar. The redundant "เชื่อมต่อแล้ว" status line and duplicate "การเชื่อมต่อ"
+  tab/section labels are gone; a signed-out operator sees the connection form
+  directly, while the HOSxP/site tabs appear only after sign-in.
 - **Connection changes reset the session** - saving a new HOSxP connection
   clears the backend session and returns a signed-in operator to the login
   gate, so patient data cannot survive a site switch.

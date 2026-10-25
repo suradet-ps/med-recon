@@ -193,9 +193,14 @@ HN/CID) from Google Fonts. Base 14 px, line-height 1.5.
 - **Timeline** - hairline list rows: mono date, OPD/IPD badge, dept, visit
   id.
 - **Badges/chips** - 10 px, 600 weight, pill radius, muted surface.
-- **Settings modal** - centered, max-width 460 px, blur backdrop, elev-3
-  shadow; form fields with 12 px labels, 36 px inputs, focus ring; success
-  (green) / error (red) message panels.
+- **Settings modal** - centered, max-width 560 px, blur backdrop, elev-3
+  shadow; fixed header with title, short description, and close button;
+  scrolling body; fixed action bar. The HOSxP and site sections switch with
+  compact pill tabs that appear only after sign-in - a signed-out operator
+  sees the connection form directly, with no redundant status line or tab.
+  Form fields use 12 px labels, grouped under quiet uppercase headings
+  (เซิร์ฟเวอร์ / บัญชีผู้ใช้), 36 px inputs, focus ring; success (green) /
+  error (red) message panels.
 - **Warning banner** - amber tint, alert icon, used for completeness
   warnings and degraded-connection messages.
 - **Medication table** - fixed layout with pinned short columns; header cells

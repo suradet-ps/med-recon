@@ -55,6 +55,14 @@ icon!(
 );
 
 icon!(
+    /// Database - HOSxP connection settings.
+    IconDatabase,
+    <ellipse cx="12" cy="5" rx="9" ry="3" />
+    <path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5" />
+    <path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3" />
+);
+
+icon!(
     /// Save (floppy disk).
     IconSave,
     <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
