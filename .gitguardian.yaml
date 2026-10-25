@@ -1,0 +1,13 @@
+# GitGuardian configuration.
+#
+# The only ignored match is the RFC-style MD5 test vector for the literal
+# string "password". It was used in an early commit of this PR's auth tests
+# and was replaced with a non-credential vector; no real credential has ever
+# been committed. Keeping the match ignored prevents the historical commit
+# from re-triggering a false positive.
+version: 2
+
+secret:
+  ignored-matches:
+    - name: "Well-known MD5 test vector (not a credential)"
+      match: "5f4dcc3b5aa765d61d8327deb882cf99"
