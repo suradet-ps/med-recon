@@ -1,0 +1,164 @@
+<svg viewBox="0 0 560 400" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="pharm-title">
+  <title id="pharm-title">เน€เธ เธชเธฑเธเธเธฃเธชเธญเธเธเธเธเธณเธฅเธฑเธเธเธฃเธถเธเธฉเธฒเธฃเธฒเธขเธเธฒเธฃเธขเธฒเธเธนเนเธเนเธงเธข</title>
+  <defs>
+    <linearGradient id="skin-f" x1="157" y1="112" x2="203" y2="218" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4CDAA" />
+      <stop offset="1" stop-color="#E3AE82" />
+    </linearGradient>
+    <linearGradient id="skin-m" x1="357" y1="110" x2="403" y2="218" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DCA572" />
+      <stop offset="1" stop-color="#C48652" />
+    </linearGradient>
+    <linearGradient id="coat" x1="140" y1="240" x2="240" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#EDF3F7" />
+    </linearGradient>
+    <linearGradient id="coat-m" x1="340" y1="240" x2="440" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#EAF1F6" />
+    </linearGradient>
+    <linearGradient id="scrub-f" x1="165" y1="235" x2="205" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F766E" />
+      <stop offset="1" stop-color="#115E59" />
+    </linearGradient>
+    <linearGradient id="scrub-m" x1="365" y1="235" x2="405" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#059669" />
+      <stop offset="1" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="hair-f" x1="140" y1="95" x2="230" y2="225" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#332B28" />
+      <stop offset="1" stop-color="#1E1917" />
+    </linearGradient>
+    <linearGradient id="hair-m" x1="350" y1="98" x2="420" y2="170" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B2B23" />
+      <stop offset="1" stop-color="#251A15" />
+    </linearGradient>
+    <filter id="bubble-shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#065F46" flood-opacity="0.14" />
+    </filter>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="14" stdDeviation="15" flood-color="#065F46" flood-opacity="0.12" />
+    </filter>
+  </defs>
+
+  <circle cx="180" cy="245" r="148" fill="#FFFFFF" fill-opacity="0.4" />
+  <circle cx="380" cy="245" r="148" fill="#FFFFFF" fill-opacity="0.4" />
+  <circle cx="280" cy="215" r="198" fill="#FFFFFF" fill-opacity="0.16" />
+  <circle cx="280" cy="215" r="136" fill="#FFFFFF" fill-opacity="0.12" />
+  <path d="M54 310C34 170 170 48 320 60C448 70 516 180 498 308" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 12" />
+  <circle cx="492" cy="96" r="4" fill="#FDE047" fill-opacity="0.85" />
+  <circle cx="66" cy="168" r="3" fill="#FFFFFF" fill-opacity="0.9" />
+  <path d="M90 86v18M81 95h18" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2.4" stroke-linecap="round" />
+  <path d="M472 306v14M465 313h14" stroke="#10B981" stroke-opacity="0.45" stroke-width="2.4" stroke-linecap="round" />
+  <ellipse cx="280" cy="392" rx="190" ry="12" fill="#047857" opacity="0.08" />
+
+  <!-- Left pharmacist -->
+  <g filter="url(#soft-shadow)">
+    <path d="M144 162C141 122 158 101 185 101C212 101 229 122 226 162C226 184 219 201 211 214H159C151 201 144 184 144 162Z" fill="url(#hair-f)" />
+    <path d="M169 208V246C169 255 201 255 201 246V208Z" fill="#D99E72" />
+    <path d="M169 232C169 226 201 226 201 232V246C201 255 169 255 169 246V232Z" fill="#C88B61" opacity="0.55" />
+    <path d="M185 111C208 111 224 129 226 156C228 184 214 209 185 216C156 209 142 184 144 156C146 129 162 111 185 111Z" fill="url(#skin-f)" />
+    <ellipse cx="143" cy="169" rx="7" ry="10" fill="#E3AE82" />
+    <ellipse cx="227" cy="169" rx="7" ry="10" fill="#E3AE82" />
+    <circle cx="143" cy="181" r="2.2" fill="#FDE047" />
+    <path d="M147 150C153 121 169 106 191 108C209 110 222 122 226 140C215 129 202 124 188 126C171 128 158 137 147 150Z" fill="#3A302C" />
+    <path d="M150 143C158 118 175 106 195 110C209 113 219 124 223 138C211 129 199 126 187 129C173 132 161 138 150 143Z" fill="url(#hair-f)" />
+    <path d="M156 130C166 114 183 109 198 117" stroke="#5B4A43" stroke-width="2.4" stroke-linecap="round" opacity="0.55" />
+    <path d="M150 141C158 119 173 107 191 107" stroke="#5B4A43" stroke-width="2" stroke-linecap="round" opacity="0.28" />
+    <path d="M159 160Q166 153 174 156Q177 160 174 164Q166 166 159 160Z" fill="#FFFFFF" />
+    <path d="M196 160Q204 153 211 156Q214 160 211 164Q204 166 196 160Z" fill="#FFFFFF" />
+    <circle cx="168.8" cy="160" r="3.8" fill="#5B3A29" />
+    <circle cx="204.5" cy="160" r="3.8" fill="#5B3A29" />
+    <circle cx="168.8" cy="160" r="1.8" fill="#1F1712" />
+    <circle cx="204.5" cy="160" r="1.8" fill="#1F1712" />
+    <circle cx="170" cy="158.7" r="1.05" fill="#FFFFFF" />
+    <circle cx="205.7" cy="158.7" r="1.05" fill="#FFFFFF" />
+    <path d="M154 145Q162 138 173 142" stroke="#4A332A" stroke-width="2.3" stroke-linecap="round" />
+    <path d="M197 142Q208 138 216 145" stroke="#4A332A" stroke-width="2.3" stroke-linecap="round" />
+    <path d="M185 160C184 167 181 173 183 177C184 179 187 180 189 178" stroke="#C58B63" stroke-width="1.7" stroke-linecap="round" />
+    <circle cx="180" cy="178" r="0.9" fill="#B97A53" />
+    <path d="M173 190Q179 187 185 190Q191 187 197 190Q193 196 185 196Q177 196 173 190Z" fill="#C47272" />
+    <path d="M176 197Q185 203 194 197Q185 200 176 197Z" fill="#DB9292" />
+    <path d="M180 193Q185 195 190 193" stroke="#E8A6A6" stroke-width="1.2" stroke-linecap="round" opacity="0.7" />
+    <ellipse cx="157" cy="180" rx="6" ry="3.3" fill="#E88E8E" opacity="0.28" />
+    <ellipse cx="213" cy="180" rx="6" ry="3.3" fill="#E88E8E" opacity="0.28" />
+
+    <path d="M138 270C138 250 154 239 172 235L185 232L198 235C216 239 232 250 232 270L241 440H129L138 270Z" fill="url(#coat)" />
+    <path d="M202 236C218 240 232 251 232 270L241 440H218L202 236Z" fill="#E8EFF5" opacity="0.75" />
+    <path d="M162 235L185 286L208 235L216 240L204 297H166L154 240L162 235Z" fill="url(#scrub-f)" />
+    <path d="M162 235L185 286L160 324L141 278C144 258 151 244 162 235Z" fill="#F8FBFC" />
+    <path d="M208 235L185 286L210 324L229 278C226 258 219 244 208 235Z" fill="#FFFFFF" />
+    <path d="M160 324L168 304L162 288L150 296L141 278L160 324Z" fill="#E8EFF5" opacity="0.6" />
+    <path d="M175 239L195 292M195 239L176 292" stroke="#0F766E" stroke-width="2.2" stroke-linecap="round" opacity="0.85" />
+    <rect x="204" y="304" width="24" height="34" rx="5" fill="#ECFDF5" />
+    <circle cx="216" cy="315" r="5" fill="#10B981" />
+    <rect x="209" y="324" width="14" height="3" rx="1.5" fill="#6EE7B7" />
+    <rect x="209" y="330" width="9" height="3" rx="1.5" fill="#A7F3D0" />
+    <path d="M145 327H170V352C170 356 145 356 145 352V327Z" fill="#E8EFF5" />
+    <path d="M146 342H169" stroke="#D5E0E8" stroke-width="1.4" />
+    <path d="M140 270C133 296 131 334 133 366" stroke="#D5E0E8" stroke-width="1.4" stroke-linecap="round" opacity="0.65" />
+    <path d="M232 270C239 296 241 334 239 366" stroke="#D5E0E8" stroke-width="1.4" stroke-linecap="round" opacity="0.45" />
+  </g>
+
+  <!-- Right pharmacist -->
+  <g filter="url(#soft-shadow)">
+    <path d="M349 148C346 114 363 97 385 97C407 97 424 114 421 148C416 132 408 124 398 121C390 119 382 120 375 123C364 128 356 136 349 148Z" fill="url(#hair-m)" />
+    <path d="M351 148C355 119 370 104 388 104C403 104 415 115 420 133C409 125 399 121 386 122C371 123 360 132 351 148Z" fill="#3B2B23" />
+    <path d="M365 123C373 116 385 114 396 119C387 118 379 120 372 126C369 129 366 131 364 134Z" fill="#4B372C" />
+    <path d="M356 121C362 109 374 102 388 104C379 107 370 113 364 123Z" fill="#4B372C" />
+    <path d="M350 146C348 154 349 166 351 176C353 181 357 181 358 176L356 148Z" fill="#3B2B23" />
+    <path d="M420 146C422 154 421 166 419 176C417 181 413 181 412 176L414 148Z" fill="#3B2B23" />
+    <path d="M370 210V247C370 256 400 256 400 247V210Z" fill="#C48652" />
+    <path d="M370 232C370 226 400 226 400 232V247C400 256 370 256 370 247V232Z" fill="#B37746" opacity="0.55" />
+    <path d="M385 111C406 111 421 129 423 156C425 183 412 208 385 215C358 208 345 183 347 156C349 129 364 111 385 111Z" fill="url(#skin-m)" />
+    <ellipse cx="345" cy="168" rx="7" ry="10" fill="#C48652" />
+    <ellipse cx="425" cy="168" rx="7" ry="10" fill="#C48652" />
+    <path d="M351 146C358 120 373 108 391 109C407 110 419 121 422 139C408 128 396 124 382 127C368 130 358 137 351 146Z" fill="url(#hair-m)" />
+    <path d="M356 128C365 115 380 109 396 114" stroke="#6B4C3A" stroke-width="2.2" stroke-linecap="round" opacity="0.4" />
+    <path d="M359 159Q366 152 374 155Q377 159 374 163Q366 165 359 159Z" fill="#FFFFFF" />
+    <path d="M396 159Q404 152 411 155Q414 159 411 163Q404 165 396 159Z" fill="#FFFFFF" />
+    <circle cx="365" cy="159" r="3.6" fill="#4A2E20" />
+    <circle cx="402.5" cy="159" r="3.6" fill="#4A2E20" />
+    <circle cx="365" cy="159" r="1.7" fill="#1C120D" />
+    <circle cx="402.5" cy="159" r="1.7" fill="#1C120D" />
+    <circle cx="366.2" cy="157.7" r="1" fill="#FFFFFF" />
+    <circle cx="403.7" cy="157.7" r="1" fill="#FFFFFF" />
+    <path d="M355 144Q363 138 373 141" stroke="#2E211B" stroke-width="2.3" stroke-linecap="round" />
+    <path d="M397 141Q407 138 415 144" stroke="#2E211B" stroke-width="2.3" stroke-linecap="round" />
+    <rect x="356" y="148" width="23" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.12" stroke="#2E3A4B" stroke-width="2" />
+    <rect x="391" y="148" width="23" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.12" stroke="#2E3A4B" stroke-width="2" />
+    <path d="M379 157H391M356 157H345M414 157H425" stroke="#2E3A4B" stroke-width="2" stroke-linecap="round" />
+    <path d="M385 159C384 167 381 173 384 177C386 179 389 179 391 177" stroke="#B37746" stroke-width="1.7" stroke-linecap="round" />
+    <circle cx="380" cy="178" r="0.9" fill="#A5693E" />
+    <path d="M373 190Q379 187 385 190Q391 187 397 190Q393 196 385 196Q377 196 373 190Z" fill="#A85B4B" />
+    <path d="M376 197Q385 203 394 197Q385 200 376 197Z" fill="#C27363" />
+    <path d="M380 193Q385 195 390 193" stroke="#D99386" stroke-width="1.2" stroke-linecap="round" opacity="0.7" />
+
+    <path d="M338 270C338 250 354 239 372 235L385 232L398 235C416 239 432 250 432 270L441 440H329L338 270Z" fill="url(#coat-m)" />
+    <path d="M402 236C418 240 432 251 432 270L441 440H418L402 236Z" fill="#E5EDF3" opacity="0.75" />
+    <path d="M362 235L385 286L408 235L416 240L404 297H366L354 240L362 235Z" fill="url(#scrub-m)" />
+    <path d="M362 235L385 286L360 324L341 278C344 258 351 244 362 235Z" fill="#F8FBFC" />
+    <path d="M408 235L385 286L410 324L429 278C426 258 419 244 408 235Z" fill="#FFFFFF" />
+    <path d="M360 324L368 304L362 288L350 296L341 278L360 324Z" fill="#E5EDF3" opacity="0.6" />
+    <path d="M375 239L395 292M395 239L376 292" stroke="#047857" stroke-width="2.2" stroke-linecap="round" opacity="0.85" />
+    <rect x="404" y="304" width="24" height="34" rx="5" fill="#ECFDF5" />
+    <circle cx="416" cy="315" r="5" fill="#10B981" />
+    <rect x="409" y="324" width="14" height="3" rx="1.5" fill="#6EE7B7" />
+    <rect x="409" y="330" width="9" height="3" rx="1.5" fill="#A7F3D0" />
+    <path d="M345 327H370V352C370 356 345 356 345 352V327Z" fill="#E5EDF3" />
+    <path d="M346 342H369" stroke="#D5E0E8" stroke-width="1.4" />
+    <path d="M340 270C333 296 331 334 333 366" stroke="#D5E0E8" stroke-width="1.4" stroke-linecap="round" opacity="0.65" />
+    <path d="M432 270C439 296 441 334 439 366" stroke="#D5E0E8" stroke-width="1.4" stroke-linecap="round" opacity="0.45" />
+  </g>
+
+  <!-- Dialogue -->
+  <g filter="url(#bubble-shadow)">
+    <path d="M62 34H233C245 34 255 44 255 56V76C255 88 245 98 233 98H198L186 112L182 98H62C50 98 40 88 40 76V56C40 44 50 34 62 34Z" fill="#FFFFFF" />
+  </g>
+  <text x="147" y="72" text-anchor="middle" font-family="Sarabun, sans-serif" font-size="15.5" font-weight="600" fill="#065F46">ยาตัวนี้ยังใช้อยู่ไหม?</text>
+
+  <g filter="url(#bubble-shadow)">
+    <path d="M327 34H498C510 34 520 44 520 56V76C520 88 510 98 498 98H378L374 112L362 98H327C315 98 305 88 305 76V56C305 44 315 34 327 34Z" fill="#FFFFFF" />
+  </g>
+  <text x="413" y="72" text-anchor="middle" font-family="Sarabun, sans-serif" font-size="15.5" font-weight="600" fill="#065F46">ยืนยันกับผู้ป่วยแล้ว</text>
+</svg>
