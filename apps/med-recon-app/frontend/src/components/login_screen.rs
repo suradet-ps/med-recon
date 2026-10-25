@@ -73,7 +73,6 @@ pub fn LoginScreen(state: AppState) -> impl IntoView {
                     </p>
                     <div class="login__hero" aria-hidden="true">
                         <div class="login__hero-glow"></div>
-                        <div class="login__hero-orbit"></div>
                         <div
                             class="login__art"
                             inner_html=include_str!("../../../../../icon-master.svg")
