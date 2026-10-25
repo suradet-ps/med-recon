@@ -8,6 +8,6 @@
 version: 2
 
 secret:
-  ignored-matches:
+  ignored_matches:
     - name: "Well-known MD5 test vector (not a credential)"
       match: "5f4dcc3b5aa765d61d8327deb882cf99"
