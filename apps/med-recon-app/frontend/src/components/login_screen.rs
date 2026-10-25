@@ -68,9 +68,6 @@ pub fn LoginScreen(state: AppState) -> impl IntoView {
 
                 <div class="login__stage">
                     <h1 class="login__headline">"ประสานรายการยาผู้ป่วย"</h1>
-                    <p class="login__lede">
-                        "BPMH · ประวัติการแพ้ยา · ประวัติการเข้ารับบริการ"
-                    </p>
                     <div class="login__hero" aria-hidden="true">
                         <div
                             class="login__art"
