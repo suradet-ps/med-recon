@@ -55,6 +55,14 @@ icon!(
 );
 
 icon!(
+    /// Database - HOSxP connection settings.
+    IconDatabase,
+    <ellipse cx="12" cy="5" rx="9" ry="3" />
+    <path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5" />
+    <path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3" />
+);
+
+icon!(
     /// Save (floppy disk).
     IconSave,
     <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
@@ -97,6 +105,29 @@ icon!(
     IconUser,
     <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
     <circle cx="12" cy="7" r="4" />
+);
+
+icon!(
+    /// Lock - password field and the login gate.
+    IconLock,
+    <rect x="4" y="10" width="16" height="11" rx="3" />
+    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    <path d="M12 14v3" />
+);
+
+icon!(
+    /// Arrow right - submit / continue.
+    IconArrowRight,
+    <path d="M4 12h15" />
+    <path d="m14 7 5 5-5 5" />
+);
+
+icon!(
+    /// Log out - end the session.
+    IconLogOut,
+    <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" />
+    <path d="m14 8 4 4-4 4" />
+    <path d="M18 12H9" />
 );
 
 icon!(

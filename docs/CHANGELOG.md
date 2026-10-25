@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **HOSxP officer login gate** - the app now opens on a full-screen login
+  screen and verifies `officer` credentials against HOSxP (MD5, active and
+  auth-type checks) before any patient data is shown. The session is
+  memory-only; the top bar shows the signed-in officer and an
+  **ออกจากระบบ** action. The login brand panel shows a custom vector scene
+  of two pharmacists in conversation, with speech bubbles for the
+  medication-reconciliation dialogue. Connection setup remains reachable
+  from the login screen, while site settings and all patient/PHI commands
+  require a session. See `docs/auth.md`.
+
+### Changed
+
+- **Connection settings dialog redesigned** - a fixed header with a close
+  button, grouped server/account fields, a scrolling body, and a fixed action
+  bar. The redundant "เชื่อมต่อแล้ว" status line and duplicate "การเชื่อมต่อ"
+  tab/section labels are gone; a signed-out operator sees the connection form
+  directly, while the HOSxP/site tabs appear only after sign-in.
+- **Connection changes reset the session** - saving a new HOSxP connection
+  clears the backend session and returns a signed-in operator to the login
+  gate, so patient data cannot survive a site switch.
+- **The settings dialog no longer opens automatically on first launch** -
+  the login card reports the missing connection and links to settings.
+
+### Security
+
+- Patient search, history, photo, report, screenshot, drug lookup, and site
+  settings now require a signed-in session at the Tauri command boundary.
+  Login passwords are verified in Rust and never stored or logged.
+- Failed logins are throttled in memory after five consecutive attempts
+  (30 seconds, doubling up to eight minutes), and a session epoch prevents an
+  in-flight login from restoring a session after a connection change or
+  logout.
+
 ## [0.5.2] - 2026-09-29
 
 ### Changed

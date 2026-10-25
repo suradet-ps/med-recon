@@ -1,9 +1,10 @@
 //! Med Recon frontend library (Leptos 0.8, CSR).
 //!
 //! Two-panel desktop layout (AllerX-style): sidebar (search) + main canvas
-//! (complete medication history). On launch the app checks for stored
-//! connection settings; if absent, the settings dialog opens automatically.
-//! The top-bar status dot is driven by polling the backend's live
+//! (complete medication history), behind a HOSxP `officer` login gate. On
+//! launch the app probes the saved configuration and backend session; the
+//! connection settings dialog is reachable from the login screen. The
+//! top-bar status dot is driven by polling the backend's live
 //! `connection_health`.
 
 use std::time::Duration;
@@ -14,6 +15,7 @@ use wasm_bindgen::JsCast;
 
 use crate::components::help_modal::HelpModal;
 use crate::components::history_canvas::HistoryCanvas;
+use crate::components::login_screen::{LoginScreen, StartupSplash};
 use crate::components::patient_card::PatientCard;
 use crate::components::patient_search::PatientSearch;
 use crate::components::pmh_card::PmhCard;
@@ -29,7 +31,7 @@ pub fn run() {
     leptos::mount::mount_to_body(|| view! { <App /> });
 }
 
-/// Two-panel desktop layout.
+/// Two-panel desktop layout behind the login gate.
 #[component]
 fn App() -> impl IntoView {
     let state = AppState::new();
@@ -71,32 +73,23 @@ fn App() -> impl IntoView {
         }
     });
 
-    // First-run check: no stored settings → open the settings dialog.
+    // First-run probe: configuration, site settings, and the backend session.
+    // The UI shows a splash until this resolves, then the login gate or the
+    // document. No settings dialog opens automatically - an unconfigured app
+    // says so on the login card.
     spawn_local(async move {
         match crate::api::is_configured().await {
-            Ok(configured) => {
-                state.configured.set(configured);
-                if !configured {
-                    state.settings_open.set(true);
-                }
-            }
-            Err(_) => {
-                state.settings_open.set(true);
-            }
+            Ok(configured) => state.configured.set(configured),
+            Err(_) => state.configured.set(false),
         }
-    });
-
-    // Mirror the configured history window so the segmented control can
-    // label the "ค่าเริ่มต้น" segment with the real default, and the site
-    // name for the top-bar brand line.
-    let default_state = state;
-    spawn_local(async move {
         if let Ok(settings) = crate::api::get_site_settings().await {
-            default_state
-                .default_history_days
-                .set(settings.history_days);
-            default_state.site_name.set(settings.site_name);
+            state.default_history_days.set(settings.history_days);
+            state.site_name.set(settings.site_name);
         }
+        if let Ok(Some(user)) = crate::api::current_session().await {
+            state.finish_login(user);
+        }
+        state.auth_checked.set(true);
     });
 
     // Poll the backend's live reachability - the status dot must reflect a
@@ -127,31 +120,45 @@ fn App() -> impl IntoView {
 
     view! {
         <div class="app" node_ref=root_ref>
-            <TopBar state=state />
-            <div class="app__body">
-                <aside class="sidebar">
-                    <PatientSearch state=state />
-                    <PatientCard state=state />
-                    <PmhCard state=state />
-                </aside>
-                <HistoryCanvas state=state />
-            </div>
-            <SettingsModal state=state />
-            <HelpModal state=state />
+            {move || {
+                if !state.auth_checked.get() {
+                    view! { <StartupSplash /> }.into_any()
+                } else if state.session.get().is_none() {
+                    view! { <LoginScreen state=state /> }.into_any()
+                } else {
+                    view! {
+                        <TopBar state=state />
+                        <div class="app__body">
+                            <aside class="sidebar">
+                                <PatientSearch state=state />
+                                <PatientCard state=state />
+                                <PmhCard state=state />
+                            </aside>
+                            <HistoryCanvas state=state />
+                        </div>
+                        <HelpModal state=state />
 
-            // Screen-reader narration for the async states (WCAG 4.1.3);
-            // errors are announced by the canvas' role="alert" panel.
-            <div class="sr-only" role="status" aria-live="polite">
-                {move || {
-                    if state.history_loading_visible.get() {
-                        "กำลังโหลดประวัติยา".to_string()
-                    } else if state.history.with(|history| history.is_some()) {
-                        "โหลดประวัติยาแล้ว".to_string()
-                    } else {
-                        String::new()
+                        // Screen-reader narration for the async states
+                        // (WCAG 4.1.3); errors are announced by the canvas'
+                        // role="alert" panel.
+                        <div class="sr-only" role="status" aria-live="polite">
+                            {move || {
+                                if state.history_loading_visible.get() {
+                                    "กำลังโหลดประวัติยา".to_string()
+                                } else if state.history.with(|history| history.is_some()) {
+                                    "โหลดประวัติยาแล้ว".to_string()
+                                } else {
+                                    String::new()
+                                }
+                            }}
+                        </div>
                     }
-                }}
-            </div>
+                        .into_any()
+                }
+            }}
+            // Reachable from the login gate (connection setup) and the
+            // signed-in shell (site settings + current medications).
+            <SettingsModal state=state />
         </div>
     }
 }

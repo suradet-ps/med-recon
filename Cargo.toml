@@ -27,6 +27,7 @@ serde_json = "1.0"                                          # JSON payloads for 
 thiserror = "2"                                             # structured errors in lib code
 chrono = { version = "0.4", default-features = false, features = ["serde", "std"] }  # date math + BE/CE conversion
 secrecy = { version = "0.10", features = ["serde"] }        # password protection in memory
+md-5 = "0.10"                                               # verify HOSxP officer MD5 passwords (read-only auth)
 tracing = "0.1"                                             # structured logging
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }  # log output
 directories = "6.0"                                         # platform config dirs

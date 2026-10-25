@@ -13,7 +13,9 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 
 use crate::api::{self, ConnectionInput, DrugInfo, SiteSettings};
-use crate::components::icons::{IconCheckCircle, IconPlug, IconSave, IconSearch, IconX};
+use crate::components::icons::{
+    IconCheckCircle, IconDatabase, IconPlug, IconSave, IconSearch, IconX,
+};
 use crate::state::AppState;
 
 /// Default MySQL port, prefilled in the port field.
@@ -219,16 +221,26 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
         conn_busy.set(true);
         conn_message.set(None);
         let token = arm_operation_timeout(generation, conn_busy, conn_message);
+        let had_session = state.session.get_untracked().is_some();
         spawn_local(async move {
             let result = api::save_connection(&input).await;
             if generation.get_untracked() == token {
                 match result {
                     Ok(()) => {
-                        // Fields keep their values so the operator can see
-                        // what is saved; they are only wiped on close.
-                        conn_message.set(Some((true, "บันทึกการตั้งค่าและเชื่อมต่อแล้ว".to_string())));
                         state.configured.set(true);
                         state.health.set(ConnectionHealth::Connected);
+                        if had_session {
+                            // The backend drops the session on a connection
+                            // change - return to the login gate, never keep
+                            // showing the previous site's patient data.
+                            wipe_connection_fields();
+                            state.clear_session();
+                        } else {
+                            // Saving from the login gate closes the dialog
+                            // and wipes the typed credentials, leaving the
+                            // operator on the login card ready to sign in.
+                            close();
+                        }
                     }
                     Err(error) => conn_message.set(Some((false, error.message))),
                 }
@@ -260,7 +272,7 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                     Ok(()) => {
                         state.default_history_days.set(settings.history_days);
                         state.site_name.set(settings.site_name);
-                        settings_message.set(Some((true, "บันทึกการตั้งค่าและเชื่อมต่อแล้ว".to_string())))
+                        settings_message.set(Some((true, "บันทึกการตั้งค่าแล้ว".to_string())))
                     }
                     Err(e) => settings_message.set(Some((false, e.message))),
                 }
@@ -271,34 +283,32 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
 
     let connection_panel = move || {
         view! {
-            <section class="form-section">
-                <h3 class="form-section__title">
-                    <IconPlug class="icon" />
-                    "การเชื่อมต่อ HOSxP"
-                </h3>
-
-                <div class="form-field">
-                    <label for="cfg-host">"Host"</label>
-                    <input
-                        id="cfg-host"
-                        node_ref=host_ref
-                        class="form-input form-input--mono"
-                        placeholder="192.168.1.10"
-                        prop:value=move || host.get()
-                        on:input=move |ev| host.set(event_target_value(&ev))
-                    />
-                </div>
-                <div class="form-row">
-                    <div class="form-field" style="max-width:100px">
-                        <label for="cfg-port">"Port"</label>
-                        <input
-                            id="cfg-port"
-                            class="form-input form-input--mono"
-                            prop:value=move || port.get()
-                            on:input=move |ev| port.set(event_target_value(&ev))
-                        />
+            <section class="settings-panel">
+                <div class="settings-group">
+                    <h3 class="settings-group__title">"เซิร์ฟเวอร์"</h3>
+                    <div class="form-row">
+                        <div class="form-field form-field--grow">
+                            <label for="cfg-host">"Host"</label>
+                            <input
+                                id="cfg-host"
+                                node_ref=host_ref
+                                class="form-input form-input--mono"
+                                placeholder="192.168.1.10"
+                                prop:value=move || host.get()
+                                on:input=move |ev| host.set(event_target_value(&ev))
+                            />
+                        </div>
+                        <div class="form-field form-field--port">
+                            <label for="cfg-port">"Port"</label>
+                            <input
+                                id="cfg-port"
+                                class="form-input form-input--mono"
+                                prop:value=move || port.get()
+                                on:input=move |ev| port.set(event_target_value(&ev))
+                            />
+                        </div>
                     </div>
-                    <div class="form-field form-field--grow">
+                    <div class="form-field">
                         <label for="cfg-database">"Database"</label>
                         <input
                             id="cfg-database"
@@ -309,25 +319,34 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         />
                     </div>
                 </div>
-                <div class="form-field">
-                    <label for="cfg-user">"User"</label>
-                    <input
-                        id="cfg-user"
-                        class="form-input form-input--mono"
-                        placeholder="recon_ro"
-                        prop:value=move || user.get()
-                        on:input=move |ev| user.set(event_target_value(&ev))
-                    />
-                </div>
-                <div class="form-field">
-                    <label for="cfg-password">"Password"</label>
-                    <input
-                        id="cfg-password"
-                        class="form-input form-input--mono"
-                        type="password"
-                        prop:value=move || password.get()
-                        on:input=move |ev| password.set(event_target_value(&ev))
-                    />
+
+                <div class="settings-group">
+                    <h3 class="settings-group__title">"บัญชีผู้ใช้"</h3>
+                    <div class="form-row">
+                        <div class="form-field form-field--grow">
+                            <label for="cfg-user">"User"</label>
+                            <input
+                                id="cfg-user"
+                                class="form-input form-input--mono"
+                                placeholder="recon_ro"
+                                prop:value=move || user.get()
+                                on:input=move |ev| user.set(event_target_value(&ev))
+                            />
+                        </div>
+                        <div class="form-field form-field--grow">
+                            <label for="cfg-password">"Password"</label>
+                            <input
+                                id="cfg-password"
+                                class="form-input form-input--mono"
+                                type="password"
+                                prop:value=move || password.get()
+                                on:input=move |ev| password.set(event_target_value(&ev))
+                            />
+                        </div>
+                    </div>
+                    <p class="settings-hint">
+                        "ใช้บัญชี MySQL ที่มีสิทธิ์อ่านข้อมูลเท่านั้น (SELECT)"
+                    </p>
                 </div>
 
                 {move || {
@@ -341,26 +360,6 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         view! { <p class=class role=role>{text}</p> }
                     })
                 }}
-
-                <div class="modal__actions" style="margin-top:var(--sp-md)">
-                    <button
-                        class="button-secondary button-secondary--inline"
-                        on:click=move |_| run_test()
-                        prop:disabled=move || conn_busy.get()
-                    >
-                        <IconPlug class="icon" />
-                        {move || if conn_busy.get() { "กำลังทดสอบ…" } else { "ทดสอบ" }}
-                    </button>
-                    <button
-                        class="button-primary button-primary--inline"
-                        on:click=move |_| run_save_connection()
-                        prop:disabled=move || conn_busy.get()
-                    >
-                        <IconSave class="icon" />
-                        {move || if conn_busy.get() { "กำลังบันทึก…" } else { "บันทึก" }}
-                    </button>
-                </div>
-
             </section>
         }
         .into_any()
@@ -368,41 +367,44 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
 
     let site_panel = move || {
         view! {
-            <section class="form-section">
-                <h3 class="form-section__title">
-                    <IconCheckCircle class="icon" />
-                    "การตั้งค่าอื่นๆ"
-                </h3>
-
-                <div class="form-field">
-                    <label for="cfg-site">"ชื่อสถานบริการ"</label>
-                    <input
-                        id="cfg-site"
-                        class="form-input"
-                        placeholder="เช่น โรงพยาบาลสมมติ (แสดงในรายงาน)"
-                        prop:value=move || site_name.get()
-                        on:input=move |ev| site_name.set(event_target_value(&ev))
-                    />
-                </div>
-                <div class="form-field">
-                    <label for="cfg-window">"ค้นประวัติย้อนหลัง (วัน)"</label>
-                    <input
-                        id="cfg-window"
-                        class="form-input form-input--mono"
-                        type="number"
-                        min="30"
-                        max="3650"
-                        prop:value=move || history_days.get().to_string()
-                        on:input=move |ev| {
-                            if let Ok(v) = event_target_value(&ev).parse::<u32>() {
-                                history_days.set(v);
+            <section class="settings-panel">
+                <div class="settings-group">
+                    <h3 class="settings-group__title">"ข้อมูลสถานบริการ"</h3>
+                    <div class="form-field">
+                        <label for="cfg-site">"ชื่อสถานบริการ"</label>
+                        <input
+                            id="cfg-site"
+                            class="form-input"
+                            placeholder="เช่น โรงพยาบาลสมมติ (แสดงในรายงาน)"
+                            prop:value=move || site_name.get()
+                            on:input=move |ev| site_name.set(event_target_value(&ev))
+                        />
+                    </div>
+                    <div class="form-field">
+                        <label for="cfg-window">"ค้นประวัติย้อนหลัง (วัน)"</label>
+                        <input
+                            id="cfg-window"
+                            class="form-input form-input--mono"
+                            type="number"
+                            min="30"
+                            max="3650"
+                            prop:value=move || history_days.get().to_string()
+                            on:input=move |ev| {
+                                if let Ok(v) = event_target_value(&ev).parse::<u32>() {
+                                    history_days.set(v);
+                                }
                             }
-                        }
-                    />
+                        />
+                    </div>
                 </div>
 
-                <p class="modal__note">"เฉพาะยาที่ตั้งค่าไว้เท่านั้นจะแสดงในหัวข้อ ยาที่ผู้ป่วยเคยได้รับ - ยาที่ไม่ตั้งค่า (แม้เพิ่งได้รับ) จะถือว่าเป็นยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ)"</p>
-                <CurrentMedsPanel selected=selected_meds/>
+                <div class="settings-group">
+                    <h3 class="settings-group__title">"รายการยาปัจจุบัน"</h3>
+                    <p class="settings-hint">
+                        "เฉพาะยาที่ตั้งค่าไว้เท่านั้นจะแสดงในหัวข้อ ยาที่ผู้ป่วยเคยได้รับ - ยาที่ไม่ตั้งค่า (แม้เพิ่งได้รับ) จะถือว่าเป็นยาที่ผู้ป่วยเคยได้รับ (ยาตามอาการ)"
+                    </p>
+                    <CurrentMedsPanel selected=selected_meds/>
+                </div>
 
                 {move || {
                     settings_message.get().map(|(is_success, text)| {
@@ -415,25 +417,43 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
                         view! { <p class=class role=role>{text}</p> }
                     })
                 }}
-
-                <div class="modal__actions" style="margin-top:var(--sp-md)">
-                    <button
-                        class="button-secondary button-secondary--inline"
-                        on:click=move |_| close()
-                    >
-                        <IconX class="icon" />
-                        "ปิด"
-                    </button>
-                    <button
-                        class="button-primary button-primary--inline"
-                        on:click=move |_| run_save_settings()
-                        prop:disabled=move || settings_busy.get()
-                    >
-                        <IconSave class="icon" />
-                        {move || if settings_busy.get() { "กำลังบันทึก…" } else { "บันทึกการตั้งค่า" }}
-                    </button>
-                </div>
             </section>
+        }
+        .into_any()
+    };
+
+    let connection_actions = move || {
+        view! {
+            <button
+                class="button-secondary button-secondary--inline"
+                on:click=move |_| run_test()
+                prop:disabled=move || conn_busy.get()
+            >
+                <IconPlug class="icon" />
+                {move || if conn_busy.get() { "กำลังทดสอบ…" } else { "ทดสอบ" }}
+            </button>
+            <button
+                class="button-primary button-primary--inline"
+                on:click=move |_| run_save_connection()
+                prop:disabled=move || conn_busy.get()
+            >
+                <IconSave class="icon" />
+                {move || if conn_busy.get() { "กำลังบันทึก…" } else { "บันทึกและเชื่อมต่อ" }}
+            </button>
+        }
+        .into_any()
+    };
+
+    let site_actions = move || {
+        view! {
+            <button
+                class="button-primary button-primary--inline"
+                on:click=move |_| run_save_settings()
+                prop:disabled=move || settings_busy.get()
+            >
+                <IconSave class="icon" />
+                {move || if settings_busy.get() { "กำลังบันทึก…" } else { "บันทึกการตั้งค่า" }}
+            </button>
         }
         .into_any()
     };
@@ -451,59 +471,117 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             on:click=move |_| close()
         >
             <section
-                class="modal"
+                class="modal modal--settings"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="settings-title"
                 on:click=move |ev| ev.stop_propagation()
             >
-                <h2 class="modal__title" id="settings-title">"ตั้งค่า HOSxP"</h2>
-                <p class="modal__status">
-                    {move || {
-                        if state.configured.get() {
-                            "เชื่อมต่อแล้ว"
-                        } else {
-                            "ยังไม่ได้ตั้งค่า"
-                        }
-                    }}
-                </p>
-
-                <div class="tabs">
+                <header class="settings-modal__header">
+                    <div class="settings-modal__heading">
+                        <h2 class="settings-modal__title" id="settings-title">
+                            {move || {
+                                if state.session.get().is_some() {
+                                    "ตั้งค่า"
+                                } else {
+                                    "ตั้งค่า HOSxP"
+                                }
+                            }}
+                        </h2>
+                        <p class="settings-modal__subtitle">
+                            {move || {
+                                if state.session.get().is_some() {
+                                    "จัดการฐานข้อมูลและข้อมูลสถานบริการ"
+                                } else {
+                                    "กรอกข้อมูลฐานข้อมูล HOSxP เพื่อเริ่มใช้งาน"
+                                }
+                            }}
+                        </p>
+                    </div>
                     <button
-                        class=move || {
-                            if tab.get() == SettingsTab::Connection {
-                                "tab tab--active"
-                            } else {
-                                "tab"
-                            }
-                        }
-                        on:click=move |_| tab.set(SettingsTab::Connection)
+                        class="settings-modal__close"
+                        aria-label="ปิด"
+                        title="ปิด"
+                        on:click=move |_| close()
                     >
-                        <IconPlug class="icon" />
-                        "การเชื่อมต่อ"
+                        <IconX class="icon" />
                     </button>
-                    <button
-                        class=move || {
-                            if tab.get() == SettingsTab::Site {
-                                "tab tab--active"
-                            } else {
-                                "tab"
-                            }
-                        }
-                        on:click=move |_| tab.set(SettingsTab::Site)
-                    >
-                        <IconCheckCircle class="icon" />
-                        "ตั้งค่าอื่นๆ"
-                    </button>
-                </div>
+                </header>
 
                 {move || {
-                    if tab.get() == SettingsTab::Connection {
-                        connection_panel()
-                    } else {
-                        site_panel()
-                    }
+                    state
+                        .session
+                        .get()
+                        .is_some()
+                        .then(|| {
+                            view! {
+                                <div
+                                    class="settings-tabs"
+                                    role="tablist"
+                                    aria-label="หมวดการตั้งค่า"
+                                >
+                                    <button
+                                        class=move || {
+                                            if tab.get() == SettingsTab::Connection {
+                                                "settings-tab settings-tab--active"
+                                            } else {
+                                                "settings-tab"
+                                            }
+                                        }
+                                        role="tab"
+                                        aria-selected=move || {
+                                            (tab.get() == SettingsTab::Connection).to_string()
+                                        }
+                                        on:click=move |_| tab.set(SettingsTab::Connection)
+                                    >
+                                        <IconDatabase class="icon" />
+                                        "ฐานข้อมูล HOSxP"
+                                    </button>
+                                    <button
+                                        class=move || {
+                                            if tab.get() == SettingsTab::Site {
+                                                "settings-tab settings-tab--active"
+                                            } else {
+                                                "settings-tab"
+                                            }
+                                        }
+                                        role="tab"
+                                        aria-selected=move || {
+                                            (tab.get() == SettingsTab::Site).to_string()
+                                        }
+                                        on:click=move |_| tab.set(SettingsTab::Site)
+                                    >
+                                        <IconCheckCircle class="icon" />
+                                        "ตั้งค่าอื่นๆ"
+                                    </button>
+                                </div>
+                            }
+                        })
                 }}
+
+                <div class="settings-modal__body">
+                    {move || {
+                        if tab.get() == SettingsTab::Connection
+                            || state.session.get().is_none()
+                        {
+                            connection_panel()
+                        } else {
+                            site_panel()
+                        }
+                    }}
+                </div>
+
+                <footer class="settings-modal__footer">
+                    {move || {
+                        if tab.get() == SettingsTab::Connection
+                            || state.session.get().is_none()
+                        {
+                            connection_actions()
+                        } else {
+                            site_actions()
+                        }
+                    }}
+                </footer>
             </section>
         </div>
     }

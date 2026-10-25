@@ -3,6 +3,7 @@
 pub mod help_modal;
 pub mod history_canvas;
 pub mod icons;
+pub mod login_screen;
 pub mod patient_card;
 pub mod patient_search;
 pub mod pmh_card;

@@ -44,6 +44,12 @@ correct queries. Do not duplicate docs/DESIGN.md content here - link to it.
   era setting**: every date value read from HOSxP is normalized to ค.ศ.
   individually, using the year (≥ 2500 ⇒ พ.ศ.) to detect its era
   (`med_recon_core::normalize_date`).
+- **HOSxP officer login.** The app opens on an `officer` login gate before
+  patient data is shown. Never read `opduser`, never select
+  `officer_login_password` (plaintext), never log usernames/passwords, and
+  never persist a login token to HOSxP. The session is memory-only in the
+  Tauri process; PHI commands and settings writes require a signed-in
+  session. Details and the MD5 caveat: `docs/auth.md`.
 
 ## HOSxP Schema Reference (confirmed against live schema)
 
@@ -89,6 +95,11 @@ encrypted with the site config) and only drugs on it are shown as
 |---|---|---|
 | `opd_allergy` | `hn`, `agent`, `symptom`, `reporter`, `report_date`, `note` | `agent` may be free-text or `icode`-linked depending on site configuration - do not assume structured data; plan for text cleaning/normalization. Confirmed at the target site: `report_date` (date) and `note` (text) columns exist; `allergy_group_id` is **not loaded** (site-dependent meaning, not displayed). No `severy_id` column. |
 
+### Authentication
+| Table | Key fields | Notes |
+|---|---|---|
+| `officer` | `officer_id`, `officer_login_name`, `officer_login_password_md5`, `officer_active`, `officer_authentication_type_id`, `officer_doctor_code`, `officer_pname`, `officer_fname`, `officer_lname` | The only login source. Compare `MD5(password)` case-insensitively with `officer_login_password_md5`; require `officer_active = 'Y'` and auth type 1 (local DB). The plaintext `officer_login_password` column is never selected. Display name falls back to `doctor.name` via `officer_doctor_code`, then to the login name. Never read `opduser`. Full design: `docs/auth.md`. |
+
 ### Diagnosis (out of MVP scope, for future indication-linking)
 | Table | Key fields | Notes |
 |---|---|---|
@@ -113,3 +124,5 @@ encrypted with the site config) and only drugs on it are shown as
 - [ ] Confirm whether `tmt_tp_code`/`tmt_gp_code` are populated on the target site.
 - [ ] Confirm `opd_allergy.agent` format (free-text vs `icode`-linked) on the target site.
 - [ ] Decide read-only DB user/role setup for HOSxP connection.
+- [ ] Verify the `MD5(password)` login assumption on one real `officer`
+      account before the pilot (see `docs/auth.md` section G).

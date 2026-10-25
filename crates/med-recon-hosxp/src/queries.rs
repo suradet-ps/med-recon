@@ -75,6 +75,31 @@ FROM patient_image
 WHERE hn = ?
 LIMIT 1"#;
 
+/// Reads one local HOSxP officer for password verification.
+///
+/// Only `officer` is used: `opduser` is blacklisted by the gateway and
+/// `officer_login_password` (the plaintext column) is never selected. The
+/// display name comes from the officer name fields, falling back to
+/// `doctor.name` through `officer_doctor_code` when they are blank.
+///
+/// Parameters: `(login_name)`.
+pub const FETCH_OFFICER_SQL: &str = r#"
+SELECT CAST(o.officer_id AS SIGNED) AS officer_id,
+       o.officer_login_name AS login_name,
+       COALESCE(o.officer_login_password_md5, '') AS password_md5,
+       COALESCE(o.officer_active, 'N') AS active,
+       CAST(COALESCE(o.officer_authentication_type_id, 1) AS SIGNED) AS auth_type_id,
+       NULLIF(o.officer_doctor_code, '') AS doctor_code,
+       COALESCE(
+           NULLIF(TRIM(CONCAT(COALESCE(o.officer_pname, ''), COALESCE(o.officer_fname, ''), ' ', COALESCE(o.officer_lname, ''))), ''),
+           NULLIF(TRIM(d.name), ''),
+           ''
+       ) AS display_name
+FROM officer o
+LEFT JOIN doctor d ON d.code = NULLIF(o.officer_doctor_code, '')
+WHERE o.officer_login_name = ?
+LIMIT 1"#;
+
 /// OPD dispensing history (orders/dispense via `opitemrece`).
 ///
 /// `qty` is CAST to CHAR because sqlx cannot decode MySQL DECIMAL as `f64`;
@@ -484,6 +509,23 @@ mod tests {
     }
 
     #[test]
+    fn officer_query_uses_only_safe_columns() {
+        assert!(FETCH_OFFICER_SQL.contains("FROM officer o"));
+        assert!(FETCH_OFFICER_SQL.contains("officer_login_password_md5"));
+        for (idx, _) in FETCH_OFFICER_SQL.match_indices("officer_login_password") {
+            assert!(
+                FETCH_OFFICER_SQL[idx..].starts_with("officer_login_password_md5"),
+                "plaintext password column must never be selected"
+            );
+        }
+        assert!(!FETCH_OFFICER_SQL.contains("opduser"));
+        assert!(FETCH_OFFICER_SQL.contains("LEFT JOIN doctor d"));
+        assert!(FETCH_OFFICER_SQL.contains("d.name"));
+        assert!(FETCH_OFFICER_SQL.ends_with("LIMIT 1"));
+        assert!(!FETCH_OFFICER_SQL.contains(';'));
+    }
+
+    #[test]
     fn all_statements_are_read_only() {
         for stmt in [
             PATIENT_SEARCH_BY_CID,
@@ -492,6 +534,7 @@ mod tests {
             PATIENT_SEARCH_NAME_CONTAINS,
             PATIENT_BY_HN_SQL,
             PATIENT_IMAGE_SQL,
+            FETCH_OFFICER_SQL,
             OPD_DISPENSE_SQL,
             OPD_DISPENSE_SQL_FALLBACK,
             OPD_DISPENSE_SQL_NO_CODES,

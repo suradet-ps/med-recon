@@ -8,8 +8,8 @@
 
 use chrono::NaiveDate;
 use med_recon_core::{
-    AllergyRecord, Dispense, EncounterSource, MedicationItem, OpdScreenRecord, PatientHistory,
-    PatientSummary, Sig, VisitSummary, aggregate_medications, normalize_date,
+    AllergyRecord, Dispense, EncounterSource, MedicationItem, OfficerAccount, OpdScreenRecord,
+    PatientHistory, PatientSummary, Sig, VisitSummary, aggregate_medications, normalize_date,
 };
 use secrecy::ExposeSecret;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPool, MySqlPoolOptions};
@@ -239,6 +239,23 @@ impl HosxpClient {
             .next()
             .map(|r| r.image)
             .filter(|bytes| !bytes.is_empty()))
+    }
+
+    /// Reads one local HOSxP officer by login name for password
+    /// verification. The stored hash stays in the backend.
+    pub async fn fetch_officer(&self, login_name: &str) -> Result<Option<OfficerAccount>> {
+        let row: Option<OfficerRow> = self
+            .fetch_row(queries::FETCH_OFFICER_SQL, &[P::Str(login_name.to_owned())])
+            .await?;
+        Ok(row.map(|r| OfficerAccount {
+            officer_id: r.officer_id,
+            login_name: r.login_name,
+            password_md5: r.password_md5,
+            active: r.active,
+            auth_type_id: r.auth_type_id,
+            doctor_code: r.doctor_code,
+            display_name: r.display_name,
+        }))
     }
 
     /// Load the BPMH medication list for a patient (used by the report
@@ -721,6 +738,18 @@ struct PatientRow {
 #[derive(sqlx::FromRow)]
 struct PatientImageRow {
     image: Vec<u8>,
+}
+
+/// Raw row shape for the `officer` login query.
+#[derive(sqlx::FromRow)]
+struct OfficerRow {
+    officer_id: i64,
+    login_name: String,
+    password_md5: String,
+    active: String,
+    auth_type_id: i64,
+    doctor_code: Option<String>,
+    display_name: String,
 }
 
 /// Raw row shape for dispensing queries (OPD and IPD share column aliases).
