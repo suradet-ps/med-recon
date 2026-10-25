@@ -467,15 +467,15 @@ code, .mono, .code {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--sp-md);
+  gap: 10px;
   min-height: 0;
-  padding-bottom: 24px;
+  padding-bottom: 8px;
 }
 
 .login__headline {
   margin: 0;
   max-width: 420px;
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 700;
   line-height: 1.16;
   letter-spacing: -0.8px;
@@ -483,14 +483,153 @@ code, .mono, .code {
   color: var(--ink);
 }
 
+.login__lede {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: center;
+  letter-spacing: 0.01em;
+  color: var(--slate);
+}
+
+.login__hero {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, 340px);
+  aspect-ratio: 1;
+  margin-top: 4px;
+}
+
+.login__hero-glow {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(16, 185, 129, 0.3) 0%,
+    rgba(16, 185, 129, 0.1) 46%,
+    transparent 70%
+  );
+  filter: blur(16px);
+  animation: login-glow 5.5s ease-in-out infinite;
+}
+
+.login__hero-orbit {
+  position: absolute;
+  inset: 1%;
+  border: 1.5px dashed rgba(5, 150, 105, 0.3);
+  border-radius: 50%;
+  animation: login-orbit 32s linear infinite;
+}
+
+.login__hero::before,
+.login__hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: var(--brand);
+  animation: login-spark 4.8s ease-in-out infinite;
+}
+
+.login__hero::before {
+  top: 16%;
+  right: 3%;
+  width: 8px;
+  height: 8px;
+  opacity: 0.5;
+}
+
+.login__hero::after {
+  bottom: 18%;
+  left: 4%;
+  width: 5px;
+  height: 5px;
+  opacity: 0.35;
+  animation-delay: -2.4s;
+}
+
 .login__art {
-  width: min(100%, 440px);
+  position: relative;
+  z-index: 1;
+  width: 76%;
+  filter: drop-shadow(0 26px 38px rgba(5, 150, 105, 0.24));
+  animation: login-float 6s ease-in-out infinite;
 }
 
 .login__art svg {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.login__caption {
+  margin: 0;
+  max-width: 360px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--steel);
+}
+
+@keyframes login-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(1.5deg);
+  }
+}
+
+@keyframes login-glow {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes login-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes login-spark {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login__art,
+  .login__hero-glow,
+  .login__hero-orbit,
+  .login__hero::before,
+  .login__hero::after {
+    animation: none;
+  }
+}
+
+@media (max-height: 760px) {
+  .login__headline {
+    font-size: 26px;
+  }
+
+  .login__hero {
+    width: min(100%, 270px);
+  }
 }
 
 .login__main {
