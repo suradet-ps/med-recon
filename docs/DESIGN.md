@@ -173,9 +173,10 @@ HN/CID) from Google Fonts. Base 14 px, line-height 1.5.
 ### 3.3 Components
 
 - **Login gate** - full-height split surface before sign-in: a soft emerald
-  brand panel (logo, headline, medication-history illustration) and a
-  centered login card with officer credentials, connection notice, and a
-  settings shortcut. No patient UI exists behind the gate.
+  brand panel (logo, headline, and a custom illustration of two pharmacists
+  discussing a shared medication list, with speech bubbles carrying their
+  dialogue) and a centered login card with officer credentials, connection
+  notice, and a settings shortcut. No patient UI exists behind the gate.
 - **Top bar** - 44 px, raised surface, hairline bottom border; logo + title,
   status dot (7 px, green/red), signed-in officer chip, help, settings, and
   logout actions.

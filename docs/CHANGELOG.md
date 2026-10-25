@@ -13,9 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   screen and verifies `officer` credentials against HOSxP (MD5, active and
   auth-type checks) before any patient data is shown. The session is
   memory-only; the top bar shows the signed-in officer and an
-  **ออกจากระบบ** action. Connection setup remains reachable from the login
-  screen, while site settings and all patient/PHI commands require a
-  session. See `docs/auth.md`.
+  **ออกจากระบบ** action. The login brand panel illustrates two pharmacists
+  reviewing a shared medication list with speech bubbles. Connection setup
+  remains reachable from the login screen, while site settings and all
+  patient/PHI commands require a session. See `docs/auth.md`.
 
 ### Changed
 

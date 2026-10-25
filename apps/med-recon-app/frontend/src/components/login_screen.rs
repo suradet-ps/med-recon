@@ -72,10 +72,9 @@ pub fn LoginScreen(state: AppState) -> impl IntoView {
                         "BPMH · ประวัติการแพ้ยา · ประวัติการเข้ารับบริการ"
                     </p>
                     <div class="login__hero" aria-hidden="true">
-                        <div class="login__hero-glow"></div>
                         <div
                             class="login__art"
-                            inner_html=include_str!("../../../../../icon-master.svg")
+                            inner_html=include_str!("../../assets/login-pharmacists.svg")
                         ></div>
                     </div>
                 </div>
