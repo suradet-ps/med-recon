@@ -227,16 +227,18 @@ pub fn SettingsModal(state: AppState) -> impl IntoView {
             if generation.get_untracked() == token {
                 match result {
                     Ok(()) => {
-                        // Fields keep their values so the operator can see
-                        // what is saved; they are only wiped on close.
-                        conn_message.set(Some((true, "บันทึกการตั้งค่าแล้ว".to_string())));
                         state.configured.set(true);
                         state.health.set(ConnectionHealth::Connected);
-                        // The backend drops the session on a connection
-                        // change - return to the login gate, never keep
-                        // showing the previous site's patient data.
                         if had_session {
+                            // The backend drops the session on a connection
+                            // change - return to the login gate, never keep
+                            // showing the previous site's patient data.
                             state.clear_session();
+                        } else {
+                            // Saving from the login gate closes the dialog
+                            // and wipes the typed credentials, leaving the
+                            // operator on the login card ready to sign in.
+                            close();
                         }
                     }
                     Err(error) => conn_message.set(Some((false, error.message))),
