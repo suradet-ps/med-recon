@@ -37,7 +37,7 @@ sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio",
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "fs"] }  # async runtime
 tauri = { version = "2", features = [] }                    # desktop shell
 tauri-build = "2"                                           # tauri context generation
-rfd = "0.17"                                                # native save dialog for report export
+rfd = "0.18"                                                # native save dialog for report export
 pdf-writer = "0.15"                                         # A4 PDF report writer (med-recon-app)
 harfrust = "0.13"                                           # maintained HarfBuzz port - Thai shaping for PDF
 skrifa = "0.46"                                             # maintained font metrics/cmap reader for PDF layout
