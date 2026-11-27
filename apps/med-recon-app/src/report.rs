@@ -9,7 +9,6 @@
 //! Every user-visible string comes from [`ReportLabels`], resolved by the
 //! frontend as fixed Thai - this module hard-codes no display text.
 
-use chrono::Datelike;
 use med_recon_core::{MedicationItem, MedicationStatus, PatientHistory};
 
 /// User-visible strings for the report - fixed Thai, resolved by the
@@ -134,7 +133,7 @@ pub fn build_model(
     history: &PatientHistory,
     site_name: &str,
     labels: &ReportLabels,
-    now: chrono::NaiveDate,
+    now: time::Date,
 ) -> ReportModel {
     let patient = &history.patient;
     // Empty site name falls back to the label so the header never renders a
@@ -271,21 +270,24 @@ pub fn build_model(
 
 /// Build the full A4 PDF report for a patient history.
 pub fn build_report(history: &PatientHistory, site_name: &str, labels: &ReportLabels) -> Vec<u8> {
-    let model = build_model(
-        history,
-        site_name,
-        labels,
-        chrono::Local::now().date_naive(),
-    );
+    let model = build_model(history, site_name, labels, local_today());
     let fonts = crate::pdf::Fonts::new();
     let mut pages = crate::pdf::layout(&model, &fonts);
     crate::pdf::finalize_pages(&mut pages);
     crate::pdf::write_pdf(&pages, &fonts)
 }
 
+/// Today's date in the machine's local timezone, falling back to UTC when
+/// the system offset cannot be determined.
+fn local_today() -> time::Date {
+    time::OffsetDateTime::now_local()
+        .unwrap_or_else(|_| time::OffsetDateTime::now_utc())
+        .date()
+}
+
 /// Format a date in the Thai locale style (ค.ศ. year).
-fn format_date(d: chrono::NaiveDate) -> String {
-    format!("{:02}/{:02}/{}", d.day(), d.month(), d.year())
+fn format_date(d: time::Date) -> String {
+    format!("{:02}/{:02}/{}", d.day(), u8::from(d.month()), d.year())
 }
 
 #[cfg(test)]
@@ -327,7 +329,7 @@ mod tests {
             last_name: "ใจดี".into(),
             birthday: None,
         };
-        let disp = |icode: &str, name: &str, qty: f64, date: chrono::NaiveDate| Dispense {
+        let disp = |icode: &str, name: &str, qty: f64, date: time::Date| Dispense {
             hn: "0012345".into(),
             visit_id: "vn1".into(),
             source: EncounterSource::Opd,
@@ -344,17 +346,17 @@ mod tests {
             "P1",
             "Paracetamol",
             30.0,
-            chrono::NaiveDate::from_ymd_opt(2026, 7, 1).unwrap(),
+            med_recon_core::date_from_ymd(2026, 7, 1).unwrap(),
         );
         let d2 = disp(
             "M1",
             "Metformin",
             90.0,
-            chrono::NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+            med_recon_core::date_from_ymd(2025, 1, 1).unwrap(),
         );
         let medications = med_recon_core::aggregate_medications(
             &[d1, d2],
-            chrono::Local::now().date_naive(),
+            local_today(),
             &["P1".to_string()].into_iter().collect(),
         );
         PatientHistory {
@@ -363,14 +365,14 @@ mod tests {
             allergies: vec![AllergyRecord {
                 agent: "Penicillin".into(),
                 symptom: Some("ผื่น".into()),
-                report_date: Some(chrono::NaiveDate::from_ymd_opt(2026, 7, 1).unwrap()),
+                report_date: Some(med_recon_core::date_from_ymd(2026, 7, 1).unwrap()),
                 note: Some("แจ้งผู้ป่วยแล้ว".into()),
                 reporter: Some("นส. nurse".into()),
             }],
             visits: vec![VisitSummary {
                 visit_id: "vn1".into(),
                 source: EncounterSource::Opd,
-                date: chrono::NaiveDate::from_ymd_opt(2026, 7, 1).unwrap(),
+                date: med_recon_core::date_from_ymd(2026, 7, 1).unwrap(),
                 department: Some("OPD".into()),
             }],
             screen_records: vec![],
@@ -384,7 +386,7 @@ mod tests {
             &sample_history(),
             "รพ.ทดสอบ",
             &th_labels(),
-            chrono::NaiveDate::from_ymd_opt(2026, 8, 26).unwrap(),
+            med_recon_core::date_from_ymd(2026, 8, 26).unwrap(),
         )
     }
 
@@ -429,7 +431,7 @@ mod tests {
             &h,
             "รพ.ทดสอบ",
             &th_labels(),
-            chrono::NaiveDate::from_ymd_opt(2026, 8, 26).unwrap(),
+            med_recon_core::date_from_ymd(2026, 8, 26).unwrap(),
         );
         assert_eq!(m.warnings, vec!["ไม่พบตาราง drugusage/sp_use"]);
     }
@@ -445,7 +447,7 @@ mod tests {
             &h,
             "site",
             &th_labels(),
-            chrono::NaiveDate::from_ymd_opt(2026, 8, 26).unwrap(),
+            med_recon_core::date_from_ymd(2026, 8, 26).unwrap(),
         );
         assert_eq!(m.patient_name, "นาย <script>alert(1)</script> ใจดี");
     }
@@ -460,7 +462,7 @@ mod tests {
             &sample_history(),
             "",
             &labels,
-            chrono::NaiveDate::from_ymd_opt(2026, 8, 26).unwrap(),
+            med_recon_core::date_from_ymd(2026, 8, 26).unwrap(),
         );
         assert_eq!(m.sections[0].title, "ACTIVE_SECTION 1");
         assert_eq!(m.heading, "HEADING");

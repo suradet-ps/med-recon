@@ -1,7 +1,7 @@
 //! Core domain types shared across the Med Recon workspace.
 
-use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
+use time::Date;
 
 /// A patient as returned by the identity search.
 ///
@@ -19,7 +19,7 @@ pub struct PatientSummary {
     /// Last name.
     pub last_name: String,
     /// Birth date, if known.
-    pub birthday: Option<NaiveDate>,
+    pub birthday: Option<Date>,
 }
 
 impl PatientSummary {
@@ -81,13 +81,13 @@ pub struct Dispense {
     /// Quantity dispensed at this event.
     pub qty: f64,
     /// Dispense date.
-    pub date: NaiveDate,
+    pub date: Date,
     /// Sig / directions for use, if available.
     pub sig: Option<Sig>,
     /// Next appointment date for this visit (`oapp.nextdate`), if any.
     /// OPD visits only - IPD rows carry an admission number and have no
     /// direct `oapp` row.
-    pub appointment: Option<NaiveDate>,
+    pub appointment: Option<Date>,
 }
 
 /// Whether a medication is considered part of the current regimen.
@@ -115,9 +115,9 @@ pub struct MedicationItem {
     /// Units text, if any.
     pub units: Option<String>,
     /// Most recent dispense date.
-    pub last_dispense: NaiveDate,
+    pub last_dispense: Date,
     /// Earliest dispense date in the history.
-    pub first_dispense: NaiveDate,
+    pub first_dispense: Date,
     /// Quantity of the most recent dispensing event (shown next to the
     /// dispense date; not the lifetime total).
     pub last_qty: f64,
@@ -137,7 +137,7 @@ pub struct MedicationItem {
     pub sig: Option<Sig>,
     /// Next appointment date (`oapp.nextdate`) of the most recent event's
     /// visit, if any.
-    pub appointment_date: Option<NaiveDate>,
+    pub appointment_date: Option<Date>,
     /// Active/lapsed inference.
     pub status: MedicationStatus,
     /// Days between `last_dispense` and the status inference date.
@@ -152,7 +152,7 @@ pub struct AllergyRecord {
     /// Reported symptom(s).
     pub symptom: Option<String>,
     /// Date the reaction was reported (`opd_allergy.report_date`).
-    pub report_date: Option<NaiveDate>,
+    pub report_date: Option<Date>,
     /// Free-text note.
     pub note: Option<String>,
     /// Reporter name/title.
@@ -167,7 +167,7 @@ pub struct VisitSummary {
     /// Encounter source.
     pub source: EncounterSource,
     /// Visit date.
-    pub date: NaiveDate,
+    pub date: Date,
     /// `main_dep` (OPD) or `ward` (IPD) label.
     pub department: Option<String>,
 }
@@ -179,7 +179,7 @@ pub struct OpdScreenRecord {
     /// OPD visit id.
     pub vn: String,
     /// Screening date.
-    pub vstdate: NaiveDate,
+    pub vstdate: Date,
     /// Chief complaint (`cc`).
     pub cc: Option<String>,
     /// Physical examination text (`pe`).

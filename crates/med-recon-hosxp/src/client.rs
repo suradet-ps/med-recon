@@ -6,7 +6,6 @@
 //! พ.ศ. or ค.ศ.) to Christian era at the boundary (see
 //! [`med_recon_core::normalize_date`]).
 
-use chrono::NaiveDate;
 use med_recon_core::{
     AllergyRecord, Dispense, EncounterSource, MedicationItem, OfficerAccount, OpdScreenRecord,
     PatientHistory, PatientSummary, Sig, VisitSummary, aggregate_medications, normalize_date,
@@ -15,6 +14,7 @@ use secrecy::ExposeSecret;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPool, MySqlPoolOptions};
 use std::collections::{HashMap, HashSet};
 use std::time::Duration;
+use time::Date;
 use tracing::debug;
 
 use crate::config::HosxpConfig;
@@ -164,9 +164,9 @@ impl HosxpClient {
     ) -> Result<PatientHistory> {
         let patient = self.load_patient(hn).await?;
 
-        let today = chrono::Local::now().date_naive();
+        let today = local_today();
         let cutoff = match history_days_override {
-            Some(days) => today - chrono::Days::new(days as u64),
+            Some(days) => today - time::Duration::days(i64::from(days)),
             None => self.config.history_cutoff(today),
         };
 
@@ -189,7 +189,7 @@ impl HosxpClient {
         let mut visits = self.load_visits(hn, cutoff, &mut warnings).await?;
         visits.sort_by_key(|a| std::cmp::Reverse(a.date));
 
-        let today = chrono::Local::now().date_naive();
+        let today = local_today();
         let medications = aggregate_medications(&dispenses, today, current_codes);
 
         Ok(PatientHistory {
@@ -308,8 +308,8 @@ impl HosxpClient {
     async fn load_opd_dispenses(
         &self,
         hn: &str,
-        cutoff: NaiveDate,
-        appointments: &HashMap<String, NaiveDate>,
+        cutoff: Date,
+        appointments: &HashMap<String, Date>,
         sigs: &HashMap<SigKey, Sig>,
         warnings: &mut Vec<String>,
     ) -> Result<Vec<Dispense>> {
@@ -364,7 +364,7 @@ impl HosxpClient {
     async fn load_ipd_dispenses(
         &self,
         hn: &str,
-        cutoff: NaiveDate,
+        cutoff: Date,
         sigs: &HashMap<SigKey, Sig>,
         warnings: &mut Vec<String>,
     ) -> Result<Vec<Dispense>> {
@@ -423,7 +423,7 @@ impl HosxpClient {
     async fn load_sigs(
         &self,
         hn: &str,
-        cutoff: NaiveDate,
+        cutoff: Date,
         warnings: &mut Vec<String>,
     ) -> Result<HashMap<SigKey, Sig>> {
         let rows: Vec<SigRow> = match self
@@ -446,7 +446,7 @@ impl HosxpClient {
     async fn load_screen_records(
         &self,
         hn: &str,
-        cutoff: NaiveDate,
+        cutoff: Date,
         warnings: &mut Vec<String>,
     ) -> Result<Vec<OpdScreenRecord>> {
         let rows: Vec<OpdScreenRow> = match self
@@ -530,9 +530,9 @@ impl HosxpClient {
     async fn load_appointments(
         &self,
         hn: &str,
-        cutoff: NaiveDate,
+        cutoff: Date,
         warnings: &mut Vec<String>,
-    ) -> Result<HashMap<String, NaiveDate>> {
+    ) -> Result<HashMap<String, Date>> {
         let rows: Vec<AppointmentRow> = match self
             .fetch_rows(
                 queries::APPOINTMENT_SQL,
@@ -556,7 +556,7 @@ impl HosxpClient {
     async fn load_visits(
         &self,
         hn: &str,
-        cutoff: NaiveDate,
+        cutoff: Date,
         warnings: &mut Vec<String>,
     ) -> Result<Vec<VisitSummary>> {
         let opd_rows: Vec<OpdVisitRow> = match self
@@ -711,6 +711,14 @@ fn collect_sigs(rows: Vec<SigRow>) -> HashMap<SigKey, Sig> {
         .collect()
 }
 
+/// Today's date in the machine's local timezone, falling back to UTC when
+/// the system offset cannot be determined.
+fn local_today() -> Date {
+    time::OffsetDateTime::now_local()
+        .unwrap_or_else(|_| time::OffsetDateTime::now_utc())
+        .date()
+}
+
 /// A typed SQL parameter. MySQL prepared statements reject `VARCHAR`
 /// parameters for `LIMIT` and for DATE column comparisons, so the repository
 /// binds each value with its native type.
@@ -718,7 +726,7 @@ enum P {
     /// String (VARCHAR).
     Str(String),
     /// Date (DATE).
-    Date(NaiveDate),
+    Date(Date),
     /// Integer (BIGINT).
     Int(i64),
 }
@@ -731,7 +739,7 @@ struct PatientRow {
     pname: Option<String>,
     fname: String,
     lname: String,
-    birthday: Option<NaiveDate>,
+    birthday: Option<Date>,
 }
 
 /// Raw row shape for `patient_image` photo queries.
@@ -763,7 +771,7 @@ struct DispenseRow {
     drug_name: String,
     strength: Option<String>,
     units: Option<String>,
-    disp_date: NaiveDate,
+    disp_date: Date,
     /// Order-level sig codes, used to match this row to its own
     /// [`SigKey`].
     drugusage: Option<String>,
@@ -799,7 +807,7 @@ struct SigRow {
 #[derive(sqlx::FromRow)]
 struct OpdScreenRow {
     vn: String,
-    vstdate: NaiveDate,
+    vstdate: Date,
     cc: Option<String>,
     pe: Option<String>,
 }
@@ -808,7 +816,7 @@ struct OpdScreenRow {
 #[derive(sqlx::FromRow)]
 struct PmhRow {
     #[allow(dead_code)]
-    vstdate: NaiveDate,
+    vstdate: Date,
     pmh: String,
 }
 
@@ -818,7 +826,7 @@ struct AllergyRow {
     agent: String,
     symptom: Option<String>,
     reporter: Option<String>,
-    report_date: Option<NaiveDate>,
+    report_date: Option<Date>,
     note: Option<String>,
 }
 
@@ -826,14 +834,14 @@ struct AllergyRow {
 #[derive(sqlx::FromRow)]
 struct AppointmentRow {
     vn: String,
-    nextdate: NaiveDate,
+    nextdate: Date,
 }
 
 /// Raw row shape for OPD visit queries.
 #[derive(sqlx::FromRow)]
 struct OpdVisitRow {
     vn: String,
-    vstdate: NaiveDate,
+    vstdate: Date,
     main_dep: Option<String>,
 }
 
@@ -841,7 +849,7 @@ struct OpdVisitRow {
 #[derive(sqlx::FromRow)]
 struct IpdVisitRow {
     an: String,
-    regdate: NaiveDate,
+    regdate: Date,
     ward: Option<String>,
 }
 
@@ -880,7 +888,7 @@ fn map_dispense(
     r: DispenseRow,
     hn: &str,
     source: EncounterSource,
-    cutoff: NaiveDate,
+    cutoff: Date,
 ) -> Option<Dispense> {
     let date = normalize_date(r.disp_date);
     let visit_id = r.visit_id?;

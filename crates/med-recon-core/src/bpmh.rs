@@ -53,7 +53,7 @@ pub fn days_supply(qty: f64, sig: &Sig) -> Option<u32> {
 /// drug `Lapsed`.
 pub fn aggregate_medications(
     dispenses: &[Dispense],
-    reference_date: chrono::NaiveDate,
+    reference_date: time::Date,
     current_codes: &HashSet<String>,
 ) -> Vec<MedicationItem> {
     let mut by_icode: BTreeMap<&str, Vec<&Dispense>> = BTreeMap::new();
@@ -152,7 +152,7 @@ fn most_recent_sig_key(by_sig: &BTreeMap<SigKey, Vec<&Dispense>>) -> Option<SigK
 /// directions without a supply estimate.
 fn build_item(
     mut events: Vec<&Dispense>,
-    reference_date: chrono::NaiveDate,
+    reference_date: time::Date,
     current_codes: &HashSet<String>,
 ) -> MedicationItem {
     events.sort_by(|a, b| {
@@ -202,7 +202,8 @@ fn build_item(
         sig,
         appointment_date: latest.appointment,
         status,
-        days_since_last_dispense: (reference_date - latest.date).num_days(),
+        days_since_last_dispense: i64::from(reference_date.to_julian_day())
+            - i64::from(latest.date.to_julian_day()),
     }
 }
 
@@ -214,10 +215,10 @@ pub fn has_ipd_source(item: &MedicationItem) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::NaiveDate;
+    use crate::date_from_ymd;
 
-    fn date(y: i32, m: u32, d: u32) -> NaiveDate {
-        NaiveDate::from_ymd_opt(y, m, d).unwrap()
+    fn date(y: i32, m: u8, d: u8) -> time::Date {
+        date_from_ymd(y, m, d).unwrap()
     }
 
     fn empty_codes() -> HashSet<String> {
@@ -241,7 +242,7 @@ mod tests {
         qty: f64,
         visit_id: &str,
         source: EncounterSource,
-        date: NaiveDate,
+        date: time::Date,
     ) -> Dispense {
         Dispense {
             hn: "0001".into(),

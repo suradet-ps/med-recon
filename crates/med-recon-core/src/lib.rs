@@ -16,7 +16,8 @@ pub mod redact;
 pub use auth::{OfficerAccount, SessionUser, md5_hex, verify_password};
 pub use bpmh::{aggregate_medications, days_supply};
 pub use eras::{
-    BUDDHIST_ERA_YEAR_THRESHOLD, buddhist_to_christian, is_buddhist_era_year, normalize_date,
+    BUDDHIST_ERA_YEAR_THRESHOLD, buddhist_to_christian, date_from_ymd, is_buddhist_era_year,
+    normalize_date,
 };
 pub use model::{
     AllergyRecord, Dispense, EncounterSource, MedicationItem, MedicationStatus, OpdScreenRecord,

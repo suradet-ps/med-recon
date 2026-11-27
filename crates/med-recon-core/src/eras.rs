@@ -16,10 +16,17 @@
 //! already Christian-era. This tolerates sites storing either era - even
 //! mixed within one database.
 
-use chrono::{Datelike, NaiveDate};
+use time::{Date, Month};
 
 /// Year offset between the two calendars.
 const YEAR_OFFSET: i32 = 543;
+
+/// Construct a date from calendar components.
+///
+/// Returns `None` when the year, month, or day is out of range.
+pub fn date_from_ymd(year: i32, month: u8, day: u8) -> Option<Date> {
+    Date::from_calendar_date(year, Month::try_from(month).ok()?, day).ok()
+}
 
 /// First year that is unambiguously Buddhist era for patient records.
 ///
@@ -34,18 +41,18 @@ pub fn is_buddhist_era_year(year: i32) -> bool {
 
 /// Convert a Buddhist-era date (พ.ศ.) to Christian era (ค.ศ.).
 ///
-/// Cannot fail for any date representable as a `NaiveDate`, because a BE
+/// Cannot fail for any date representable as a `time::Date`, because a BE
 /// date in Gregorian representation only reaches Feb 29 when the CE target
 /// year is a leap year.
-pub fn buddhist_to_christian(date: NaiveDate) -> NaiveDate {
+pub fn buddhist_to_christian(date: Date) -> Date {
     let ce_year = date.year() - YEAR_OFFSET;
-    date.with_year(ce_year)
+    date.replace_year(ce_year)
         .expect("invariant: Buddhist-era Feb 29 only exists for leap CE years")
 }
 
 /// Convert a HOSxP date value to Christian era by detecting its era from
 /// the stored year (see [`is_buddhist_era_year`]).
-pub fn normalize_date(date: NaiveDate) -> NaiveDate {
+pub fn normalize_date(date: Date) -> Date {
     if is_buddhist_era_year(date.year()) {
         buddhist_to_christian(date)
     } else {
@@ -69,24 +76,24 @@ mod tests {
     #[test]
     fn be_to_ce_plain_date() {
         assert_eq!(
-            buddhist_to_christian(NaiveDate::from_ymd_opt(2567, 5, 10).unwrap()),
-            NaiveDate::from_ymd_opt(2024, 5, 10).unwrap()
+            buddhist_to_christian(date_from_ymd(2567, 5, 10).unwrap()),
+            date_from_ymd(2024, 5, 10).unwrap()
         );
     }
 
     #[test]
     fn normalize_detects_both_eras_per_value() {
         assert_eq!(
-            normalize_date(NaiveDate::from_ymd_opt(2567, 5, 10).unwrap()),
-            NaiveDate::from_ymd_opt(2024, 5, 10).unwrap()
+            normalize_date(date_from_ymd(2567, 5, 10).unwrap()),
+            date_from_ymd(2024, 5, 10).unwrap()
         );
         assert_eq!(
-            normalize_date(NaiveDate::from_ymd_opt(2024, 5, 10).unwrap()),
-            NaiveDate::from_ymd_opt(2024, 5, 10).unwrap()
+            normalize_date(date_from_ymd(2024, 5, 10).unwrap()),
+            date_from_ymd(2024, 5, 10).unwrap()
         );
         assert_eq!(
-            normalize_date(NaiveDate::from_ymd_opt(2499, 1, 1).unwrap()),
-            NaiveDate::from_ymd_opt(2499, 1, 1).unwrap()
+            normalize_date(date_from_ymd(2499, 1, 1).unwrap()),
+            date_from_ymd(2499, 1, 1).unwrap()
         );
     }
 }

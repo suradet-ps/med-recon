@@ -3,10 +3,10 @@
 //! sections, and the CC/PE screening table. The patient identity lives in
 //! the sidebar card, so this panel keeps its full vertical space for data.
 
-use chrono::{Datelike, NaiveDate};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use std::collections::HashSet;
+use time::Date;
 
 use crate::api;
 use crate::components::icons::{
@@ -255,7 +255,7 @@ fn HistoryView(history: PatientHistory, state: AppState) -> impl IntoView {
                                 meta_parts.push(format!(
                                     "รายงานเมื่อ {:02}/{:02}/{}",
                                     d.day(),
-                                    d.month(),
+                                    u8::from(d.month()),
                                     d.year()
                                 ));
                             }
@@ -428,7 +428,7 @@ fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
             <tbody>
                 {{
                     let mut band = false;
-                    let mut last_date: Option<NaiveDate> = None;
+                    let mut last_date: Option<Date> = None;
                     items.iter().enumerate().map(|(i, m)| {
                         // First date group = the most recent visit; highlight
                         // it above the alternating banding. Rows are sorted
@@ -451,7 +451,7 @@ fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
                             "med-table__row"
                         };
                         let no = (i + 1).to_string();
-                        let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), m.last_dispense.month(), m.last_dispense.year());
+                        let date = format!("{:02}/{:02}/{}", m.last_dispense.day(), u8::from(m.last_dispense.month()), m.last_dispense.year());
                         let drug = drug_label(m);
                         // Session-local "หยุดใช้แล้ว" review aid - clicking
                         // the row or its dismiss button hides it. Never
@@ -483,7 +483,7 @@ fn med_table(items: &[MedicationItem], state: AppState) -> impl IntoView {
                         let qty = format_qty(m.last_qty);
                         let units = m.units.clone().unwrap_or_default();
                         let appt = m.appointment_date.map(|d| {
-                            format!("{:02}/{:02}/{}", d.day(), d.month(), d.year())
+                            format!("{:02}/{:02}/{}", d.day(), u8::from(d.month()), d.year())
                         }).unwrap_or_default();
                         view! {
                             <tr
@@ -558,7 +558,7 @@ fn screen_table(items: &[OpdScreenRecord]) -> impl IntoView {
             <tbody>
                 {items.iter().enumerate().map(|(i, r)| {
                     let no = (i + 1).to_string();
-                    let date = format!("{:02}/{:02}/{}", r.vstdate.day(), r.vstdate.month(), r.vstdate.year());
+                    let date = format!("{:02}/{:02}/{}", r.vstdate.day(), u8::from(r.vstdate.month()), r.vstdate.year());
                     view! {
                         <tr class="med-table__row">
                             <td class="med-table__no">{no}</td>
@@ -640,7 +640,7 @@ mod tests {
     use super::*;
 
     fn item(drug_name: &str, strength: Option<&str>, sig: Option<Sig>) -> MedicationItem {
-        let date = NaiveDate::from_ymd_opt(2026, 7, 1).unwrap();
+        let date = med_recon_core::date_from_ymd(2026, 7, 1).unwrap();
         MedicationItem {
             icode: "P1".into(),
             drug_name: drug_name.into(),

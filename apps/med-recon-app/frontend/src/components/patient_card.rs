@@ -4,9 +4,9 @@
 //! Rendered below the search section after a patient is picked, so the
 //! main canvas keeps its full vertical space for the history itself.
 
-use chrono::{Datelike, NaiveDate};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
+use time::Date;
 
 use crate::api;
 use crate::components::icons::{IconCamera, IconPrinter, IconUser, IconX};
@@ -99,7 +99,7 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
             let cid = patient.cid.clone();
             let birthday = patient
                 .birthday
-                .map(|d| format!("{:02}/{:02}/{}", d.day(), d.month(), d.year()));
+                .map(|d| format!("{:02}/{:02}/{}", d.day(), u8::from(d.month()), d.year()));
             let age = patient.birthday.map(age_years);
             let photo = state.patient_photo.get();
             Some(view! {
@@ -211,12 +211,12 @@ pub fn PatientCard(state: AppState) -> impl IntoView {
 /// Uses the browser's local date (`js_sys::Date`) - `std::time::SystemTime`
 /// panics under `wasm32`. The date arithmetic lives in [`age_years_on`] so it
 /// stays testable on the native target.
-fn age_years(birthday: NaiveDate) -> i32 {
+fn age_years(birthday: Date) -> i32 {
     let today = js_sys::Date::new_0();
     let year = today.get_full_year() as i32;
-    let month = today.get_month() + 1;
-    let day = today.get_date();
-    let today = match NaiveDate::from_ymd_opt(year, month, day) {
+    let month = today.get_month() as u8 + 1;
+    let day = today.get_date() as u8;
+    let today = match med_recon_core::date_from_ymd(year, month, day) {
         Some(d) => d,
         None => return 0,
     };
@@ -224,9 +224,9 @@ fn age_years(birthday: NaiveDate) -> i32 {
 }
 
 /// Whole-years age as of a given date (pure; testable on native).
-fn age_years_on(birthday: NaiveDate, today: NaiveDate) -> i32 {
+fn age_years_on(birthday: Date, today: Date) -> i32 {
     let mut age = today.year() - birthday.year();
-    if (today.month(), today.day()) < (birthday.month(), birthday.day()) {
+    if (u8::from(today.month()), today.day()) < (u8::from(birthday.month()), birthday.day()) {
         age -= 1;
     }
     age
@@ -236,8 +236,8 @@ fn age_years_on(birthday: NaiveDate, today: NaiveDate) -> i32 {
 mod tests {
     use super::*;
 
-    fn date(y: i32, m: u32, d: u32) -> NaiveDate {
-        NaiveDate::from_ymd_opt(y, m, d).unwrap()
+    fn date(y: i32, m: u8, d: u8) -> Date {
+        med_recon_core::date_from_ymd(y, m, d).unwrap()
     }
 
     #[test]

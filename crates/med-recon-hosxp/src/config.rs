@@ -5,6 +5,7 @@
 //! in a [`secrecy::SecretString`] and never logged.
 
 use secrecy::SecretString;
+use time::Date;
 
 /// HOSxP connection settings.
 #[derive(Debug, Clone)]
@@ -25,15 +26,15 @@ pub struct HosxpConfig {
 
 impl HosxpConfig {
     /// Cutoff date (Christian era) for history queries, relative to `today`.
-    pub fn history_cutoff(&self, today: chrono::NaiveDate) -> chrono::NaiveDate {
-        today - chrono::Days::new(self.history_days as u64)
+    pub fn history_cutoff(&self, today: Date) -> Date {
+        today - time::Duration::days(i64::from(self.history_days))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::NaiveDate;
+    use med_recon_core::date_from_ymd;
 
     fn config() -> HosxpConfig {
         HosxpConfig {
@@ -49,10 +50,7 @@ mod tests {
     #[test]
     fn history_cutoff_subtracts_configured_days() {
         let c = config();
-        let today = NaiveDate::from_ymd_opt(2026, 3, 1).unwrap();
-        assert_eq!(
-            c.history_cutoff(today),
-            NaiveDate::from_ymd_opt(2024, 3, 1).unwrap()
-        );
+        let today = date_from_ymd(2026, 3, 1).unwrap();
+        assert_eq!(c.history_cutoff(today), date_from_ymd(2024, 3, 1).unwrap());
     }
 }
