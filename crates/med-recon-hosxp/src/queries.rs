@@ -433,7 +433,7 @@ pub fn sig_from_names(
 pub fn visit_summary(
     visit_id: String,
     source: EncounterSource,
-    date: chrono::NaiveDate,
+    date: time::Date,
     department: Option<String>,
 ) -> VisitSummary {
     VisitSummary {

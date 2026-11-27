@@ -9,5 +9,5 @@ authors.workspace = true
 
 [dependencies]
 serde = { workspace = true }
-chrono = { workspace = true }
+time = { workspace = true }
 md-5 = { workspace = true }                                     # HOSxP officer password verification

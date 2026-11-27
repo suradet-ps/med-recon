@@ -966,7 +966,17 @@ pub async fn capture_screenshot(
                 )
             })??;
 
-        let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
+        let now =
+            time::OffsetDateTime::now_local().unwrap_or_else(|_| time::OffsetDateTime::now_utc());
+        let stamp = format!(
+            "{:04}{:02}{:02}-{:02}{:02}{:02}",
+            now.year(),
+            u8::from(now.month()),
+            now.day(),
+            now.hour(),
+            now.minute(),
+            now.second()
+        );
         let path = rfd::AsyncFileDialog::new()
             .set_title("Export screenshot")
             .set_file_name(format!("{base_name}-{stamp}.png"))
